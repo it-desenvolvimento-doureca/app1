@@ -21,8 +21,8 @@ public class ConnectProgress {
 	private Connection getConnection() throws SQLException {
 		try {
 			conf pasta = new conf();
-			
-			//pasta.teste();
+
+			// pasta.teste();
 			// the openedge driver string
 			Class.forName("com.ddtek.jdbcx.openedge.OpenEdgeDataSource40");
 			// the openedge url
@@ -62,7 +62,7 @@ public class ConnectProgress {
 			stmt.close();
 			rs.close();
 			connection.close();
-			//globalconnection.close();
+			// globalconnection.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -93,7 +93,7 @@ public class ConnectProgress {
 			stmt.close();
 			rs.close();
 			connection.close();
-			//globalconnection.close();
+			// globalconnection.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -257,7 +257,8 @@ public class ConnectProgress {
 
 	public List<HashMap<String, String>> getMaq(String SECNUMENR) throws SQLException {
 
-		String query = "select a.SECCOD, a.ssecod ,c.SECLIB,b.SSEDES from PUB.\"SDTSEC\" a " + "inner join PUB.\"SPASSE\" b on a.ssecod = b.ssecod "
+		String query = "select a.SECCOD, a.ssecod ,c.SECLIB,b.SSEDES from PUB.\"SDTSEC\" a "
+				+ "inner join PUB.\"SPASSE\" b on a.ssecod = b.ssecod "
 				+ "inner join PUB.\"SPASEC\" c on a.seccod = c.seccod " + "where a.SECNUMENR= '" + SECNUMENR + "'";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
@@ -348,8 +349,8 @@ public class ConnectProgress {
 
 	public List<HashMap<String, String>> getfilhos(String pai) throws SQLException {
 
-		String query = "select b.PROREF,b.PRODES1,b.PRODES2,a.PROREFCST,b.PRDFAMCOD from PUB.\"SDTNCL\" a " + "inner join PUB.\"SDTPRA\" b on a.PROREFCST = b.PROREF  "
-				+ " where a.PROREFCSE ='" + pai + "'";
+		String query = "select b.PROREF,b.PRODES1,b.PRODES2,a.PROREFCST,b.PRDFAMCOD from PUB.\"SDTNCL\" a "
+				+ "inner join PUB.\"SDTPRA\" b on a.PROREFCST = b.PROREF  " + " where a.PROREFCSE ='" + pai + "'";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
@@ -399,7 +400,7 @@ public class ConnectProgress {
 			stmt.close();
 			rs.close();
 			connection.close();
-			//globalconnection.close();
+			// globalconnection.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -443,7 +444,7 @@ public class ConnectProgress {
 			stmt.close();
 			rs.close();
 			connection.close();
-			//globalconnection.close();
+			// globalconnection.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -474,7 +475,7 @@ public class ConnectProgress {
 			}
 			stmt.close();
 			rs.close();
-			//connection.close();
+			// connection.close();
 			globalconnection.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -486,9 +487,9 @@ public class ConnectProgress {
 
 	public List<HashMap<String, String>> getEtiqueta(String etiqueta) throws SQLException {
 
-		String query = "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,a.INDNUMENR,a.VA1REF,a.VA2REF,a.INDREF from PUB.\"SETQDE\" a "
-				+ "inner join PUB.\"SOFA\" b on b.ofnum = left(a.etqoridoc1,10) "
-				+ "where a.etqnum = '" + etiqueta + "'";
+		String query = "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,a.INDNUMENR,a.VA1REF,a.VA2REF,a.INDREF,a.PROREF from PUB.\"SETQDE\" a "
+				+ "inner join PUB.\"SOFA\" b on b.ofnum = left(a.etqoridoc1,10) " + "where a.etqnum = '" + etiqueta
+				+ "'";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
@@ -508,12 +509,13 @@ public class ConnectProgress {
 				x.put("VA1REF", rs.getString("VA1REF"));
 				x.put("VA2REF", rs.getString("VA2REF"));
 				x.put("INDREF", rs.getString("INDREF"));
+				x.put("PROREF", rs.getString("PROREF"));
 				list.add(x);
 			}
 			stmt.close();
 			rs.close();
 			connection.close();
-			//globalconnection.close();
+			// globalconnection.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -543,7 +545,7 @@ public class ConnectProgress {
 			stmt.close();
 			rs.close();
 			connection.close();
-			//globalconnection.close();
+			// globalconnection.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -573,7 +575,7 @@ public class ConnectProgress {
 			stmt.close();
 			rs.close();
 			connection.close();
-			//globalconnection.close();
+			// globalconnection.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -603,7 +605,7 @@ public class ConnectProgress {
 			stmt.close();
 			rs.close();
 			connection.close();
-			//globalconnection.close();
+			// globalconnection.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
