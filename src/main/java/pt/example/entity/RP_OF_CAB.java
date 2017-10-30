@@ -32,6 +32,7 @@ public class RP_OF_CAB {
 	private String NOME_UTZ_MODIF;
 	private Timestamp DATA_HORA_MODIF;
 	private String ESTADO;
+	private String OP_COD_ORIGEM;
 
 	@Id
 	@Column(name = "ID_OF_CAB")
@@ -108,6 +109,15 @@ public class RP_OF_CAB {
 	@Column(name = "OP_NUM")
 	public String getOP_NUM() {
 		return OP_NUM;
+	}
+	
+	@Column(name = "OP_COD_ORIGEM")
+	public String getOP_COD_ORIGEM() {
+		return OP_COD_ORIGEM;
+	}
+
+	public void setOP_COD_ORIGEM(String oP_COD_ORIGEM) {
+		OP_COD_ORIGEM = oP_COD_ORIGEM;
 	}
 
 	public void setOP_NUM(String oP_NUM) {

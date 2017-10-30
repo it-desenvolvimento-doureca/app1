@@ -545,6 +545,14 @@ public class SIIP {
 	public RP_OF_DEF_LIN insertRP_OF_DEF_LIN(final RP_OF_DEF_LIN data) {
 		return dao5.create(data);
 	}
+	
+	@POST
+	@Path("/createupdateRP_OF_DEF_LIN")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public RP_OF_DEF_LIN insertupdateRP_OF_DEF_LIN(final RP_OF_DEF_LIN data) {
+		return dao5.createupdate(data);
+	}
 
 	@GET
 	@Path("/getbyidRP_OF_DEF_LIN/{id}/{id2}/{id_ref}")

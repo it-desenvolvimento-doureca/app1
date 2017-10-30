@@ -86,4 +86,24 @@ public class RP_OF_DEF_LINDao extends GenericDaoJpaImpl<RP_OF_DEF_LIN, Integer>
 
 	}
 
+	public RP_OF_DEF_LIN createupdate(RP_OF_DEF_LIN data) {
+
+		Query query = entityManager.createQuery("select a from RP_OF_DEF_LIN a where a.ID_OP_LIN = "
+				+ data.getID_OP_LIN() + " and a.COD_DEF=" + data.getCOD_DEF() + "");
+		// query.setParameter("id", id);
+
+		List<RP_OF_DEF_LIN> utz2 = query.getResultList();
+		if (utz2.size() > 0) {
+			data.setID_DEF_LIN(utz2.get(0).getID_DEF_LIN());
+			Query query2 = entityManager.createQuery("UPDATE RP_OF_DEF_LIN a set a.QUANT_DEF = " + data.getQUANT_DEF()
+					+ ", a.ID_UTZ_MODIF=" + data.getID_UTZ_CRIA() + "  where a.ID_OP_LIN = " + data.getID_OP_LIN()
+					+ " and a.COD_DEF=" + data.getCOD_DEF() + "");
+			query2.executeUpdate();
+			return data;
+		} else {
+			return this.create(data);
+		}
+
+	}
+
 }
