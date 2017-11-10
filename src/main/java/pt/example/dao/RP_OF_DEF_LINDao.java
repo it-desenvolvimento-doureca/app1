@@ -35,7 +35,30 @@ public class RP_OF_DEF_LINDao extends GenericDaoJpaImpl<RP_OF_DEF_LIN, Integer>
 		return utz;
 
 	}
+	
+	public List<RP_OF_DEF_LIN> getbyidall(Integer id2, String id_ref) {
+		Query query = null;
+		if (id_ref.equals("null")) {
 
+			query = entityManager.createNativeQuery(
+					"select a.COD_DEF,a.DESC_DEF, a.QUANT_DEF,a.ID_DEF_LIN,a.OBS_DEF  from RP_OF_DEF_LIN a where ID_OP_LIN = :id2 and  ID_REF_ETIQUETA is null "
+							+ "UNION select b.COD_DEF,b.DESC_DEF,'' QUANT_DEF,'' ID_DEF_LIN, '' OBS_DEF from RP_OF_LST_DEF b where "
+							+ "b.ID_OP_LIN = :id2 and b.COD_DEF not in (select c.COD_DEF from RP_OF_DEF_LIN c where c.ID_OP_LIN=:id2 and ID_REF_ETIQUETA is null)");
+		} else {
+			query = entityManager.createNativeQuery(
+					"select a.COD_DEF,a.DESC_DEF, a.QUANT_DEF,a.ID_DEF_LIN,a.OBS_DEF from RP_OF_DEF_LIN a where ID_OP_LIN = :id2 and  ID_REF_ETIQUETA = "
+							+ id_ref + " "
+							+ "UNION select b.COD_DEF,b.DESC_DEF,'' QUANT_DEF,'' ID_DEF_LIN, '' OBS_DEF from RP_OF_LST_DEF b where "
+							+ "b.ID_OP_LIN = :id2 and b.COD_DEF not in (select c.COD_DEF from RP_OF_DEF_LIN c where c.ID_OP_LIN=:id2 and ID_REF_ETIQUETA = "
+							+ id_ref + ") ");
+		}
+
+		query.setParameter("id2", id2);
+		List<RP_OF_DEF_LIN> utz = query.getResultList();
+		return utz;
+
+	}
+	
 	public List<RP_OF_DEF_LIN> getbyid_op_lin(Integer id) {
 
 		Query query = entityManager

@@ -6,7 +6,9 @@ import java.io.IOException;
 
 public class conf {
 
-	public static String filePath = "jdbc:datadirect:openedge://192.168.40.112:20612;DatabaseName=silv-exp;User=SYSPROGRESS;Password=SYSPROGRESS;";
+	//public static String filePath = "jdbc:datadirect:openedge://192.168.40.112:20612;DatabaseName=silv-exp;User=SYSPROGRESS;Password=SYSPROGRESS;";
+
+	public static String filePath = "jdbc:datadirect:openedge://192.168.40.112:20613;DatabaseName=silv-ver;User=SYSPROGRESS;Password=SYSPROGRESS;";
 
 	private static final String FILENAME = "C:\\sgiid_dev\\conf\\filename.txt";
 

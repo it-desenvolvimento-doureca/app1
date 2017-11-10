@@ -545,7 +545,7 @@ public class SIIP {
 	public RP_OF_DEF_LIN insertRP_OF_DEF_LIN(final RP_OF_DEF_LIN data) {
 		return dao5.create(data);
 	}
-	
+
 	@POST
 	@Path("/createupdateRP_OF_DEF_LIN")
 	@Consumes("*/*")
@@ -560,6 +560,14 @@ public class SIIP {
 	public List<RP_OF_DEF_LIN> getbyRP_OF_DEF_LIN(@PathParam("id") String id, @PathParam("id2") Integer id2,
 			@PathParam("id_ref") String id_ref) {
 		return dao5.getbyid(id, id2, id_ref);
+	}
+
+	@GET
+	@Path("/getbyidRP_OF_DEF_LINall/{id2}/{id_ref}")
+	@Produces("application/json")
+	public List<RP_OF_DEF_LIN> getbyRP_OF_DEF_LINall(@PathParam("id2") Integer id2,
+			@PathParam("id_ref") String id_ref) {
+		return dao5.getbyidall(id2, id_ref);
 	}
 
 	@GET
@@ -722,7 +730,7 @@ public class SIIP {
 		RP_OF_LST_DEF.setID_LST_DEF(id);
 		dao14.delete(RP_OF_LST_DEF);
 	}
-	
+
 	@DELETE
 	@Path("/deleteRP_OF_LST_DEFid_op_lin/{id}")
 	public void deleteRP_OF_LST_DEFid_op_lin(@PathParam("id") Integer id) {
