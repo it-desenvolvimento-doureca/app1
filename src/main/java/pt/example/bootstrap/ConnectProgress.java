@@ -18,7 +18,7 @@ public class ConnectProgress {
 	public static void main(String[] args) throws SQLException {
 	}
 
-	private Connection getConnection() throws SQLException {
+	private Connection getConnection(String url) throws SQLException {
 		try {
 			conf pasta = new conf();
 
@@ -26,7 +26,7 @@ public class ConnectProgress {
 			// the openedge driver string
 			Class.forName("com.ddtek.jdbcx.openedge.OpenEdgeDataSource40");
 			// the openedge url
-			String url = pasta.filePath;
+			//String url2 = pasta.filePath;
 			// String url =
 			// "jdbc:datadirect:openedge://192.168.30.25:20612;DatabaseName=silv-exp;User=SYSPROGRESS;Password=SYSPROGRESS;";
 			// get the openedge database connection
@@ -46,13 +46,13 @@ public class ConnectProgress {
 		return globalconnection;
 	}
 
-	public List<String> getSofas() throws SQLException {
+	public List<String> getSofas(String url) throws SQLException {
 		String query = String.format(ConnectProgress.querySofaGetAll, "recep1");
 
 		List<String> x = new ArrayList<>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
@@ -71,7 +71,7 @@ public class ConnectProgress {
 		return x;
 	}
 
-	public List<HashMap<String, String>> getOF(String ofnum) throws SQLException {
+	public List<HashMap<String, String>> getOF(String ofnum,String url) throws SQLException {
 
 		String query = "select a.ofnum,a.ofanumenr,a.ofref,b.OFETAT from PUB.\"SOFA\" a "
 				+ " left join PUB.\"SOFB\" b on a.OFANUMENR = b.OFANUMENR where a.ofnum= '" + ofnum + "'";
@@ -79,7 +79,7 @@ public class ConnectProgress {
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
@@ -102,14 +102,14 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getOP(String ofanumenr) throws SQLException {
+	public List<HashMap<String, String>> getOP(String ofanumenr,String url) throws SQLException {
 
 		String query = "select OPECOD,OPENUM,OPEDES,SECNUMENR1 from PUB.\"SOFD\" where ofanumenr= '" + ofanumenr + "'";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
@@ -133,14 +133,14 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getallOP() throws SQLException {
+	public List<HashMap<String, String>> getallOP(String url) throws SQLException {
 
 		String query = "select OPECOD,OPEDES,SECNUMENR1 from PUB.\"SDTOPP\"";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
@@ -163,7 +163,7 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getallOPNOTIN(String data) throws SQLException {
+	public List<HashMap<String, String>> getallOPNOTIN(String data,String url) throws SQLException {
 		String query = "select OPECOD,OPEDES,SECNUMENR1 from PUB.\"SDTOPP\"";
 		if (!data.equals("null")) {
 			query += " where OPECOD not in(" + data + ")";
@@ -172,7 +172,7 @@ public class ConnectProgress {
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
@@ -195,7 +195,7 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getallfamNOTIN(String data) throws SQLException {
+	public List<HashMap<String, String>> getallfamNOTIN(String data,String url) throws SQLException {
 		String query = "select FAMCOD,FAMLIB from PUB.\"SPAFAM\"";
 		if (!data.equals("null")) {
 			query += " where FAMCOD not in(" + data + ")";
@@ -204,7 +204,7 @@ public class ConnectProgress {
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
@@ -226,20 +226,20 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getTipoFalta() throws SQLException {
+	public List<HashMap<String, String>> getTipoFalta(String url) throws SQLException {
 
 		String query = "select DISTINCT * from PUB.\"SPAARR\"";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
 				// parser das operações
 				HashMap<String, String> x = new HashMap<>();
-				x.put("numenr", rs.getString("numenr"));
+				x.put("ARRCOD", rs.getString("ARRCOD"));
 				x.put("arrlib", rs.getString("arrlib"));
 				list.add(x);
 			}
@@ -255,7 +255,7 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getMaq(String SECNUMENR) throws SQLException {
+	public List<HashMap<String, String>> getMaq(String SECNUMENR,String url) throws SQLException {
 
 		String query = "select a.SECCOD, a.ssecod ,c.SECLIB,b.SSEDES from PUB.\"SDTSEC\" a "
 				+ "inner join PUB.\"SPASSE\" b on a.ssecod = b.ssecod "
@@ -264,7 +264,7 @@ public class ConnectProgress {
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
@@ -288,7 +288,7 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getAllMaq(String SECCOD) throws SQLException {
+	public List<HashMap<String, String>> getAllMaq(String SECCOD,String url) throws SQLException {
 
 		String query = "select b.ssecod,a.SSEDES from PUB.\"SPASSE\"a inner join PUB.\"SDTSEC\" b on a.ssecod = b.ssecod where b.SECCOD= '"
 				+ SECCOD + "'";
@@ -296,7 +296,7 @@ public class ConnectProgress {
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
@@ -318,14 +318,14 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getFamilias() throws SQLException {
+	public List<HashMap<String, String>> getFamilias(String url) throws SQLException {
 
 		String query = "select DISTINCT LEFT(QUACOD,2) as fam from PUB.\"SPAQUA\"";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
@@ -347,7 +347,7 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getfilhos(String pai) throws SQLException {
+	public List<HashMap<String, String>> getfilhos(String pai,String url) throws SQLException {
 
 		String query = "select b.PROREF,b.PRODES1,b.PRODES2,a.PROREFCST,b.PRDFAMCOD from PUB.\"SDTNCL\" a "
 				+ "inner join PUB.\"SDTPRA\" b on a.PROREFCST = b.PROREF  " + " where a.PROREFCSE ='" + pai + "'";
@@ -355,7 +355,7 @@ public class ConnectProgress {
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
@@ -380,14 +380,14 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getDefeitos(String fam) throws SQLException {
+	public List<HashMap<String, String>> getDefeitos(String fam,String url) throws SQLException {
 
 		String query = "select QUACOD,QUALIB from PUB.\"SPAQUA\" where  LEFT(QUACOD,2)='" + fam + "'";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
@@ -409,7 +409,7 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getRef(String OFANUMENR) throws SQLException {
+	public List<HashMap<String, String>> getRef(String OFANUMENR,String url) throws SQLException {
 
 		String query = "select a.PROREF, b.PRODES1,b.PRODES2,a.VA1REF, a.VA2REF,a.INDREF,a.OFBQTEINI,a.INDNUMENR,c.FAMCOD,d.ZPAVAL,b.PRDFAMCOD "
 				+ "from PUB.\"SOFB\"a " + "inner join PUB.\"SDTPRA\" b on a.PROREF = b.PROREF  "
@@ -421,7 +421,7 @@ public class ConnectProgress {
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
@@ -453,7 +453,7 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getOPtop1(String ofanumenr) throws SQLException {
+	public List<HashMap<String, String>> getOPtop1(String ofanumenr,String url) throws SQLException {
 
 		String query = "select top 1 * from PUB.\"SOFD\" a where ofanumenr= '" + ofanumenr
 				+ "' and OPECOD != '' order by a.OPENUM desc";
@@ -461,7 +461,7 @@ public class ConnectProgress {
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
@@ -485,7 +485,7 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getEtiqueta(String etiqueta) throws SQLException {
+	public List<HashMap<String, String>> getEtiqueta(String etiqueta,String url) throws SQLException {
 
 		String query = "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,a.INDNUMENR,a.VA1REF,a.VA2REF,a.INDREF,a.PROREF from PUB.\"SETQDE\" a "
 				+ "inner join PUB.\"SOFA\" b on b.ofnum = left(a.etqoridoc1,10) " + "where a.etqnum = '" + etiqueta
@@ -495,7 +495,7 @@ public class ConnectProgress {
 
 		/// System.out.println(query);
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
@@ -524,14 +524,14 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getUsers() throws SQLException {
+	public List<HashMap<String, String>> getUsers(String url) throws SQLException {
 
 		String query = "select RESCOD,RESDES from PUB.\"SDTRES \" where RESTYPCOD = 'MO' ";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
@@ -554,14 +554,14 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getUser(String RESCOD) throws SQLException {
+	public List<HashMap<String, String>> getUser(String RESCOD,String url) throws SQLException {
 
 		String query = "select RESCOD,RESDES from PUB.\"SDTRES \" where RESTYPCOD = 'MO' and RESCOD='" + RESCOD + "'";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
@@ -584,14 +584,14 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getSessoes() throws SQLException {
+	public List<HashMap<String, String>> getSessoes(String url) throws SQLException {
 
 		String query = "select SECCOD,SECLIB from PUB.\"SPASEC \" ";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
-		try (Connection connection = getConnection();
+		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {

@@ -9,6 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 
 import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -30,7 +33,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getOF(ofnum);
+		List<HashMap<String, String>> dados = connectionProgress.getOF(ofnum,getURL());
 		return dados;
 	}
 
@@ -42,7 +45,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getOP(ofanumenr);
+		List<HashMap<String, String>> dados = connectionProgress.getOP(ofanumenr,getURL());
 		return dados;
 	}
 	
@@ -54,7 +57,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getOPtop1(ofanumenr);
+		List<HashMap<String, String>> dados = connectionProgress.getOPtop1(ofanumenr,getURL());
 		return dados;
 	}
 
@@ -65,7 +68,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getallOP();
+		List<HashMap<String, String>> dados = connectionProgress.getallOP(getURL());
 		return dados;
 	}
 
@@ -76,7 +79,7 @@ public class DemoRest {
 			throws SQLException, ClassNotFoundException {
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getallOPNOTIN(data);
+		List<HashMap<String, String>> dados = connectionProgress.getallOPNOTIN(data,getURL());
 		return dados;
 	}
 
@@ -87,7 +90,7 @@ public class DemoRest {
 			throws SQLException, ClassNotFoundException {
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getallfamNOTIN(data);
+		List<HashMap<String, String>> dados = connectionProgress.getallfamNOTIN(data,getURL());
 		return dados;
 	}
 
@@ -99,7 +102,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getMaq(SECNUMENR);
+		List<HashMap<String, String>> dados = connectionProgress.getMaq(SECNUMENR,getURL());
 		return dados;
 	}
 
@@ -111,7 +114,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getAllMaq(SECCOD);
+		List<HashMap<String, String>> dados = connectionProgress.getAllMaq(SECCOD,getURL());
 		return dados;
 	}
 
@@ -122,7 +125,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getTipoFalta();
+		List<HashMap<String, String>> dados = connectionProgress.getTipoFalta(getURL());
 		return dados;
 	}
 
@@ -133,7 +136,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getUsers();
+		List<HashMap<String, String>> dados = connectionProgress.getUsers(getURL());
 		return dados;
 	}
 
@@ -145,8 +148,26 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getUser(RESCOD);
+		List<HashMap<String, String>> dados = connectionProgress.getUser(RESCOD,getURL());
 		return dados;
+	}
+	
+	
+	@PersistenceContext(unitName = "persistenceUnit")
+	protected EntityManager entityManager;
+	public String getURL(){
+		String url ="";
+		Query query_folder = entityManager.createNativeQuery(
+				"select top 1 * from GER_PARAMETROS a");
+
+		List<Object[]> dados_folder = query_folder.getResultList();
+		
+
+		for (Object[] content : dados_folder) {
+			url = content[2].toString();
+		}	
+		
+		return url;
 	}
 
 	@GET
@@ -156,7 +177,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getSessoes();
+		List<HashMap<String, String>> dados = connectionProgress.getSessoes(getURL());
 		return dados;
 	}
 
@@ -168,7 +189,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getEtiqueta(etiqueta);
+		List<HashMap<String, String>> dados = connectionProgress.getEtiqueta(etiqueta,getURL());
 		return dados;
 	}
 	
@@ -180,7 +201,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getRef(OFANUMENR);
+		List<HashMap<String, String>> dados = connectionProgress.getRef(OFANUMENR,getURL());
 		return dados;
 	}
 	
@@ -191,7 +212,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getFamilias();
+		List<HashMap<String, String>> dados = connectionProgress.getFamilias(getURL());
 		return dados;
 	}
 	
@@ -202,7 +223,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getfilhos(pai);
+		List<HashMap<String, String>> dados = connectionProgress.getfilhos(pai,getURL());
 		return dados;
 	}
 
@@ -214,7 +235,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getDefeitos(fam);
+		List<HashMap<String, String>> dados = connectionProgress.getDefeitos(fam,getURL());
 		return dados;
 	}
 

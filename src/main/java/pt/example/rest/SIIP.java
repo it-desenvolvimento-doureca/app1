@@ -5,12 +5,17 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -20,7 +25,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
-import pt.example.bootstrap.ConnectProgress;
+import pt.example.bootstrap.conf;
 import pt.example.dao.RPCONFUTZPERFDao;
 import pt.example.dao.RPOFDao;
 import pt.example.dao.RP_CONF_CHEF_SECDao;
@@ -31,32 +36,33 @@ import pt.example.dao.RP_OF_DEF_LINDao;
 import pt.example.dao.RP_OF_LST_DEFDao;
 import pt.example.dao.RP_OF_OP_CABDao;
 import pt.example.dao.RP_OF_OP_ETIQUETADao;
+import pt.example.dao.RP_OF_OP_FUNCDao;
 import pt.example.dao.RP_OF_OP_LINDao;
 import pt.example.dao.RP_OF_OUTRODEF_LINDao;
 import pt.example.dao.RP_OF_PARA_LINDao;
 import pt.example.dao.RP_OF_PREP_LINDao;
-import pt.example.dao.RP_OF_OP_FUNCDao;
-import pt.example.dao.UserDao;
-import pt.example.entity.RP_OF_CAB;
 import pt.example.entity.RP_CONF_CHEF_SEC;
 import pt.example.entity.RP_CONF_FAMILIA_COMP;
 import pt.example.entity.RP_CONF_OP;
 import pt.example.entity.RP_CONF_OP_NPREV;
+import pt.example.entity.RP_CONF_UTZ_PERF;
+import pt.example.entity.RP_OF_CAB;
 import pt.example.entity.RP_OF_DEF_LIN;
 import pt.example.entity.RP_OF_LST_DEF;
 import pt.example.entity.RP_OF_OP_CAB;
 import pt.example.entity.RP_OF_OP_ETIQUETA;
+import pt.example.entity.RP_OF_OP_FUNC;
 import pt.example.entity.RP_OF_OP_LIN;
 import pt.example.entity.RP_OF_OUTRODEF_LIN;
 import pt.example.entity.RP_OF_PARA_LIN;
 import pt.example.entity.RP_OF_PREP_LIN;
-import pt.example.entity.RP_OF_OP_FUNC;
-import pt.example.entity.RP_CONF_UTZ_PERF;
-import pt.example.entity.User;
 
 @Stateless
 @Path("/siip")
 public class SIIP {
+
+	@PersistenceContext(unitName = "persistenceUnit")
+	protected EntityManager entityManager;
 
 	@Inject
 	private RPOFDao dao;
@@ -741,16 +747,417 @@ public class SIIP {
 	// FICHEIRO****************************************************************
 
 	@GET
-	@Path("/ficheiro")
+	@Path("/ficheiro/{id}")
 	@Produces("application/json")
-	public void getFicheiro() throws IOException {
+	public void getFicheiro(@PathParam("id") Integer id) throws IOException, ParseException {
 		BufferedWriter bw = null;
+		SimpleDateFormat formate = new SimpleDateFormat("yyyyMMdd");
+		String data_atual = formate.format(new Date());
 		FileWriter fw = null;
-		String path = "C:" + File.separator + "hello" + File.separator + "hi.txt";
+		conf pasta = new conf();
+		String nome_ficheiro = new SimpleDateFormat("yyyyMMddHHmm'.txt'").format(new Date());
+		String path = "";
+		String data = "";
+		String data_maquina = "";
+		boolean existe_maquina = false;
+		boolean lider = true;
+		String data_inicio = "";
+
+		Query query_folder = entityManager.createNativeQuery("select top 1 * from GER_PARAMETROS a");
+
+		List<Object[]> dados_folder = query_folder.getResultList();
+
+		for (Object[] content : dados_folder) {
+			path = content[1] + nome_ficheiro;
+		}
 
 		try {
 
-			String data = "Campo1: \r\n" + "Campo2:\r\n" + "Campo3:\r\n" + "Campo4:";
+			Query query = entityManager.createNativeQuery(
+					"select a.OF_NUM,c.ID_UTZ_CRIA,a.OP_NUM,a.SEC_NUM,a.MAQ_NUM,c.DATA_INI,c.HORA_INI,c.DATA_FIM,c.HORA_FIM, "
+							+ "cast((datediff(second,0,b.TEMPO_PREP_TOTAL)/3600.0)as decimal(18,4)) as Decimalprep,cast((datediff(second,0,b.TEMPO_EXEC_TOTAL)/3600.0)as decimal(18,4)) as Decimalexec "
+							+ ",a.OP_PREVISTA from RP_OF_CAB a "
+							+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
+							+ "inner join RP_OF_OP_FUNC c on c.ID_OP_CAB = b.ID_OP_CAB " + "where a.ID_OF_CAB = " + id);
+
+			List<Object[]> dados = query.getResultList();
+
+			for (Object[] content : dados) {
+				// System.out.println(content[0]);
+				data += "01        ";// Société
+				data += data_atual; // Date suivi
+				data += "000000001    1";// N° séquence + Ligne de production +
+											// Type N° OF
+				data += (content[0] + "         ").substring(0, 10); // N° OF
+				data += content[11];// Type opération
+
+				data += ("0000" + content[2]).substring(("0000" + content[2]).length() - 4,
+						("0000" + content[2]).length()); // N° Opération
+
+				if (!content[4].toString().equals("000")) {
+					data += "2";// Position ( S12 )
+				} else {
+					data += "1";// Position ( S12 )
+				}
+
+				data += (content[3] + "         ").substring(0, 10);// Code
+																	// section
+				data += (content[4] + "         ").substring(0, 10); // Code
+																		// sous-section
+				data += "01"; // N° d'équipe
+
+				// Type de ressource
+				data += ("MO" + "         ").substring(0, 4);
+
+				// Code ressource
+				data += (content[1] + "         ").substring(0, 10);
+
+				data += "   A"; // N° établissement + Type d'élément A
+				data += content[5].toString().replaceAll("-", ""); // Date début
+				data += content[6].toString().replace(":", "").substring(0, 6); // Heure
+																				// début
+				data += content[7].toString().replaceAll("-", ""); // Date
+																	// fin
+				data += content[8].toString().replace(":", "").substring(0, 6); // Heure
+																				// fin
+				data += "04002"; // Nombre de postes + Origine temps prépa.
+
+				// Temps de préparation
+				String temp_pre = "000000000000000";
+				if (content[9] != null) {
+					String parts_prep = (content[9].toString()).replace(".", "");
+					String size = temp_pre + parts_prep;
+					temp_pre = (size).substring(size.length() - 15, size.length());
+				}
+				data += temp_pre;
+				data += "+"; // Signe
+				data += "22"; // Arrêts compris + Origine temps exécution
+
+				// Temps d'exécution
+				String temp_exec = "000000000000000";
+				if (content[10] != null) {
+					String parts_exec = content[10].toString().replace(".", "");
+					String size = temp_exec + parts_exec;
+					temp_exec = (size).substring(size.length() - 15, size.length());
+				}
+				data += temp_exec;
+				data += "+"; // Signe
+				data += "22          \r\n"; // Arrêts compris + Etat opération +
+											// N°lot Vérif
+				if (lider) {
+					if (!content[4].toString().equals("000")) {
+						System.out.println(content[4]);
+						existe_maquina = true;
+						StringBuffer buf = new StringBuffer(data);
+						buf.replace(70, 84, "              ");
+						buf.replace(47, 48, "1");
+						data_maquina = buf.toString();
+						lider = false;
+					}
+					data_inicio = data.substring(0, 87);
+				}
+
+			}
+
+			if (existe_maquina)
+				data += data_maquina;
+
+			Query query2 = entityManager.createNativeQuery("select c.DATA_INI,c.HORA_INI,c.DATA_FIM,c.HORA_FIM, "
+					+ "cast((DATEDIFF(second,DATEADD(DAY, DATEDIFF(DAY, c.HORA_INI, c.DATA_INI ), CAST(c.HORA_INI AS DATETIME)), DATEADD(DAY, DATEDIFF(DAY, c.HORA_FIM, c.DATA_FIM ), CAST(c.HORA_FIM AS DATETIME)))/3600.00) as decimal(18,4)) as timediff, "
+					+ "c.TIPO_PARAGEM,c.MOMENTO_PARAGEM from RP_OF_CAB a "
+					+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
+					+ "inner join RP_OF_PARA_LIN c on c.ID_OP_CAB = b.ID_OP_CAB " + "where a.ID_OF_CAB = " + id);
+
+			List<Object[]> dados2 = query2.getResultList();
+
+			for (Object[] content2 : dados2) {
+
+				String data_pausa = "";
+				data_pausa += "B"; // Type d'élément B
+				data_pausa += content2[0].toString().replaceAll("-", ""); // Date
+				// début
+				data_pausa += content2[1].toString().replace(":", "").substring(0, 6); // Heure
+																						// début
+				data_pausa += content2[2].toString().replaceAll("-", ""); // Date
+				// fin
+				data_pausa += content2[3].toString().replace(":", "").substring(0, 6); // Heure
+																						// fin
+
+				data_pausa += (content2[5] + "    ").substring(0, 4);// Code
+																		// section
+
+				data_pausa += "3"; // Origine arrêt prépa.
+
+				// Temps d'arrêt/prépa.
+
+				String temp_pre = "000000000000000";
+				if (content2[6].toString().equals("P")) {
+					String parts_prep = (content2[4].toString()).replace(".", "");
+					String size = temp_pre + parts_prep;
+					temp_pre = (size).substring(size.length() - 15, size.length());
+				}
+				data_pausa += temp_pre;
+				data_pausa += "+"; // Signe
+				data_pausa += "3"; // Origine arrêt exécution
+
+				// Temps d'arrêt/exécution
+				String temp_exec = "000000000000000";
+				if (content2[6].toString().equals("E")) {
+					String parts_exec = content2[4].toString().replace(".", "");
+					String size = temp_exec + parts_exec;
+					temp_exec = (size).substring(size.length() - 15, size.length());
+				}
+				data_pausa += temp_exec;
+				data_pausa += "+"; // Signe
+				data_pausa += "                                        \r\n"; // Texte
+																				// libre
+				data += data_inicio + data_pausa;
+				if (existe_maquina)
+					data += data_maquina.substring(0, 87) + data_pausa;
+			}
+
+			Query query3 = entityManager.createNativeQuery(
+					"Select a.ID_OF_CAB_ORIGEM,a.OF_NUM,e.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM,a.SEC_NUM,d.DATA_INI,d.HORA_INI,d.DATA_FIM,d.HORA_FIM,d.ID_UTZ_CRIA,c.REF_IND,cast(c.QUANT_BOAS_TOTAL as decimal(18,4)) as qtd1,cast(e.QUANT_BOAS as decimal(18,4)) as qtd2 "
+							+ ", a.OP_PREVISTA from RP_OF_CAB a "
+							+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
+							+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
+							+ "inner join RP_OF_OP_FUNC d on d.ID_OP_CAB = b.ID_OP_CAB "
+							+ "left join RP_OF_OP_ETIQUETA e on e.ID_OP_LIN = c.ID_OP_LIN " + "where a.ID_OF_CAB = "
+							+ id + " or a.ID_OF_CAB_ORIGEM = " + id);
+
+			List<Object[]> dados3 = query3.getResultList();
+
+			for (Object[] content3 : dados3) {
+				String data_quantidades = "";
+				data_quantidades += "01        ";// Société
+				data_quantidades += data_atual; // Date suivi
+				data_quantidades += "000000001    1";// N° séquence + Ligne de
+														// production +
+				// Type N° OF
+				if (content3[0] == null) {
+					data_quantidades += (content3[1] + "         ").substring(0, 10); // N°
+																						// OF
+				} else {
+					data_quantidades += (content3[2] + "         ").substring(0, 10); // N°
+																						// OF
+				}
+
+				data_quantidades += content3[18];// Type opération
+
+				data_quantidades += ("0000" + content3[3]).substring(("0000" + content3[3]).length() - 4,
+						("0000" + content3[3]).length()); // N° Opération
+
+				data_quantidades += "1";// Position ( S12 )
+
+				data_quantidades += (content3[9] + "         ").substring(0, 10);// Code
+				// section
+				data_quantidades += (content3[8] + "         ").substring(0, 10); // Code
+				// sous-section
+				data_quantidades += "01"; // N° d'équipe
+
+				// Type de ressource
+				if (content3[0] == null) {
+					if (content3[8].toString().equals("000")) {
+						data_quantidades += ("MO" + "         ").substring(0, 4);
+					} else {
+						data_quantidades += "    ";
+					}
+				} else {
+					data_quantidades += ("MO" + "         ").substring(0, 4);
+				}
+
+				// Code ressource
+				if (content3[0] == null) {
+					if (content3[8].toString().equals("000")) {
+						data_quantidades += (content3[14] + "         ").substring(0, 10);
+					} else {
+						data_quantidades += "          ";
+					}
+				} else {
+					data_quantidades += (content3[14] + "         ").substring(0, 10);
+				}
+
+				data_quantidades += "   Q"; // N° établissement + Type d'élément
+											// Q
+
+				data_quantidades += content3[10].toString().replaceAll("-", ""); // Date
+																					// début
+				data_quantidades += content3[11].toString().replace(":", "").substring(0, 6); // Heure
+				// début
+				data_quantidades += content3[12].toString().replaceAll("-", ""); // Date
+				// fin
+				data_quantidades += content3[13].toString().replace(":", "").substring(0, 6); // Heure
+				// fin
+
+				// Référence produit
+				data_quantidades += (content3[4] + "                 ").substring(0, 17);
+				// Variante (1)
+				data_quantidades += (content3[5] + "                 ").substring(0, 10);
+				// Variante (2)
+				data_quantidades += (content3[6] + "                 ").substring(0, 10);
+				// Indice produit
+				data_quantidades += (content3[15] + "                 ").substring(0, 10);
+				// N° enreg. Produit
+				data_quantidades += ("000000000" + content3[7]).substring(("000000000" + content3[7]).length() - 9,
+						("000000000" + content3[7]).length());
+
+				data_quantidades += "1";// PType quantité
+
+				// Quantité bonne
+				String quantidades = "000000000000000";
+
+				if (content3[0] == null) {
+					if (content3[16] != null) {
+						String parts = content3[16].toString().replace(".", "");
+						String size = quantidades + parts;
+						quantidades = (size).substring(size.length() - 15, size.length());
+					}
+				} else {
+					if (content3[17] != null) {
+						String parts = content3[17].toString().replace(".", "");
+						String size = quantidades + parts;
+						quantidades = (size).substring(size.length() - 15, size.length());
+					}
+
+				}
+
+				data_quantidades += quantidades + "  ";
+
+				data_quantidades += "+"; // Signe
+				data_quantidades += "    "; // Unité
+				data_quantidades += "000000000000000"; // Qté bonne (US2)
+				// N° d'étiquette suivie + N° enreg. étiquette + Lieu ( entrée )
+				// + Emplacement ( entrée ) +
+				// Référence du lot ( entrée ) + N° d'étiquette ( entrée )
+				// +Texte libre
+				data_quantidades += "                                                                                                                            \r\n";
+
+				data += data_quantidades;
+				/*
+				 * StringBuffer buf = new StringBuffer(data_quantidades);
+				 * buf.replace(70, 84, "              "); data_maquina =
+				 * buf.toString(); data += data_maquina;
+				 */
+
+			}
+
+			Query query4 = entityManager.createNativeQuery(
+					"Select d.COD_DEF,cast(d.QUANT_DEF as decimal(18,4)),a.ID_OF_CAB_ORIGEM,a.OF_NUM,f.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM,a.SEC_NUM,e.DATA_INI,e.HORA_INI,"
+							+ "e.DATA_FIM,e.HORA_FIM,d.ID_UTZ_CRIA,c.REF_IND,c.QUANT_BOAS_TOTAL,f.QUANT_BOAS ,d.OBS_DEF "
+							+ ", a.OP_PREVISTA from RP_OF_CAB a "
+							+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
+							+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
+							+ "inner join RP_OF_DEF_LIN d on d.ID_OP_LIN = c.ID_OP_LIN "
+							+ "inner join RP_OF_OP_FUNC e on e.ID_OP_CAB = b.ID_OP_CAB "
+							+ "left join RP_OF_OP_ETIQUETA f on f.ID_OP_LIN = c.ID_OP_LIN and f.ID_REF_ETIQUETA = d.ID_REF_ETIQUETA "
+							+ "where a.ID_OF_CAB = " + id + " or a.ID_OF_CAB_ORIGEM = " + id
+							+ " order by c.REF_NUM,d.COD_DEF");
+
+			List<Object[]> dados4 = query4.getResultList();
+
+			for (Object[] content4 : dados4) {
+				String data_defeitos = "";
+				data_defeitos += "01        ";// Société
+				data_defeitos += data_atual; // Date suivi
+				data_defeitos += "000000001    1";// N° séquence + Ligne de
+													// production +
+				// Type N° OF
+				if (content4[2] == null) {
+					data_defeitos += (content4[3] + "         ").substring(0, 10); // N°
+																					// OF
+				} else {
+					data_defeitos += (content4[4] + "         ").substring(0, 10); // N°
+																					// OF
+				}
+
+				data_defeitos += content4[21];// Type opération
+
+				data_defeitos += ("0000" + content4[5]).substring(("0000" + content4[5]).length() - 4,
+						("0000" + content4[5]).length()); // N° Opération
+
+				data_defeitos += "1";// Position ( S12 )
+
+				data_defeitos += (content4[11] + "         ").substring(0, 10);// Code
+				// section
+				data_defeitos += (content4[10] + "         ").substring(0, 10); // Code
+				// sous-section
+				data_defeitos += "01"; // N° d'équipe
+
+				// Type de ressource
+				if (content4[2] == null) {
+					if (content4[10].toString().equals("000")) {
+						data_defeitos += ("MO" + "         ").substring(0, 4);
+					} else {
+						data_defeitos += "    ";
+					}
+				} else {
+					data_defeitos += ("MO" + "         ").substring(0, 4);
+				}
+
+				// Code ressource
+				if (content4[2] == null) {
+					if (content4[10].toString().equals("000")) {
+						data_defeitos += (content4[16] + "         ").substring(0, 10);
+					} else {
+						data_defeitos += "          ";
+					}
+				} else {
+					data_defeitos += (content4[16] + "         ").substring(0, 10);
+				}
+
+				data_defeitos += "   R"; // N° établissement + Type d'élément Q
+
+				data_defeitos += content4[12].toString().replaceAll("-", ""); // Date
+																				// début
+				data_defeitos += content4[13].toString().replace(":", "").substring(0, 6); // Heure
+				// début
+				data_defeitos += content4[14].toString().replaceAll("-", ""); // Date
+				// fin
+				data_defeitos += content4[15].toString().replace(":", "").substring(0, 6); // Heure
+				// fin
+
+				// Référence produit
+				data_defeitos += (content4[6] + "                 ").substring(0, 17);
+				// Variante (1)
+				data_defeitos += (content4[7] + "                 ").substring(0, 10);
+				// Variante (2)
+				data_defeitos += (content4[8] + "                 ").substring(0, 10);
+				// Indice produit
+				data_defeitos += (content4[17] + "                 ").substring(0, 10);
+				// N° enreg. Produit
+				data_defeitos += ("000000000" + content4[9]).substring(("000000000" + content4[9]).length() - 9,
+						("000000000" + content4[9]).length());
+				// Code rebut
+				data_defeitos += (content4[0] + "    ").substring(0, 4);
+
+				data_defeitos += "1"; // Type quantité
+
+				// Quantité rebutée
+				String quantidades = "000000000000000";
+
+				if (content4[1] != null) {
+					String parts = content4[1].toString().replace(".", "");
+					String size = quantidades + parts;
+					quantidades = (size).substring(size.length() - 15, size.length());
+				}
+
+				data_defeitos += quantidades + "  ";
+
+				data_defeitos += "+"; // Signe
+				data_defeitos += "                                                                                                       ";
+				data_defeitos += (content4[20] + "                                        ").substring(0, 40); // Texte
+																												// libre
+				data_defeitos += "\r\n";
+				data += data_defeitos;
+				/*
+				 * StringBuffer buf = new StringBuffer(data_defeitos);
+				 * buf.replace(70, 84, "              "); data_maquina =
+				 * buf.toString(); data += data_maquina;
+				 */
+			}
+
+			/// String data = "Campo1: \r\n" + "Campo2:\r\n" + "Campo3:\r\n" +
+			/// "Campo4:";
 
 			File file = new File(path);
 
@@ -764,7 +1171,7 @@ public class SIIP {
 
 			bw.write(data);
 
-			System.out.println("Done");
+			// System.out.println("Done");
 
 		} catch (IOException e) {
 

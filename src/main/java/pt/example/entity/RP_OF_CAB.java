@@ -33,6 +33,7 @@ public class RP_OF_CAB {
 	private Timestamp DATA_HORA_MODIF;
 	private String ESTADO;
 	private String OP_COD_ORIGEM;
+	private String OP_PREVISTA;
 
 	@Id
 	@Column(name = "ID_OF_CAB")
@@ -110,7 +111,7 @@ public class RP_OF_CAB {
 	public String getOP_NUM() {
 		return OP_NUM;
 	}
-	
+
 	@Column(name = "OP_COD_ORIGEM")
 	public String getOP_COD_ORIGEM() {
 		return OP_COD_ORIGEM;
@@ -205,6 +206,15 @@ public class RP_OF_CAB {
 
 	public void setOP_COD(String oP_COD) {
 		OP_COD = oP_COD;
+	}
+
+	@Column(name = "OP_PREVISTA")
+	public String getOP_PREVISTA() {
+		return OP_PREVISTA;
+	}
+
+	public void setOP_PREVISTA(String oP_PREVISTA) {
+		OP_PREVISTA = oP_PREVISTA;
 	}
 
 }

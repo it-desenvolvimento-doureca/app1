@@ -2950,8 +2950,8 @@ html, body {
     background: linear-gradient(to bottom, rgba(208,228,247,1) 0%,rgba(115,177,231,1) 0%,rgba(10,119,213,1) 30%,rgba(83,159,225,1) 65%,rgba(135,188,234,1) 100%);
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d0e4f7', endColorstr='#87bcea',GradientType=0 );*/
     /* The image used */
-    background-image: url("../assets/fundo.jpeg");
-    /* background: rgba(131, 160, 196, 0.99) !important;*/
+    /*background-image: url("../assets/fundo.jpeg");*/
+     background: rgb(96, 147, 192) !important;
     background-size: cover;
     /* Full height */
     /*height: 100%;*/
