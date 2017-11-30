@@ -15,7 +15,7 @@ public class GenericDaoJpaImpl<T, PK>
     protected Class<T> entityClass;
 
     @PersistenceContext(unitName ="persistenceUnit")
-    protected EntityManager entityManager;
+    protected static EntityManager entityManager;
 
     public GenericDaoJpaImpl(Class<T> clazz) {
     	this.entityClass = clazz;

@@ -1,5 +1,6 @@
 package pt.example.dao;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Query;
@@ -16,6 +17,23 @@ public class RP_OF_LST_DEFDao extends GenericDaoJpaImpl<RP_OF_LST_DEF, Integer>
 
 		Query query = entityManager.createQuery("Select a from RP_OF_LST_DEF a where a.ID_LST_DEF = :id ");
 		query.setParameter("id", id_utz);
+		List<RP_OF_LST_DEF> utz = query.getResultList();
+		return utz;
+
+	}
+	
+	public List<RP_OF_LST_DEF> getallfam() {
+
+		Query query = entityManager.createQuery("select distinct substring(COD_DEF,0,3) as cod from RP_OF_LST_DEF order by cod ");
+		List<RP_OF_LST_DEF> utz = query.getResultList();
+		return utz;
+
+	}
+	
+	public List<RP_OF_LST_DEF> getfam(ArrayList<String> data) {
+
+		Query query = entityManager.createQuery("select distinct COD_DEF from RP_OF_LST_DEF where substring(COD_DEF,0,3) in (:data) order by COD_DEF");
+		query.setParameter("data", data);
 		List<RP_OF_LST_DEF> utz = query.getResultList();
 		return utz;
 

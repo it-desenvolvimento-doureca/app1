@@ -247,7 +247,15 @@ public class SIIP {
 	public List<RP_OF_CAB> listof() {
 		return dao.getall();
 	}
-
+	
+	@POST
+	@Path("/getallRP_OF_CAB")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public List<RP_OF_CAB> listallof(final ArrayList<String> data) {
+		return dao.getalllist(data);
+	}
+	
 	@GET
 	@Path("/getRP_OF_CABbyid/{id}")
 	@Produces("application/json")
@@ -556,7 +564,7 @@ public class SIIP {
 	@Path("/createupdateRP_OF_DEF_LIN")
 	@Consumes("*/*")
 	@Produces("application/json")
-	public RP_OF_DEF_LIN insertupdateRP_OF_DEF_LIN(final RP_OF_DEF_LIN data) {
+	public List<RP_OF_DEF_LIN> insertupdateRP_OF_DEF_LIN(final RP_OF_DEF_LIN data) {
 		return dao5.createupdate(data);
 	}
 
@@ -720,6 +728,21 @@ public class SIIP {
 	@Produces("application/json")
 	public List<RP_OF_LST_DEF> getRP_OF_LST_DEF_id(@PathParam("id") Integer id) {
 		return dao14.getbyid(id);
+	}
+
+	@GET
+	@Path("/getRP_OF_LST_DEFgetallfam")
+	@Produces("application/json")
+	public List<RP_OF_LST_DEF> getRP_OF_LST_DEFgetallfam() {
+		return dao14.getallfam();
+	}
+
+	@POST
+	@Path("/getRP_OF_LST_DEFgetfam")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public List<RP_OF_LST_DEF> getRP_OF_LST_DEFgetfam(final ArrayList<String> data) {
+		return dao14.getfam(data);
 	}
 
 	@GET
