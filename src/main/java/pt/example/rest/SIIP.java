@@ -778,7 +778,7 @@ public class SIIP {
 		String data_atual = formate.format(new Date());
 		FileWriter fw = null;
 		conf pasta = new conf();
-		String nome_ficheiro = new SimpleDateFormat("yyyyMMddHHmm'.txt'").format(new Date());
+		String nome_ficheiro = new SimpleDateFormat("yyyyMMddHHmmss'.txt'").format(new Date());
 		String path = "";
 		String data = "";
 		String data_maquina = "";
@@ -869,7 +869,7 @@ public class SIIP {
 											// N°lot Vérif
 				if (lider) {
 					if (!content[4].toString().equals("000")) {
-						System.out.println(content[4]);
+						//System.out.println(content[4]);
 						existe_maquina = true;
 						StringBuffer buf = new StringBuffer(data);
 						buf.replace(70, 84, "              ");
@@ -946,7 +946,7 @@ public class SIIP {
 							+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
 							+ "inner join RP_OF_OP_FUNC d on d.ID_OP_CAB = b.ID_OP_CAB "
 							+ "left join RP_OF_OP_ETIQUETA e on e.ID_OP_LIN = c.ID_OP_LIN " + "where a.ID_OF_CAB = "
-							+ id + " or a.ID_OF_CAB_ORIGEM = " + id);
+							+ id + " or a.ID_OF_CAB_ORIGEM = " + id + " and (a.OF_NUM is not null or e.OF_NUM_ORIGEM is not null)");
 
 			List<Object[]> dados3 = query3.getResultList();
 

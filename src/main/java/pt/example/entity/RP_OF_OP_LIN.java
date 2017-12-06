@@ -24,6 +24,7 @@ public class RP_OF_OP_LIN {
 	private Integer QUANT_DEF_TOTAL;
 	private Float PERC_OBJETIV;
 	private Float PERC_DEF;
+	private String OBS_REF;
 
 	@Id
 	@Column(name = "ID_OP_LIN")
@@ -135,13 +136,22 @@ public class RP_OF_OP_LIN {
 	public void setQUANT_DEF_TOTAL(Integer qUANT_DEF_TOTAL) {
 		QUANT_DEF_TOTAL = qUANT_DEF_TOTAL;
 	}
-	
+
 	public void setPERC_OBJETIV(Float pERC_OBJETIV) {
 		PERC_OBJETIV = pERC_OBJETIV;
 	}
 
 	public void setPERC_DEF(Float pERC_DEF) {
 		PERC_DEF = pERC_DEF;
+	}
+
+	@Column(name = "OBS_REF")
+	public String getOBS_REF() {
+		return OBS_REF;
+	}
+
+	public void setOBS_REF(String oBS_REF) {
+		OBS_REF = oBS_REF;
 	}
 
 }
