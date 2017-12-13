@@ -1,9 +1,5 @@
 package pt.example.bootstrap;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-
 public class conf {
 
 	//public static String filePath = "jdbc:datadirect:openedge://192.168.40.112:20612;DatabaseName=silv-exp;User=SYSPROGRESS;Password=SYSPROGRESS;";

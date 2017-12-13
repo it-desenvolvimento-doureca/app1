@@ -1,6 +1,5 @@
 package pt.example.entity;
 
-import java.sql.Date;
 import java.sql.Timestamp;
 
 import javax.persistence.Column;
@@ -24,6 +23,7 @@ public class RP_OF_CAB {
 	private String SEC_NUM;
 	private String SEC_DES;
 	private String MAQ_NUM;
+	private String MAQ_NUM_ORIG;
 	private String MAQ_DES;
 	private String ID_UTZ_CRIA;
 	private String NOME_UTZ_CRIA;
@@ -215,6 +215,15 @@ public class RP_OF_CAB {
 
 	public void setOP_PREVISTA(String oP_PREVISTA) {
 		OP_PREVISTA = oP_PREVISTA;
+	}
+
+	@Column(name = "MAQ_NUM_ORIG")
+	public String getMAQ_NUM_ORIG() {
+		return MAQ_NUM_ORIG;
+	}
+
+	public void setMAQ_NUM_ORIG(String mAQ_NUM_ORIG) {
+		MAQ_NUM_ORIG = mAQ_NUM_ORIG;
 	}
 
 }

@@ -1,6 +1,5 @@
 package pt.example.entity;
 
-import java.sql.Date;
 import java.sql.Timestamp;
 
 import javax.persistence.Column;

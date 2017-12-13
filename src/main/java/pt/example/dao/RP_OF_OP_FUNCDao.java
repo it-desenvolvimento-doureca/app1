@@ -6,9 +6,6 @@ import java.util.List;
 
 import javax.persistence.Query;
 
-import pt.example.entity.RP_CONF_OP;
-import pt.example.entity.RP_OF_OP_FUNC;
-import pt.example.entity.RP_OF_PARA_LIN;
 import pt.example.entity.RP_OF_OP_FUNC;
 
 public class RP_OF_OP_FUNCDao extends GenericDaoJpaImpl<RP_OF_OP_FUNC,Integer> implements GenericDao<RP_OF_OP_FUNC,Integer> {

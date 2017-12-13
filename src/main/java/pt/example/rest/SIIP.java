@@ -797,7 +797,7 @@ public class SIIP {
 		try {
 
 			Query query = entityManager.createNativeQuery(
-					"select a.OF_NUM,c.ID_UTZ_CRIA,a.OP_NUM,a.SEC_NUM,a.MAQ_NUM,c.DATA_INI,c.HORA_INI,c.DATA_FIM,c.HORA_FIM, "
+					"select a.OF_NUM,c.ID_UTZ_CRIA,a.OP_NUM,a.SEC_NUM,a.MAQ_NUM_ORIG,c.DATA_INI,c.HORA_INI,c.DATA_FIM,c.HORA_FIM, "
 							+ "cast((datediff(second,0,b.TEMPO_PREP_TOTAL)/3600.0)as decimal(18,4)) as Decimalprep,cast((datediff(second,0,b.TEMPO_EXEC_TOTAL)/3600.0)as decimal(18,4)) as Decimalexec "
 							+ ",a.OP_PREVISTA from RP_OF_CAB a "
 							+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
@@ -940,7 +940,7 @@ public class SIIP {
 			}
 
 			Query query3 = entityManager.createNativeQuery(
-					"Select a.ID_OF_CAB_ORIGEM,a.OF_NUM,e.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM,a.SEC_NUM,d.DATA_INI,d.HORA_INI,d.DATA_FIM,d.HORA_FIM,d.ID_UTZ_CRIA,c.REF_IND,cast(c.QUANT_BOAS_TOTAL as decimal(18,4)) as qtd1,cast(e.QUANT_BOAS as decimal(18,4)) as qtd2 "
+					"Select a.ID_OF_CAB_ORIGEM,a.OF_NUM,e.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,d.DATA_INI,d.HORA_INI,d.DATA_FIM,d.HORA_FIM,d.ID_UTZ_CRIA,c.REF_IND,cast(c.QUANT_BOAS_TOTAL as decimal(18,4)) as qtd1,cast(e.QUANT_BOAS as decimal(18,4)) as qtd2 "
 							+ ", a.OP_PREVISTA from RP_OF_CAB a "
 							+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
 							+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
@@ -1065,7 +1065,7 @@ public class SIIP {
 			}
 
 			Query query4 = entityManager.createNativeQuery(
-					"Select d.COD_DEF,cast(d.QUANT_DEF as decimal(18,4)),a.ID_OF_CAB_ORIGEM,a.OF_NUM,f.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM,a.SEC_NUM,e.DATA_INI,e.HORA_INI,"
+					"Select d.COD_DEF,cast(d.QUANT_DEF as decimal(18,4)),a.ID_OF_CAB_ORIGEM,a.OF_NUM,f.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,e.DATA_INI,e.HORA_INI,"
 							+ "e.DATA_FIM,e.HORA_FIM,d.ID_UTZ_CRIA,c.REF_IND,c.QUANT_BOAS_TOTAL,f.QUANT_BOAS ,d.OBS_DEF "
 							+ ", a.OP_PREVISTA from RP_OF_CAB a "
 							+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "

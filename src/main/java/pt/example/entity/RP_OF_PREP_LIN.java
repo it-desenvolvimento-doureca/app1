@@ -3,7 +3,6 @@ package pt.example.entity;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.TimeZone;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

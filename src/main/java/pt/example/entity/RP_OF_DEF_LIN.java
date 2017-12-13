@@ -1,8 +1,6 @@
 package pt.example.entity;
 
-import java.sql.Date;
 import java.sql.Timestamp;
-import java.text.DecimalFormat;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

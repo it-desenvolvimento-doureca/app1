@@ -4,7 +4,6 @@ import java.util.List;
 
 import javax.persistence.Query;
 
-import pt.example.entity.RP_OF_OP_CAB;
 import pt.example.entity.RP_OF_OP_LIN;
 
 public class RP_OF_OP_LINDao extends GenericDaoJpaImpl<RP_OF_OP_LIN, Integer>

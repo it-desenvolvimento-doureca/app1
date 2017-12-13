@@ -6,7 +6,6 @@ import java.util.List;
 import javax.persistence.Query;
 
 import pt.example.entity.RP_CONF_FAMILIA_COMP;
-import pt.example.entity.RP_OF_DEF_LIN;
 
 public class RP_CONF_FAMILIA_COMPDao extends GenericDaoJpaImpl<RP_CONF_FAMILIA_COMP,Integer> implements GenericDao<RP_CONF_FAMILIA_COMP,Integer> {
 	public RP_CONF_FAMILIA_COMPDao() {
