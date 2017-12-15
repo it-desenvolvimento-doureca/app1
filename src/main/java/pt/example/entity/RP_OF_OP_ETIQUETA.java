@@ -26,6 +26,11 @@ public class RP_OF_OP_ETIQUETA {
 	private String ID_UTZ_CRIA;
 	private String ID_UTZ_MODIF;
 	private Timestamp DATA_HORA_MODIF;
+	private Integer QUANT_BOAS_M1;
+	private Integer QUANT_BOAS_M2;
+	private Integer QUANT_DEF_M1;
+	private Integer QUANT_DEF_M2;
+	private Integer VERSAO_MODIF;
 
 	@Id
 	@Column(name = "ID_REF_ETIQUETA")
@@ -94,6 +99,42 @@ public class RP_OF_OP_ETIQUETA {
 		return DATA_HORA_MODIF;
 	}
 
+	@Column(name = "QUANT_BOAS_M1")
+	public Integer getQUANT_BOAS_M1() {
+		return QUANT_BOAS_M1;
+	}
+
+	@Column(name = "QUANT_BOAS_M2")
+	public Integer getQUANT_BOAS_M2() {
+		return QUANT_BOAS_M2;
+	}
+
+	@Column(name = "QUANT_DEF_M1")
+	public Integer getQUANT_DEF_M1() {
+		return QUANT_DEF_M1;
+	}
+
+	@Column(name = "QUANT_DEF_M2")
+	public Integer getQUANT_DEF_M2() {
+		return QUANT_DEF_M2;
+	}
+
+	public void setQUANT_BOAS_M1(Integer qUANT_BOAS_M1) {
+		QUANT_BOAS_M1 = qUANT_BOAS_M1;
+	}
+
+	public void setQUANT_BOAS_M2(Integer qUANT_BOAS_M2) {
+		QUANT_BOAS_M2 = qUANT_BOAS_M2;
+	}
+
+	public void setQUANT_DEF_M1(Integer qUANT_DEF_M1) {
+		QUANT_DEF_M1 = qUANT_DEF_M1;
+	}
+
+	public void setQUANT_DEF_M2(Integer qUANT_DEF_M2) {
+		QUANT_DEF_M2 = qUANT_DEF_M2;
+	}
+
 	public void setID_REF_ETIQUETA(Integer iD_REF_ETIQUETA) {
 		ID_REF_ETIQUETA = iD_REF_ETIQUETA;
 	}
@@ -144,6 +185,15 @@ public class RP_OF_OP_ETIQUETA {
 
 	public void setDATA_HORA_MODIF(Timestamp dATA_HORA_MODIF) {
 		DATA_HORA_MODIF = dATA_HORA_MODIF;
+	}
+
+	@Column(name = "VERSAO_MODIF")
+	public Integer getVERSAO_MODIF() {
+		return VERSAO_MODIF;
+	}
+
+	public void setVERSAO_MODIF(Integer vERSAO_MODIF) {
+		VERSAO_MODIF = vERSAO_MODIF;
 	}
 
 }

@@ -23,6 +23,9 @@ public class RP_OF_DEF_LIN {
 	private String DESC_DEF;
 	private Integer QUANT_DEF;
 	private Timestamp DATA_HORA_REG;
+	private Integer QUANT_DEF_M1;
+	private Integer QUANT_DEF_M2;
+	private Integer VERSAO_MODIF;
 
 	@Id
 	@Column(name = "ID_DEF_LIN")
@@ -74,6 +77,33 @@ public class RP_OF_DEF_LIN {
 	@Column(name = "ID_REF_ETIQUETA")
 	public Integer getID_REF_ETIQUETA() {
 		return ID_REF_ETIQUETA;
+	}
+
+	@Column(name = "QUANT_DEF_M1")
+	public Integer getQUANT_DEF_M1() {
+		return QUANT_DEF_M1;
+	}
+
+	@Column(name = "QUANT_DEF_M2")
+	public Integer getQUANT_DEF_M2() {
+		return QUANT_DEF_M2;
+	}
+
+	@Column(name = "VERSAO_MODIF")
+	public Integer getVERSAO_MODIF() {
+		return VERSAO_MODIF;
+	}
+
+	public void setVERSAO_MODIF(Integer vERSAO_MODIF) {
+		VERSAO_MODIF = vERSAO_MODIF;
+	}
+
+	public void setQUANT_DEF_M1(Integer qUANT_DEF_M1) {
+		QUANT_DEF_M1 = qUANT_DEF_M1;
+	}
+
+	public void setQUANT_DEF_M2(Integer qUANT_DEF_M2) {
+		QUANT_DEF_M2 = qUANT_DEF_M2;
 	}
 
 	public void setID_REF_ETIQUETA(Integer iD_REF_ETIQUETA) {

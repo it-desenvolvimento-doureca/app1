@@ -25,6 +25,11 @@ public class RP_OF_OP_LIN {
 	private Float PERC_OBJETIV;
 	private Float PERC_DEF;
 	private String OBS_REF;
+	private Integer QUANT_BOAS_TOTAL_M1;
+	private Integer QUANT_DEF_TOTAL_M1;
+	private Integer QUANT_BOAS_TOTAL_M2;
+	private Integer QUANT_DEF_TOTAL_M2;
+	private Integer VERSAO_MODIF;
 
 	@Id
 	@Column(name = "ID_OP_LIN")
@@ -93,6 +98,42 @@ public class RP_OF_OP_LIN {
 		return PERC_DEF;
 	}
 
+	@Column(name = "QUANT_BOAS_TOTAL_M1")
+	public Integer getQUANT_BOAS_TOTAL_M1() {
+		return QUANT_BOAS_TOTAL_M1;
+	}
+
+	@Column(name = "QUANT_DEF_TOTAL_M1")
+	public Integer getQUANT_DEF_TOTAL_M1() {
+		return QUANT_DEF_TOTAL_M1;
+	}
+
+	@Column(name = "QUANT_BOAS_TOTAL_M2")
+	public Integer getQUANT_BOAS_TOTAL_M2() {
+		return QUANT_BOAS_TOTAL_M2;
+	}
+
+	@Column(name = "QUANT_DEF_TOTAL_M2")
+	public Integer getQUANT_DEF_TOTAL_M2() {
+		return QUANT_DEF_TOTAL_M2;
+	}
+
+	public void setQUANT_BOAS_TOTAL_M1(Integer qUANT_BOAS_TOTAL_M1) {
+		QUANT_BOAS_TOTAL_M1 = qUANT_BOAS_TOTAL_M1;
+	}
+
+	public void setQUANT_DEF_TOTAL_M1(Integer qUANT_DEF_TOTAL_M1) {
+		QUANT_DEF_TOTAL_M1 = qUANT_DEF_TOTAL_M1;
+	}
+
+	public void setQUANT_BOAS_TOTAL_M2(Integer qUANT_BOAS_TOTAL_M2) {
+		QUANT_BOAS_TOTAL_M2 = qUANT_BOAS_TOTAL_M2;
+	}
+
+	public void setQUANT_DEF_TOTAL_M2(Integer qUANT_DEF_TOTAL_M2) {
+		QUANT_DEF_TOTAL_M2 = qUANT_DEF_TOTAL_M2;
+	}
+
 	public void setID_OP_LIN(Integer iD_OP_LIN) {
 		ID_OP_LIN = iD_OP_LIN;
 	}
@@ -152,6 +193,15 @@ public class RP_OF_OP_LIN {
 
 	public void setOBS_REF(String oBS_REF) {
 		OBS_REF = oBS_REF;
+	}
+
+	@Column(name = "VERSAO_MODIF")
+	public Integer getVERSAO_MODIF() {
+		return VERSAO_MODIF;
+	}
+
+	public void setVERSAO_MODIF(Integer vERSAO_MODIF) {
+		VERSAO_MODIF = vERSAO_MODIF;
 	}
 
 }

@@ -19,6 +19,7 @@ public class RP_OF_OUTRODEF_LIN {
 	private Integer QUANT_OUTRODEF;
 	private String RES_OUTRODEF;
 	private String OBS_OUTRODEF;
+	private Integer QUANT_OUTRODEF_M1;
 
 	@Id
 	@Column(name = "ID_OUTROSDEF_LIN")
@@ -60,6 +61,15 @@ public class RP_OF_OUTRODEF_LIN {
 	@Column(name = "OBS_OUTRODEF")
 	public String getOBS_OUTRODEF() {
 		return OBS_OUTRODEF;
+	}
+
+	@Column(name = "QUANT_OUTRODEF_M1")
+	public Integer getQUANT_OUTRODEF_M1() {
+		return QUANT_OUTRODEF_M1;
+	}
+
+	public void setQUANT_OUTRODEF_M1(Integer qUANT_OUTRODEF_M1) {
+		QUANT_OUTRODEF_M1 = qUANT_OUTRODEF_M1;
 	}
 
 	public void setID_OUTROSDEF_LIN(Integer iD_OUTROSDEF_LIN) {

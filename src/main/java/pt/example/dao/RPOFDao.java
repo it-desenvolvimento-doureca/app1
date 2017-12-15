@@ -29,8 +29,8 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 
 		Query query = entityManager.createNativeQuery("DECLARE @columns NVARCHAR(MAX), @sql NVARCHAR(MAX); "
 				+ "SET @columns = N''; " + "SELECT @columns += N', p.' + QUOTENAME(COD_DEF) "
-				+ "FROM (select distinct COD_DEF from RP_OF_LST_DEF "
-				+ "where LEFT(COD_DEF,2) in (:data)) AS x; " + "SET @sql = N' "
+				+ "FROM (select distinct COD_DEF from RP_OF_LST_DEF " + "where LEFT(COD_DEF,2) in (:data)) AS x; "
+				+ "SET @sql = N' "
 				+ "SELECT OF_NUM,ID_OF_CAB, ID_OF_CAB_ORIGEM,OF_NUM_ORIGEM,ID_OP_LIN,ID_REF_ETIQUETA,REF_ETIQUETA,NOME_UTZ_CRIA,REF_NUM,REF_DES,data, ' + STUFF(@columns, 1, 2, '') + ' "
 				+ "FROM " + "(select " + "f.QUANT_DEF,f.COD_DEF, "
 				+ "a.OF_NUM,a.ID_OF_CAB, a.ID_OF_CAB_ORIGEM,e.OF_NUM_ORIGEM,c.ID_OP_LIN,e.ID_REF_ETIQUETA,e.REF_ETIQUETA,a.NOME_UTZ_CRIA,c.REF_NUM,c.REF_DES,a.DATA_HORA_CRIA as data "
@@ -145,6 +145,30 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 
 		List<RP_OF_CAB> utz = query.getResultList();
 		return utz;
+
+	}
+
+	public HashMap<String, String> updateEstados(List<HashMap<String, String>> dados) {
+		HashMap<String, String> firstMap = dados.get(0);
+
+		String quer = "Update RP_OF_OP_FUNC SET ESTADO = '" + firstMap.get("ESTADO") + "', " + "ID_UTZ_MODIF = '"
+				+ firstMap.get("ID_UTZ_MODIF") + "', DATA_HORA_MODIF = '" + firstMap.get("DATA_HORA_MODIF")
+				+ "', PERFIL_MODIF = '" + firstMap.get("PERFIL_MODIF") + "', " + "NOME_UTZ_MODIF = '"
+				+ firstMap.get("NOME_UTZ_MODIF") + "' " + "from RP_OF_OP_FUNC a, RP_OF_OP_CAB b,RP_OF_CAB c  "
+				+ "where a.ID_OP_CAB = b.ID_OP_CAB and b.ID_OF_CAB = c.ID_OF_CAB and b.ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB = "
+				+ firstMap.get("ID_OF_CAB") + ")";
+
+		Query query = entityManager.createNativeQuery(quer);
+		query.executeUpdate();
+
+		String quer2 = "Update RP_OF_CAB SET ESTADO = '" + firstMap.get("ESTADO") + "', " + "ID_UTZ_MODIF = '"
+				+ firstMap.get("ID_UTZ_MODIF") + "', DATA_HORA_MODIF = '" + firstMap.get("DATA_HORA_MODIF")
+				+ "', VERSAO_MODIF = '" + firstMap.get("VERSAO_MODIF") + "', " + "NOME_UTZ_MODIF = '"
+				+ firstMap.get("NOME_UTZ_MODIF") + "' " + "where ID_OF_CAB = " + firstMap.get("ID_OF_CAB")
+				+ " or ID_OF_CAB_ORIGEM = " + firstMap.get("ID_OF_CAB") + " ";
+		Query query2 = entityManager.createNativeQuery(quer2);
+		query2.executeUpdate();
+		return null;
 
 	}
 

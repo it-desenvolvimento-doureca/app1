@@ -1,5 +1,6 @@
 package pt.example.rest;
 
+import java.awt.geom.Arc2D.Float;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -247,7 +248,7 @@ public class SIIP {
 	public List<RP_OF_CAB> listof() {
 		return dao.getall();
 	}
-	
+
 	@POST
 	@Path("/getallRP_OF_CAB")
 	@Consumes("*/*")
@@ -255,7 +256,7 @@ public class SIIP {
 	public List<RP_OF_CAB> listallof(final ArrayList<String> data) {
 		return dao.getalllist(data);
 	}
-	
+
 	@GET
 	@Path("/getRP_OF_CABbyid/{id}")
 	@Produces("application/json")
@@ -294,6 +295,14 @@ public class SIIP {
 	}
 
 	@POST
+	@Path("/createupdateRP_OF_DEF_LIN")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public List<RP_OF_DEF_LIN> insertupdateRP_OF_DEF_LIN(final RP_OF_DEF_LIN data) {
+		return dao5.createupdate(data);
+	}
+
+	@POST
 	@Path("/pesquisa_avancada")
 	@Consumes("*/*")
 	@Produces("application/json")
@@ -308,6 +317,14 @@ public class SIIP {
 	public RP_OF_CAB updateRP_OF_CAB(final RP_OF_CAB RP_OF_CAB) {
 		RP_OF_CAB.setESTADO(RP_OF_CAB.getESTADO());
 		return dao.update(RP_OF_CAB);
+	}
+
+	@POST
+	@Path("/createupdateESTADOS")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public HashMap<String, String> insertupdate_estados(final List<HashMap<String, String>> data) {
+		return dao.updateEstados(data);
 	}
 
 	// RP_OF_OP_CAB*************************************************************
@@ -330,10 +347,10 @@ public class SIIP {
 	}
 
 	@GET
-	@Path("/getRP_OF_OP_CABid/{id}")
+	@Path("/getRP_OF_OP_CABid/{id}/{id2}")
 	@Produces("application/json")
-	public List<RP_OF_OP_CAB> getdataof(@PathParam("id") Integer id) {
-		return dao6.getid(id);
+	public List<RP_OF_OP_CAB> getdataof(@PathParam("id") Integer id, @PathParam("id2") Integer id2) {
+		return dao6.getid(id, id2);
 	}
 
 	@GET
@@ -510,6 +527,20 @@ public class SIIP {
 		return dao11.getUsers(id);
 	}
 
+	@GET
+	@Path("/getRP_OF_OP_FUNCuser/{id}")
+	@Produces("application/json")
+	public List<RP_OF_OP_FUNC> getRP_OF_OP_FUNC_user(@PathParam("id") Integer id) {
+		return dao11.getUser(id);
+	}
+
+	@GET
+	@Path("/getRP_OF_OP_FUNCallusers/{id}")
+	@Produces("application/json")
+	public List<RP_OF_OP_FUNC> getRP_OF_OP_FUNCall_users(@PathParam("id") Integer id) {
+		return dao11.getallUsers(id);
+	}
+
 	// RP_OF_PARA_LIN******************************************
 
 	@GET
@@ -558,14 +589,6 @@ public class SIIP {
 	@Produces("application/json")
 	public RP_OF_DEF_LIN insertRP_OF_DEF_LIN(final RP_OF_DEF_LIN data) {
 		return dao5.create(data);
-	}
-
-	@POST
-	@Path("/createupdateRP_OF_DEF_LIN")
-	@Consumes("*/*")
-	@Produces("application/json")
-	public List<RP_OF_DEF_LIN> insertupdateRP_OF_DEF_LIN(final RP_OF_DEF_LIN data) {
-		return dao5.createupdate(data);
 	}
 
 	@GET
@@ -770,15 +793,52 @@ public class SIIP {
 	// FICHEIRO****************************************************************
 
 	@GET
-	@Path("/ficheiro/{id}")
+	@Path("/ficheiro/{id}/{estado}")
 	@Produces("application/json")
-	public void getFicheiro(@PathParam("id") Integer id) throws IOException, ParseException {
+	public void getFicheiro(@PathParam("id") Integer id, @PathParam("estado") String estado)
+			throws IOException, ParseException {
+		if (estado.equals("M")) {
+			criarFicheiro(id, 1);
+		}
+		criarFicheiro(id, 2);
+	}
+
+	public void criarFicheiro(Integer id, Integer ficheiro) throws IOException, ParseException {
+		String DATA_INI, HORA_INI, DATA_FIM, HORA_FIM, SINAL, QUANT_BOAS_TOTAL, QUANT_BOAS, QUANT_DEF, TEMPO_PREP_TOTAL,
+				TEMPO_EXEC_TOTAL = "";
+		if (ficheiro == 1) {
+			DATA_INI = "DATA_INI_M1";
+			HORA_INI = "HORA_INI_M1";
+			DATA_FIM = "DATA_FIM_M1";
+			HORA_FIM = "HORA_FIM_M1";
+			SINAL = "-";
+			QUANT_BOAS_TOTAL = "QUANT_BOAS_TOTAL_M1";
+			QUANT_BOAS = "QUANT_BOAS_M1";
+			QUANT_DEF = "QUANT_DEF_M1";
+			TEMPO_PREP_TOTAL = "TEMPO_PREP_TOTAL_M1";
+			TEMPO_EXEC_TOTAL = "TEMPO_EXEC_TOTAL_M1";
+		} else {
+			DATA_INI = "DATA_INI_M2";
+			HORA_INI = "HORA_INI_M2";
+			DATA_FIM = "DATA_FIM_M2";
+			HORA_FIM = "HORA_FIM_M2";
+			SINAL = "+";
+			QUANT_BOAS_TOTAL = "QUANT_BOAS_TOTAL_M2";
+			QUANT_BOAS = "QUANT_BOAS_M2";
+			QUANT_DEF = "QUANT_DEF_M2";
+			TEMPO_PREP_TOTAL = "TEMPO_PREP_TOTAL_M2";
+			TEMPO_EXEC_TOTAL = "TEMPO_EXEC_TOTAL_M2";
+
+		}
+
 		BufferedWriter bw = null;
 		SimpleDateFormat formate = new SimpleDateFormat("yyyyMMdd");
 		String data_atual = formate.format(new Date());
 		FileWriter fw = null;
 		conf pasta = new conf();
 		String nome_ficheiro = new SimpleDateFormat("yyyyMMddHHmmss'.txt'").format(new Date());
+		if (ficheiro == 1)
+			nome_ficheiro = "correcao" + nome_ficheiro;
 		String path = "";
 		String data = "";
 		String data_maquina = "";
@@ -796,9 +856,10 @@ public class SIIP {
 
 		try {
 
-			Query query = entityManager.createNativeQuery(
-					"select a.OF_NUM,c.ID_UTZ_CRIA,a.OP_NUM,a.SEC_NUM,a.MAQ_NUM_ORIG,c.DATA_INI,c.HORA_INI,c.DATA_FIM,c.HORA_FIM, "
-							+ "cast((datediff(second,0,b.TEMPO_PREP_TOTAL)/3600.0)as decimal(18,4)) as Decimalprep,cast((datediff(second,0,b.TEMPO_EXEC_TOTAL)/3600.0)as decimal(18,4)) as Decimalexec "
+			Query query = entityManager
+					.createNativeQuery("select a.OF_NUM,c.ID_UTZ_CRIA,a.OP_NUM,a.SEC_NUM,a.MAQ_NUM_ORIG,c." + DATA_INI
+							+ ",c." + HORA_INI + ",c." + DATA_FIM + ",c." + HORA_FIM + ", " + "b." + TEMPO_PREP_TOTAL
+							+ " as Decimalprep,b." + TEMPO_EXEC_TOTAL + " as Decimalexec "
 							+ ",a.OP_PREVISTA from RP_OF_CAB a "
 							+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
 							+ "inner join RP_OF_OP_FUNC c on c.ID_OP_CAB = b.ID_OP_CAB " + "where a.ID_OF_CAB = " + id);
@@ -848,28 +909,38 @@ public class SIIP {
 				// Temps de préparation
 				String temp_pre = "000000000000000";
 				if (content[9] != null) {
-					String parts_prep = (content[9].toString()).replace(".", "");
+					String[] parts = content[9].toString().split(":");
+
+					double number = Double.parseDouble(parts[0]) + (Double.parseDouble(parts[1]) / 60)
+							+ (Double.parseDouble(parts[2]) / 3600);
+					String parts_prep = String.format("%.4f", number).replace(",", "");
 					String size = temp_pre + parts_prep;
 					temp_pre = (size).substring(size.length() - 15, size.length());
 				}
 				data += temp_pre;
-				data += "+"; // Signe
+				data += SINAL; // Signe
 				data += "22"; // Arrêts compris + Origine temps exécution
 
 				// Temps d'exécution
 				String temp_exec = "000000000000000";
 				if (content[10] != null) {
-					String parts_exec = content[10].toString().replace(".", "");
+					String[] parts2 = content[10].toString().split(":");
+
+					double number2 = Double.parseDouble(parts2[0]) + (Double.parseDouble(parts2[1]) / 60)
+							+ (Double.parseDouble(parts2[2]) / 3600);
+
+
+					String parts_exec = String.format("%.4f", number2).replace(",", "");
 					String size = temp_exec + parts_exec;
 					temp_exec = (size).substring(size.length() - 15, size.length());
 				}
 				data += temp_exec;
-				data += "+"; // Signe
+				data += SINAL; // Signe
 				data += "22          \r\n"; // Arrêts compris + Etat opération +
 											// N°lot Vérif
 				if (lider) {
 					if (!content[4].toString().equals("000")) {
-						//System.out.println(content[4]);
+						// System.out.println(content[4]);
 						existe_maquina = true;
 						StringBuffer buf = new StringBuffer(data);
 						buf.replace(70, 84, "              ");
@@ -920,7 +991,7 @@ public class SIIP {
 					temp_pre = (size).substring(size.length() - 15, size.length());
 				}
 				data_pausa += temp_pre;
-				data_pausa += "+"; // Signe
+				data_pausa += SINAL; // Signe
 				data_pausa += "3"; // Origine arrêt exécution
 
 				// Temps d'arrêt/exécution
@@ -931,7 +1002,7 @@ public class SIIP {
 					temp_exec = (size).substring(size.length() - 15, size.length());
 				}
 				data_pausa += temp_exec;
-				data_pausa += "+"; // Signe
+				data_pausa += SINAL; // Signe
 				data_pausa += "                                        \r\n"; // Texte
 																				// libre
 				data += data_inicio + data_pausa;
@@ -940,13 +1011,17 @@ public class SIIP {
 			}
 
 			Query query3 = entityManager.createNativeQuery(
-					"Select a.ID_OF_CAB_ORIGEM,a.OF_NUM,e.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,d.DATA_INI,d.HORA_INI,d.DATA_FIM,d.HORA_FIM,d.ID_UTZ_CRIA,c.REF_IND,cast(c.QUANT_BOAS_TOTAL as decimal(18,4)) as qtd1,cast(e.QUANT_BOAS as decimal(18,4)) as qtd2 "
+					"Select a.ID_OF_CAB_ORIGEM,a.OF_NUM,e.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,d."
+							+ DATA_INI + ",d." + HORA_INI + ",d." + DATA_FIM + ",d." + HORA_FIM
+							+ ",d.ID_UTZ_CRIA,c.REF_IND,cast(c." + QUANT_BOAS_TOTAL
+							+ " as decimal(18,4)) as qtd1,cast(e." + QUANT_BOAS + " as decimal(18,4)) as qtd2 "
 							+ ", a.OP_PREVISTA from RP_OF_CAB a "
 							+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
 							+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
 							+ "inner join RP_OF_OP_FUNC d on d.ID_OP_CAB = b.ID_OP_CAB "
 							+ "left join RP_OF_OP_ETIQUETA e on e.ID_OP_LIN = c.ID_OP_LIN " + "where a.ID_OF_CAB = "
-							+ id + " or a.ID_OF_CAB_ORIGEM = " + id + " and (a.OF_NUM is not null or e.OF_NUM_ORIGEM is not null)");
+							+ id + " or a.ID_OF_CAB_ORIGEM = " + id
+							+ " and (a.OF_NUM is not null or e.OF_NUM_ORIGEM is not null)");
 
 			List<Object[]> dados3 = query3.getResultList();
 
@@ -1046,7 +1121,7 @@ public class SIIP {
 
 				data_quantidades += quantidades + "  ";
 
-				data_quantidades += "+"; // Signe
+				data_quantidades += SINAL; // Signe
 				data_quantidades += "    "; // Unité
 				data_quantidades += "000000000000000"; // Qté bonne (US2)
 				// N° d'étiquette suivie + N° enreg. étiquette + Lieu ( entrée )
@@ -1064,17 +1139,16 @@ public class SIIP {
 
 			}
 
-			Query query4 = entityManager.createNativeQuery(
-					"Select d.COD_DEF,cast(d.QUANT_DEF as decimal(18,4)),a.ID_OF_CAB_ORIGEM,a.OF_NUM,f.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,e.DATA_INI,e.HORA_INI,"
-							+ "e.DATA_FIM,e.HORA_FIM,d.ID_UTZ_CRIA,c.REF_IND,c.QUANT_BOAS_TOTAL,f.QUANT_BOAS ,d.OBS_DEF "
-							+ ", a.OP_PREVISTA from RP_OF_CAB a "
-							+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
-							+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
-							+ "inner join RP_OF_DEF_LIN d on d.ID_OP_LIN = c.ID_OP_LIN "
-							+ "inner join RP_OF_OP_FUNC e on e.ID_OP_CAB = b.ID_OP_CAB "
-							+ "left join RP_OF_OP_ETIQUETA f on f.ID_OP_LIN = c.ID_OP_LIN and f.ID_REF_ETIQUETA = d.ID_REF_ETIQUETA "
-							+ "where a.ID_OF_CAB = " + id + " or a.ID_OF_CAB_ORIGEM = " + id
-							+ " order by c.REF_NUM,d.COD_DEF");
+			Query query4 = entityManager.createNativeQuery("Select d.COD_DEF,cast(d." + QUANT_DEF
+					+ " as decimal(18,4)),a.ID_OF_CAB_ORIGEM,a.OF_NUM,f.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,e."
+					+ DATA_INI + ",e." + HORA_INI + ",e." + DATA_FIM + ",e." + HORA_FIM + ", "
+					+ "d.ID_UTZ_CRIA,c.REF_IND,c." + QUANT_BOAS_TOTAL + ",f." + QUANT_BOAS + " ,d.OBS_DEF "
+					+ ", a.OP_PREVISTA from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
+					+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
+					+ "inner join RP_OF_DEF_LIN d on d.ID_OP_LIN = c.ID_OP_LIN "
+					+ "inner join RP_OF_OP_FUNC e on e.ID_OP_CAB = b.ID_OP_CAB "
+					+ "left join RP_OF_OP_ETIQUETA f on f.ID_OP_LIN = c.ID_OP_LIN and f.ID_REF_ETIQUETA = d.ID_REF_ETIQUETA "
+					+ "where a.ID_OF_CAB = " + id + " or a.ID_OF_CAB_ORIGEM = " + id + " order by c.REF_NUM,d.COD_DEF");
 
 			List<Object[]> dados4 = query4.getResultList();
 
@@ -1166,7 +1240,7 @@ public class SIIP {
 
 				data_defeitos += quantidades + "  ";
 
-				data_defeitos += "+"; // Signe
+				data_defeitos += SINAL; // Signe
 				data_defeitos += "                                                                                                       ";
 				data_defeitos += (content4[20] + "                                        ").substring(0, 40); // Texte
 																												// libre
@@ -1216,7 +1290,6 @@ public class SIIP {
 
 			}
 		}
-
 	}
 
 }

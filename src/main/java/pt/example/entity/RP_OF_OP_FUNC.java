@@ -30,6 +30,14 @@ public class RP_OF_OP_FUNC {
 	private String PERFIL_MODIF;
 	private Timestamp DATA_HORA_MODIF;
 	private String ESTADO;
+	private Date DATA_INI_M1;
+	private Date DATA_INI_M2;
+	private Time HORA_INI_M1;
+	private Time HORA_INI_M2;
+	private Date DATA_FIM_M1;
+	private Date DATA_FIM_M2;
+	private Time HORA_FIM_M1;
+	private Time HORA_FIM_M2;
 
 	@Id
 	@Column(name = "ID_OP_FUNC")
@@ -108,6 +116,78 @@ public class RP_OF_OP_FUNC {
 		return PERFIL_MODIF;
 	}
 
+	@Column(name = "DATA_INI_M1")
+	public Date getDATA_INI_M1() {
+		return DATA_INI_M1;
+	}
+
+	@Column(name = "DATA_INI_M2")
+	public Date getDATA_INI_M2() {
+		return DATA_INI_M2;
+	}
+
+	@Column(name = "HORA_INI_M1")
+	public Time getHORA_INI_M1() {
+		return HORA_INI_M1;
+	}
+
+	@Column(name = "HORA_INI_M2")
+	public Time getHORA_INI_M2() {
+		return HORA_INI_M2;
+	}
+
+	@Column(name = "DATA_FIM_M1")
+	public Date getDATA_FIM_M1() {
+		return DATA_FIM_M1;
+	}
+
+	@Column(name = "DATA_FIM_M2")
+	public Date getDATA_FIM_M2() {
+		return DATA_FIM_M2;
+	}
+
+	@Column(name = "HORA_FIM_M1")
+	public Time getHORA_FIM_M1() {
+		return HORA_FIM_M1;
+	}
+
+	@Column(name = "HORA_FIM_M2")
+	public Time getHORA_FIM_M2() {
+		return HORA_FIM_M2;
+	}
+
+	public void setDATA_INI_M1(Date dATA_INI_M1) {
+		DATA_INI_M1 = dATA_INI_M1;
+	}
+
+	public void setDATA_INI_M2(Date dATA_INI_M2) {
+		DATA_INI_M2 = dATA_INI_M2;
+	}
+
+	public void setHORA_INI_M1(Time hORA_INI_M1) {
+		HORA_INI_M1 = hORA_INI_M1;
+	}
+
+	public void setHORA_INI_M2(Time hORA_INI_M2) {
+		HORA_INI_M2 = hORA_INI_M2;
+	}
+
+	public void setDATA_FIM_M1(Date dATA_FIM_M1) {
+		DATA_FIM_M1 = dATA_FIM_M1;
+	}
+
+	public void setDATA_FIM_M2(Date dATA_FIM_M2) {
+		DATA_FIM_M2 = dATA_FIM_M2;
+	}
+
+	public void setHORA_FIM_M1(Time hORA_FIM_M1) {
+		HORA_FIM_M1 = hORA_FIM_M1;
+	}
+
+	public void setHORA_FIM_M2(Time hORA_FIM_M2) {
+		HORA_FIM_M2 = hORA_FIM_M2;
+	}
+
 	public void setID_OP_FUNC(Integer iD_OP_FUNC) {
 		ID_OP_FUNC = iD_OP_FUNC;
 	}
@@ -135,7 +215,6 @@ public class RP_OF_OP_FUNC {
 	public void setPERFIL_MODIF(String pERFIL_MODIF) {
 		PERFIL_MODIF = pERFIL_MODIF;
 	}
-
 
 	public void setDATA_INI(Date dATA_INI) {
 		DATA_INI = dATA_INI;

@@ -34,6 +34,7 @@ public class RP_OF_CAB {
 	private String ESTADO;
 	private String OP_COD_ORIGEM;
 	private String OP_PREVISTA;
+	private Integer VERSAO_MODIF;
 
 	@Id
 	@Column(name = "ID_OF_CAB")
@@ -115,6 +116,15 @@ public class RP_OF_CAB {
 	@Column(name = "OP_COD_ORIGEM")
 	public String getOP_COD_ORIGEM() {
 		return OP_COD_ORIGEM;
+	}
+
+	@Column(name = "VERSAO_MODIF")
+	public Integer getVERSAO_MODIF() {
+		return VERSAO_MODIF;
+	}
+
+	public void setVERSAO_MODIF(Integer vERSAO_MODIF) {
+		VERSAO_MODIF = vERSAO_MODIF;
 	}
 
 	public void setOP_COD_ORIGEM(String oP_COD_ORIGEM) {
