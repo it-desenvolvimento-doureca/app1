@@ -27,6 +27,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import pt.example.bootstrap.conf;
+import pt.example.dao.GER_EVENTODao;
 import pt.example.dao.RPCONFUTZPERFDao;
 import pt.example.dao.RPOFDao;
 import pt.example.dao.RP_CONF_CHEF_SECDao;
@@ -42,6 +43,7 @@ import pt.example.dao.RP_OF_OP_LINDao;
 import pt.example.dao.RP_OF_OUTRODEF_LINDao;
 import pt.example.dao.RP_OF_PARA_LINDao;
 import pt.example.dao.RP_OF_PREP_LINDao;
+import pt.example.entity.GER_EVENTO;
 import pt.example.entity.RP_CONF_CHEF_SEC;
 import pt.example.entity.RP_CONF_FAMILIA_COMP;
 import pt.example.entity.RP_CONF_OP;
@@ -109,6 +111,9 @@ public class SIIP {
 
 	@Inject
 	private RP_OF_LST_DEFDao dao14;
+
+	@Inject
+	private GER_EVENTODao dao15;
 
 	// RP_CONF_UTZ_PERF***************************************************************
 	@POST
@@ -789,6 +794,53 @@ public class SIIP {
 		dao14.apagar_idop_lin(id);
 	}
 
+	// GER_EVENTO***************************************************************
+	@POST
+	@Path("/createGER_EVENTO")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public GER_EVENTO insertGER_EVENTO(final GER_EVENTO data) {
+		return dao15.create(data);
+	}
+
+	@GET
+	@Path("/getGER_EVENTO")
+	@Produces("application/json")
+	public List<GER_EVENTO> getGER_EVENTO() {
+		return dao15.getall();
+	}
+
+	@GET
+	@Path("/getGER_EVENTObyidOrigem/{id}/{campo}")
+	@Produces("application/json")
+	public List<GER_EVENTO> getGER_EVENTO_idOrigem(@PathParam("id") Integer id, @PathParam("campo") String campo) {
+		return dao15.getbyidOrigem(id,campo);
+	}
+
+	@GET
+	@Path("/getGER_EVENTObyid/{id}")
+	@Produces("application/json")
+	public List<GER_EVENTO> getGER_EVENTO_id(@PathParam("id") Integer id) {
+		return dao15.getbyid(id);
+	}
+
+	@DELETE
+	@Path("/deleteGER_EVENTO/{id}")
+	public void deleteGER_EVENTO(@PathParam("id") Integer id) {
+		GER_EVENTO GER_EVENTO = new GER_EVENTO();
+		GER_EVENTO.setID_EVENTO(id);
+		dao15.delete(GER_EVENTO);
+	}
+
+	@PUT
+	@Path("/updateGER_EVENTO")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public GER_EVENTO updateGER_EVENTO(final GER_EVENTO GER_EVENTO) {
+		GER_EVENTO.setMENSAGEM(GER_EVENTO.getMENSAGEM());
+		return dao15.update(GER_EVENTO);
+	}
+
 	// CRIAR
 	// FICHEIRO****************************************************************
 
@@ -928,7 +980,6 @@ public class SIIP {
 
 					double number2 = Double.parseDouble(parts2[0]) + (Double.parseDouble(parts2[1]) / 60)
 							+ (Double.parseDouble(parts2[2]) / 3600);
-
 
 					String parts_exec = String.format("%.4f", number2).replace(",", "");
 					String size = temp_exec + parts_exec;

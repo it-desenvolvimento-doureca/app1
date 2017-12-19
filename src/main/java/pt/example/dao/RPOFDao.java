@@ -18,7 +18,10 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 
 	public List<RP_OF_CAB> getall() {
 
-		Query query = entityManager.createQuery("Select a,b,c from RP_OF_CAB a, RP_OF_OP_CAB b,RP_OF_OP_FUNC c "
+		Query query = entityManager.createQuery("Select a,b,c, "
+				+ "(select count(d.ID_EVENTO) from GER_EVENTO d where d.ID_ORIGEM = a.ID_OF_CAB and d.CAMPO_ORIGEM= 'ID_OF_CAB' and d.ESTADO != 'A') as count_messages, "
+				+ "(select count(d.ID_EVENTO) from GER_EVENTO d where d.ID_ORIGEM = a.ID_OF_CAB and d.CAMPO_ORIGEM= 'ID_OF_CAB' and d.ESTADO = 'L') as estado "
+				+ "from RP_OF_CAB a, RP_OF_OP_CAB b,RP_OF_OP_FUNC c "
 				+ "where a.ID_UTZ_CRIA = c.ID_UTZ_CRIA and c.ID_OP_CAB=b.ID_OP_CAB and a.ID_OF_CAB = b.ID_OF_CAB and a.ID_OF_CAB_ORIGEM = null order by c.DATA_INI desc, c.HORA_INI desc ");
 		List<RP_OF_CAB> utz = query.getResultList();
 		return utz;
