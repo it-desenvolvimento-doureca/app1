@@ -8,9 +8,15 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -26,6 +32,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
+import pt.example.bootstrap.SendEmail;
 import pt.example.bootstrap.conf;
 import pt.example.dao.GER_EVENTODao;
 import pt.example.dao.RPCONFUTZPERFDao;
@@ -43,7 +50,9 @@ import pt.example.dao.RP_OF_OP_LINDao;
 import pt.example.dao.RP_OF_OUTRODEF_LINDao;
 import pt.example.dao.RP_OF_PARA_LINDao;
 import pt.example.dao.RP_OF_PREP_LINDao;
+import pt.example.entity.EMAIL;
 import pt.example.entity.GER_EVENTO;
+import pt.example.entity.GER_EVENTOS_CONF;
 import pt.example.entity.RP_CONF_CHEF_SEC;
 import pt.example.entity.RP_CONF_FAMILIA_COMP;
 import pt.example.entity.RP_CONF_OP;
@@ -814,7 +823,7 @@ public class SIIP {
 	@Path("/getGER_EVENTObyidOrigem/{id}/{campo}")
 	@Produces("application/json")
 	public List<GER_EVENTO> getGER_EVENTO_idOrigem(@PathParam("id") Integer id, @PathParam("campo") String campo) {
-		return dao15.getbyidOrigem(id,campo);
+		return dao15.getbyidOrigem(id, campo);
 	}
 
 	@GET
@@ -1341,6 +1350,106 @@ public class SIIP {
 
 			}
 		}
+	}
+
+	/* Email ************************************/
+	@POST
+	@Path("/sendemail")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public EMAIL sendemail(final EMAIL data) {
+
+		String mensagem = data.getMENSAGEM();
+
+		dadosmensagem(mensagem, "execucao");
+
+		SendEmail send = new SendEmail();
+		// send.enviarEmail(data.getDE(), data.getPARA(), data.getASSUNTO(),
+		// data.getMENSAGEM(), data.getNOME_FICHEIRO());
+		return data;
+
+	}
+
+	@POST
+	@Path("/verficaEventos")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public List<HashMap<String, String>> verficaEventos(final List<HashMap<String, String>> data) {
+		HashMap<String, String> firstMap = data.get(0);
+		Query query3 = entityManager.createQuery("Select a from GER_EVENTOS_CONF a where MODULO = "
+				+ firstMap.get("MODULO") + " and MOMENTO = '" + firstMap.get("MOMENTO") + "' " + "and PAGINA = '"
+				+ firstMap.get("PAGINA") + "' and ESTADO = " + firstMap.get("ESTADO") + "");
+		List<GER_EVENTOS_CONF> dados = query3.getResultList();
+
+		for (GER_EVENTOS_CONF borderTypes : dados) {
+
+			System.out.println(borderTypes.getEMAIL_ASSUNTO());
+			EMAIL email = new EMAIL();
+			email.setASSUNTO(borderTypes.getEMAIL_ASSUNTO());
+			email.setDE(borderTypes.getEMAIL_DE());
+			email.setMENSAGEM(borderTypes.getEMAIL_MENSAGEM());
+			email.setPARA(borderTypes.getEMAIL_PARA());
+
+			sendemail(email);
+		}
+
+		return data;
+	}
+
+	public Object getvalues(String campo, Object dd) {
+		// System.out.println(getvalues("EMAIL_ASSUNTO", borderTypes[0]));
+		try {
+			try {
+				return dd.getClass().getDeclaredField(campo).get(dd);
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} catch (NoSuchFieldException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+
+	}
+
+	public String dadosmensagem(String mensagem, String pagina) {
+
+		Map<String, String> results = new HashMap<String, String>();
+
+		Query query3 = entityManager.createQuery("Select a from GER_EVENTO a where ID_EVENTO = :id");
+		query3.setParameter("id", 3);
+
+		List<GER_EVENTO> dados = query3.getResultList();
+
+		for (GER_EVENTO borderTypes : dados) {
+
+			// System.out.println(borderTypes.getASSUNTO());
+			results.put("ASSUNTO", (borderTypes.getASSUNTO() == null) ? "" : borderTypes.getASSUNTO());
+			results.put("MENSAGEM", (borderTypes.getMENSAGEM() == null) ? "" : borderTypes.getMENSAGEM());
+		}
+
+		for (Entry<String, String> entry : results.entrySet()) {
+			mensagem = mensagem.replace("{" + entry.getKey() + "}", entry.getValue());
+		}
+
+		System.out.println(mensagem);
+
+		/*
+		 * ArrayList<String> campos = new ArrayList<String>(); Pattern p =
+		 * Pattern.compile(Pattern.quote("{") + "(.*?)" + Pattern.quote("}"));
+		 * Matcher m = p.matcher(mensagem); while (m.find()) { if
+		 * (!campos.contains(m.group(1))) { campos.add(m.group(1)); //
+		 * System.out.println(m.group(1)); } }
+		 */
+
+		return mensagem;
 	}
 
 }
