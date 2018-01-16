@@ -34,14 +34,15 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 				+ "SET @columns = N''; " + "SELECT @columns += N', p.' + QUOTENAME(COD_DEF) "
 				+ "FROM (select distinct COD_DEF from RP_OF_LST_DEF " + "where LEFT(COD_DEF,2) in (:data)) AS x; "
 				+ "SET @sql = N' "
-				+ "SELECT OF_NUM,ID_OF_CAB, ID_OF_CAB_ORIGEM,OF_NUM_ORIGEM,ID_OP_LIN,ID_REF_ETIQUETA,REF_ETIQUETA,NOME_UTZ_CRIA,REF_NUM,REF_DES,data, ' + STUFF(@columns, 1, 2, '') + ' "
-				+ "FROM " + "(select " + "f.QUANT_DEF,f.COD_DEF, "
-				+ "a.OF_NUM,a.ID_OF_CAB, a.ID_OF_CAB_ORIGEM,e.OF_NUM_ORIGEM,c.ID_OP_LIN,e.ID_REF_ETIQUETA,e.REF_ETIQUETA,a.NOME_UTZ_CRIA,c.REF_NUM,c.REF_DES,a.DATA_HORA_CRIA as data "
+				+ "SELECT OF_NUM,ID_OF_CAB, ID_OF_CAB_ORIGEM,OF_NUM_ORIGEM,ID_OP_LIN,ID_REF_ETIQUETA,REF_ETIQUETA,NOME_UTZ_CRIA,REF_NUM,REF_DES,data,OP_COD_ORIGEM,OP_DES,hora,data2, ' + STUFF(@columns, 1, 2, '') + ' "
+				+ "FROM " + "(select " + "f.QUANT_DEF_M2,f.COD_DEF, "
+				+ "a.OF_NUM,a.ID_OF_CAB, a.ID_OF_CAB_ORIGEM,e.OF_NUM_ORIGEM,c.ID_OP_LIN,e.ID_REF_ETIQUETA,e.REF_ETIQUETA,a.NOME_UTZ_CRIA,c.REF_NUM,c.REF_DES,g.DATA_INI_M2 as data, a.OP_COD_ORIGEM,a.OP_DES,g.HORA_INI_M2 as hora, a.DATA_HORA_CRIA as data2 "
 				+ "from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on a.ID_OF_CAB = b.ID_OF_CAB "
 				+ "inner join RP_OF_OP_LIN c on b.ID_OP_CAB = c.ID_OP_CAB "
 				+ "left join RP_OF_OP_ETIQUETA e on c.ID_OP_LIN = e.ID_OP_LIN "
+				+ "left join RP_OF_OP_FUNC g on g.ID_OP_CAB = (select top 1 x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB =a.ID_OF_CAB) "
 				+ "left join RP_OF_DEF_LIN f on c.ID_OP_LIN = f.ID_OP_LIN) AS j " + "PIVOT " + "( "
-				+ "SUM(QUANT_DEF) FOR COD_DEF IN (' + STUFF(REPLACE(@columns, ', p.[', ',['), 1, 1, '') + ') ) AS p  order by p.data;'; "
+				+ "SUM(QUANT_DEF_M2) FOR COD_DEF IN (' + STUFF(REPLACE(@columns, ', p.[', ',['), 1, 1, '') + ') ) AS p  order by p.data,hora;'; "
 				+ "PRINT @sql; " + "EXEC sp_executesql @sql;");
 		query.setParameter("data", data);
 		List<RP_OF_CAB> utz = query.getResultList();

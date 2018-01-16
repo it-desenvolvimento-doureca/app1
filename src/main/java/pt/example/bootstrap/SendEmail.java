@@ -60,15 +60,15 @@ public class SendEmail {
 			Multipart multipart = new MimeMultipart();
 			multipart.addBodyPart(messageBodyPart);
 			
-			MimeBodyPart attachPart = new MimeBodyPart();
-			conf pasta = new conf();
+			//MimeBodyPart attachPart = new MimeBodyPart();
+			//conf pasta = new conf();
 			
 			/*String filename = "/"+pasta.nomepasta+"/relatorios/"+nome_ficheiro+".pdf";
 			DataSource source = new FileDataSource(filename);			
 			attachPart.setDataHandler(new DataHandler(source));			
 			attachPart.setFileName("Report.pdf");*/
 			
-			multipart.addBodyPart(attachPart);
+			//multipart.addBodyPart(attachPart);
 			
 			message.setContent(multipart);
 			
