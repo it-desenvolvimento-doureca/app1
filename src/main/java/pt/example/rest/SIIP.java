@@ -903,7 +903,7 @@ public class SIIP {
 				if (estado.equals("M")) {
 
 					nome_ficheiro = "correcao" + data + inform_file + ".txt";
-					criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[2].toString(), id_origem, null, estado);
+					criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(), id_origem, null, estado);
 				}
 
 				nome_ficheiro = data + inform_file + ".txt";
@@ -1011,10 +1011,14 @@ public class SIIP {
 				sequencia = ("000000000" + val).substring(("000000000" + val).length() - 9,
 						("000000000" + val).length());
 			}
-			entityManager.createNativeQuery("UPDATE GER_SEQUENCIA_FICHEIRO SET NUMERO_SEQUENCIA = " + val+ " where DATA_SEQUENCIA = CONVERT (date, GETDATE())").executeUpdate();
+			entityManager.createNativeQuery("UPDATE GER_SEQUENCIA_FICHEIRO SET NUMERO_SEQUENCIA = " + val
+					+ " where DATA_SEQUENCIA = CONVERT (date, GETDATE())").executeUpdate();
 		} else {
 			sequencia = "000000001";
-			entityManager.createNativeQuery("INSERT INTO GER_SEQUENCIA_FICHEIRO (DATA_SEQUENCIA,NUMERO_SEQUENCIA) VALUES (GETDATE(),1)").executeUpdate();
+			entityManager
+					.createNativeQuery(
+							"INSERT INTO GER_SEQUENCIA_FICHEIRO (DATA_SEQUENCIA,NUMERO_SEQUENCIA) VALUES (GETDATE(),1)")
+					.executeUpdate();
 		}
 
 		try {
@@ -1028,10 +1032,10 @@ public class SIIP {
 							+ "CASE when (c.DATA_INI_M2 != c.DATA_INI_M1 or c.HORA_INI_M1 != c.HORA_INI_M2 or c.DATA_FIM_M2 != c.DATA_FIM_M1 or c.HORA_FIM_M1 != c.HORA_FIM_M2 or "
 							+ "b.TEMPO_EXEC_TOTAL_M1 != b.TEMPO_EXEC_TOTAL_M2 or b.TEMPO_PREP_TOTAL_M1 != b.TEMPO_PREP_TOTAL_M2  ) then 1 else 0 END as alterado "
 							+ " from RP_OF_CAB a "
-							+ "inner join RP_OF_OP_CAB b on  b.ID_OP_CAB = (select top 1 x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
+							+ "inner join RP_OF_OP_CAB b on  b.ID_OP_CAB in (select x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
 							+ id + ")"
 							+ "inner join RP_OF_OP_FUNC c on c.ID_OP_CAB in  (select x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
-							+ id_origem + ") " + "where a.ID_OF_CAB = " + id);
+							+ id_origem + ") and b.ID_OP_CAB = c.ID_OP_CAB " + "where a.ID_OF_CAB = " + id);
 
 			List<Object[]> dados = query.getResultList();
 
@@ -1134,7 +1138,6 @@ public class SIIP {
 
 					double number2 = Double.parseDouble(parts2[0]) + (Double.parseDouble(parts2[1]) / 60)
 							+ (Double.parseDouble(parts2[2]) / 3600);
-
 					String parts_exec = String.format("%.4f", number2).replace(",", "");
 					String size = temp_exec + parts_exec.replace("$", "0");
 					temp_exec = (size).substring(size.length() - 15, size.length());
@@ -1227,8 +1230,8 @@ public class SIIP {
 			}
 
 			String data3 = "";
-			if (estado.equals("M"))
-				data3 = " and (c.QUANT_BOAS_TOTAL_M1 != c.QUANT_BOAS_TOTAL_M2 or e.QUANT_BOAS_M1 != e.QUANT_BOAS_M2 )";
+
+			data3 = " ,CASE when (c.QUANT_BOAS_TOTAL_M1 != c.QUANT_BOAS_TOTAL_M2 or e.QUANT_BOAS_M1 != e.QUANT_BOAS_M2   ) then 1 else 0 END as alterado ";
 
 			Query query3 = entityManager.createNativeQuery(
 					"Select a.ID_OF_CAB_ORIGEM,a.OF_NUM,e.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,d."
@@ -1237,12 +1240,12 @@ public class SIIP {
 							+ " as decimal(18,4)) as qtd1,cast(e." + QUANT_BOAS + " as decimal(18,4)) as qtd2 "
 							+ ", a.OP_PREVISTA, c.OBS_REF, (select ID_TURNO from RP_CONF_TURNO where CAST( d."
 							+ HORA_INI + "  as time) between HORA_INICIO and HORA_FIM ) as turno, a.OP_COD_ORIGEM "
-							+ " from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
+							+ data3 + " from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
 							+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
 							+ "inner join RP_OF_OP_FUNC d on d.ID_OP_CAB = b.ID_OP_CAB and d.ID_OP_CAB in (select x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
 							+ id_origem + " ) " + "left join RP_OF_OP_ETIQUETA e on e.ID_OP_LIN = c.ID_OP_LIN "
 							+ "where a.ID_OF_CAB = " + id
-							+ " and (a.OF_NUM is not null or e.OF_NUM_ORIGEM is not null) " + data3);
+							+ " and (a.OF_NUM is not null or e.OF_NUM_ORIGEM is not null) ");
 
 			Query query3_COMP = entityManager.createNativeQuery(
 					"Select a.ID_OF_CAB_ORIGEM,a.OF_NUM,e.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,d."
@@ -1251,13 +1254,13 @@ public class SIIP {
 							+ " as decimal(18,4)) as qtd1,cast(e." + QUANT_BOAS + " as decimal(18,4)) as qtd2 "
 							+ ", a.OP_PREVISTA, c.OBS_REF, (select ID_TURNO from RP_CONF_TURNO where CAST( d."
 							+ HORA_INI + "  as time) between HORA_INICIO and HORA_FIM ) as turno,a.OP_COD_ORIGEM "
-							+ " from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
+							+ data3 + " from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
 							+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
 							+ "inner join RP_OF_OP_FUNC d on d.ID_OP_CAB = (select top 1 x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
 							+ id_origem + " ) " + "left join RP_OF_OP_ETIQUETA e on e.ID_OP_LIN = c.ID_OP_LIN "
 							+ "where a.ID_OF_CAB = " + id
 							+ " and (a.OF_NUM is not null or e.OF_NUM_ORIGEM is not null)  and e.ID_REF_ETIQUETA ="
-							+ id_etiqueta + data3);
+							+ id_etiqueta);
 
 			List<Object[]> dados3;
 
@@ -1268,14 +1271,14 @@ public class SIIP {
 			}
 
 			for (Object[] content3 : dados3) {
-				alteracoes = true;
+				// alteracoes = true;
 				String data_quantidades = "";
 
 				data_quantidades += "01        ";// Société
 				data_quantidades += data_atual; // Date suivi
 
 				data_quantidades += sequencia; // N° séquence
-				
+
 				if (content3[18].toString().equals("1") || estado.equals("M")) {
 					data_quantidades += "    ";// + Ligne de production
 				} else {
@@ -1391,7 +1394,18 @@ public class SIIP {
 
 				}
 
-				data_quantidades += quantidades + "  ";
+				if (estado.equals("M")) {
+					if (content3[22].toString().equals("0")) {
+						quantidades = "000000000000000";
+						data_quantidades += quantidades + "  ";
+					} else {
+						data_quantidades += quantidades + "  ";
+						alteracoes = true;
+					}
+
+				} else {
+					data_quantidades += quantidades + "  ";
+				}
 
 				data_quantidades += SINAL; // Signe
 				data_quantidades += "    "; // Unité
@@ -1416,8 +1430,14 @@ public class SIIP {
 
 			String data4 = "";
 
-			if (estado.equals("M"))
-				data4 = " and (d.QUANT_DEF_M1 != d.QUANT_DEF_M2) ";
+			if (estado.equals("M")) {
+				if (ficheiro == 1) {
+					data4 = " and (d.QUANT_DEF_M1 != d.QUANT_DEF_M2) ";
+				} else {
+					data4 = " and (d.QUANT_DEF_M1 != d.QUANT_DEF_M2 and d.QUANT_DEF_M2 != 0) ";
+				}
+
+			}
 
 			Query query4 = entityManager.createNativeQuery("Select d.COD_DEF,cast(d." + QUANT_DEF
 					+ " as decimal(18,4)),a.ID_OF_CAB_ORIGEM,a.OF_NUM,f.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,e."

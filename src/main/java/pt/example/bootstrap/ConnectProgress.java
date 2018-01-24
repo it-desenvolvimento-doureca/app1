@@ -490,13 +490,13 @@ public class ConnectProgress {
 
 	public List<HashMap<String, String>> getEtiqueta(String etiqueta,String url) throws SQLException {
 
-		String query = "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,a.INDNUMENR,a.VA1REF,a.VA2REF,a.INDREF,a.PROREF from SETQDE a "
-				+ "inner join SOFA b on b.ofnum = left(a.etqoridoc1,10) " + "where a.etqnum = '" + etiqueta
+		String query = "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,c.INDNUMENR,c.VA1REF,c.VA2REF,c.INDREF,c.PROREF from SETQDE a "
+				+ "inner join SOFA b on b.ofnum = left(a.etqoridoc1,10) inner join SOFB c on b.ofanumenr = c.ofanumenr" + " where a.etqnum = '" + etiqueta
 				+ "'";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
-		/// System.out.println(query);
+		 System.out.println(query);
 		// Usa sempre assim que fecha os resources automaticamente
 		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
