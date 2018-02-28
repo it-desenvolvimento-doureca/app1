@@ -30,6 +30,16 @@ public class RP_OF_PARA_LINDao extends GenericDaoJpaImpl<RP_OF_PARA_LIN,Integer>
 
 	}
 	
+	public List<RP_OF_PARA_LIN> getbyallUser(Integer id,String user) {
+
+		Query query = entityManager.createQuery("Select a from RP_OF_PARA_LIN a where a.ID_OP_CAB = :id and a.ID_UTZ_CRIA = :user ");
+		query.setParameter("id", id);
+		query.setParameter("user",user);
+		List<RP_OF_PARA_LIN> utz = query.getResultList();
+		return utz;
+
+	}
+	
 	public List<RP_OF_PARA_LIN> getbyid_op_cab(Integer id) {
 
 		Query query = entityManager.createQuery("Select a from RP_OF_PARA_LIN a where a.ID_OP_CAB = :id and a.ESTADO NOT IN ('C')");

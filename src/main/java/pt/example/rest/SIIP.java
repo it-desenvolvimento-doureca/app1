@@ -566,6 +566,13 @@ public class SIIP {
 	}
 
 	@GET
+	@Path("/getbyallUSER/{id}/{user}")
+	@Produces("application/json")
+	public List<RP_OF_PARA_LIN> getbyallUSER(@PathParam("id") Integer id, @PathParam("user") String user) {
+		return dao9.getbyallUser(id, user);
+	}
+
+	@GET
 	@Path("/getbyidRP_OF_PARA_LIN/{id}")
 	@Produces("application/json")
 	public List<RP_OF_PARA_LIN> getbyidRP_OF_PARA_LIN(@PathParam("id") Integer id) {
@@ -900,15 +907,19 @@ public class SIIP {
 			if (content[1] == null) {
 				Integer id_origem = Integer.parseInt(content[0].toString());
 				inform_file = content[2].toString() + "_PF";
+				String inform_file2 = content[2].toString() + "_PAUSA";
 				if (estado.equals("M")) {
 
 					nome_ficheiro = "correcao" + data + inform_file + ".txt";
-					criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(), id_origem, null, estado);
+					criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(), id_origem, null, estado,
+							null);
 				}
 
 				nome_ficheiro = data + inform_file + ".txt";
-				criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null, estado);
-
+				criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null, estado,
+						data + inform_file2);
+				criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null, "P",
+						data + inform_file2);
 				// se for COMP verifica se exitem etiquetas para o comp e cria
 				// ficheiro
 			} else {
@@ -933,12 +944,12 @@ public class SIIP {
 
 						nome_ficheiro = "correcao" + data + inform_file + ".txt";
 						criarFicheiro(id_of_cab, 1, nome_ficheiro, "COMP", content2[0].toString(), id_origem, etiqueta,
-								estado);
+								estado, null);
 					}
 
 					nome_ficheiro = data + inform_file + ".txt";
 					criarFicheiro(id_of_cab, 2, nome_ficheiro, "COMP", content2[0].toString(), id_origem, etiqueta,
-							estado);
+							estado, null);
 				}
 				if (dados2.size() > 0)
 					comp_num++;
@@ -948,7 +959,8 @@ public class SIIP {
 	}
 
 	public void criarFicheiro(Integer id, Integer ficheiro, String nome_ficheiro, String tipo, String of,
-			Integer id_origem, Integer id_etiqueta, String estado) throws IOException, ParseException {
+			Integer id_origem, Integer id_etiqueta, String estado, String nome_ficheiro2)
+			throws IOException, ParseException {
 		String DATA_INI, HORA_INI, DATA_FIM, HORA_FIM, SINAL, QUANT_BOAS_TOTAL, QUANT_BOAS, QUANT_DEF, TEMPO_PREP_TOTAL,
 				TEMPO_EXEC_TOTAL = "";
 
@@ -983,14 +995,17 @@ public class SIIP {
 		SimpleDateFormat formate = new SimpleDateFormat("yyyyMMdd");
 		String data_atual = formate.format(new Date());
 		FileWriter fw = null;
-		String sequencia = "";
+		String sequencia = "000000000";
 		String path = "";
+		String path2 = "";
 		String data = "";
 		String data_maquina = "";
 		boolean existe_maquina = false;
 		boolean lider = true;
 		boolean primeira_linha = true;
 		String data_inicio = "";
+		HashMap<String, String> linha_utz = new HashMap<String, String>();
+		HashMap<String, String> linha_utz_inicio = new HashMap<String, String>();
 
 		Query query_folder = entityManager.createNativeQuery("select top 1 * from GER_PARAMETROS a");
 
@@ -998,28 +1013,10 @@ public class SIIP {
 
 		for (Object[] content : dados_folder) {
 			path = content[1] + nome_ficheiro;
+			path2 = content[1] + nome_ficheiro2;
 		}
 
-		Query query_seq = entityManager.createNativeQuery(
-				"select top 1 NUMERO_SEQUENCIA,DATA_SEQUENCIA from GER_SEQUENCIA_FICHEIRO where DATA_SEQUENCIA = CONVERT (date, GETDATE())");
-
-		List<Object[]> dados_seq = query_seq.getResultList();
-		if (dados_seq.size() > 0) {
-			Integer val = 1;
-			for (Object[] contentseq : dados_seq) {
-				val = Integer.parseInt(contentseq[0].toString()) + 1;
-				sequencia = ("000000000" + val).substring(("000000000" + val).length() - 9,
-						("000000000" + val).length());
-			}
-			entityManager.createNativeQuery("UPDATE GER_SEQUENCIA_FICHEIRO SET NUMERO_SEQUENCIA = " + val
-					+ " where DATA_SEQUENCIA = CONVERT (date, GETDATE())").executeUpdate();
-		} else {
-			sequencia = "000000001";
-			entityManager
-					.createNativeQuery(
-							"INSERT INTO GER_SEQUENCIA_FICHEIRO (DATA_SEQUENCIA,NUMERO_SEQUENCIA) VALUES (GETDATE(),1)")
-					.executeUpdate();
-		}
+		if(!estado.equals("P")) sequencia = sequencia();
 
 		try {
 
@@ -1033,77 +1030,78 @@ public class SIIP {
 							+ "b.TEMPO_EXEC_TOTAL_M1 != b.TEMPO_EXEC_TOTAL_M2 or b.TEMPO_PREP_TOTAL_M1 != b.TEMPO_PREP_TOTAL_M2  ) then 1 else 0 END as alterado "
 							+ " from RP_OF_CAB a "
 							+ "inner join RP_OF_OP_CAB b on  b.ID_OP_CAB in (select x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
-							+ id + ")"
+							+ id_origem + ")"
 							+ "inner join RP_OF_OP_FUNC c on c.ID_OP_CAB in  (select x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
 							+ id_origem + ") and b.ID_OP_CAB = c.ID_OP_CAB " + "where a.ID_OF_CAB = " + id);
 
 			List<Object[]> dados = query.getResultList();
 
 			for (Object[] content : dados) {
+				String data_A ="";
 				// System.out.println(content[0]);
-				data += "01        ";// Société
-				data += data_atual; // Date suivi
-				data += sequencia; // N° séquence
+				data_A += "01        ";// Société
+				data_A += data_atual; // Date suivi
+				data_A += sequencia; // N° séquence
 				if (content[11].toString().equals("1") || estado.equals("M")) {
-					data += "    ";// + Ligne de production
+					data_A += "    ";// + Ligne de production
 				} else {
-					data += (content[12] + "    ").substring(0, 4);// + Ligne de
+					data_A += (content[12] + "    ").substring(0, 4);// + Ligne de
 																	// production
 				}
 
-				data += "1";// Type N° OF
-				data += (of + "         ").substring(0, 10); // N° OF
+				data_A += "1";// Type N° OF
+				data_A += (of + "         ").substring(0, 10); // N° OF
 
 				if (estado.equals("M")) {
-					data += "1";// Type opération
+					data_A += "1";// Type opération
 				} else {
-					data += content[11];// Type opération
+					data_A += content[11];// Type opération
 				}
 
 				if (content[11].toString().equals("1")) {
-					data += ("0000" + content[2]).substring(("0000" + content[2]).length() - 4,
+					data_A += ("0000" + content[2]).substring(("0000" + content[2]).length() - 4,
 							("0000" + content[2]).length()); // N° Opération
 				} else {
-					data += ("    ").substring(0, 4);// N° Opération
+					data_A += ("    ").substring(0, 4);// N° Opération
 				}
 
 				// if (!content[4].toString().equals("000")) {
 				if (content[4].toString().equals("000")) {
 					if (primeira_linha) {
-						data += "1";// Position ( S12 )
+						data_A += "1";// Position ( S12 )
 						primeira_linha = false;
 					} else {
-						data += "2";// Position ( S12 )
+						data_A += "2";// Position ( S12 )
 					}
 				} else {
-					data += "2";// Position ( S12 )
+					data_A += "2";// Position ( S12 )
 				}
 
-				data += (content[3] + "         ").substring(0, 10);// Code
+				data_A += (content[3] + "         ").substring(0, 10);// Code
 																	// section
-				data += (content[4] + "         ").substring(0, 10); // Code
+				data_A += (content[4] + "         ").substring(0, 10); // Code
 																		// sous-section
 				if (content[13] != null) {
-					data += content[13]; // N° d'équipe
+					data_A += content[13]; // N° d'équipe
 				} else {
-					data += "01";
+					data_A += "01";
 				}
 
 				// Type de ressource
-				data += ("MO" + "         ").substring(0, 4);
+				data_A += ("MO" + "         ").substring(0, 4);
 
 				// Code ressource
-				data += (content[1] + "         ").substring(0, 10);
+				data_A += (content[1] + "         ").substring(0, 10);
 
-				data += "   A"; // N° établissement + Type d'élément A
-				data += content[5].toString().replaceAll("-", ""); // Date début
-				data += content[6].toString().replace(":", "").substring(0, 6); // Heure
+				data_A += "   A"; // N° établissement + Type d'élément A
+				data_A += content[5].toString().replaceAll("-", ""); // Date début
+				data_A += content[6].toString().replace(":", "").substring(0, 6); // Heure
 																				// début
-				data += content[7].toString().replaceAll("-", ""); // Date
+				data_A += content[7].toString().replaceAll("-", ""); // Date
 																	// fin
-				data += content[8].toString().replace(":", "").substring(0, 6); // Heure
+				data_A += content[8].toString().replace(":", "").substring(0, 6); // Heure
 																				// fin
-				data += "04002"; // Nombre de postes + Origine temps prépa.
+				data_A += "04002"; // Nombre de postes + Origine temps prépa.
 
 				// Temps de préparation
 
@@ -1118,18 +1116,18 @@ public class SIIP {
 					temp_pre = (size).substring(size.length() - 15, size.length());
 				}
 
-				if (tipo.equals("PF") && !estado.equals("M")) {
-					data += temp_pre;
+				if (tipo.equals("PF") && !estado.equals("M") && !estado.equals("P")) {
+					data_A += temp_pre;
 
-				} else if (tipo.equals("PF") && content[14].toString().equals("1")) {
-					data += temp_pre;
+				} else if (tipo.equals("PF") && content[14].toString().equals("1") && !estado.equals("P")) {
+					data_A += temp_pre;
 					alteracoes = true;
 				} else {
-					data += "000000000000000";
+					data_A += "000000000000000";
 				}
 
-				data += SINAL; // Signe
-				data += "22"; // Arrêts compris + Origine temps exécution
+				data_A += SINAL; // Signe
+				data_A += "22"; // Arrêts compris + Origine temps exécution
 
 				// Temps d'exécution
 				String temp_exec = "000000000000000";
@@ -1142,49 +1140,58 @@ public class SIIP {
 					String size = temp_exec + parts_exec.replace("$", "0");
 					temp_exec = (size).substring(size.length() - 15, size.length());
 				}
-				if (tipo.equals("PF") && !estado.equals("M")) {
-					data += temp_exec;
-				} else if (tipo.equals("PF") && content[14].toString().equals("1")) {
-					data += temp_exec;
+				if (tipo.equals("PF") && !estado.equals("M") && !estado.equals("P")) {
+					data_A += temp_exec;
+				} else if (tipo.equals("PF") && content[14].toString().equals("1") && !estado.equals("P")) {
+					data_A += temp_exec;
 				} else {
-					data += "000000000000000";
+					data_A += "000000000000000";
 				}
 
-				data += SINAL; // Signe
-				data += "22         \r\n"; // Arrêts compris + Etat opération +
+				data_A += SINAL; // Signe
+				data_A += "22         \r\n"; // Arrêts compris + Etat opération +
 											// N°lot Vérif
 				if (lider) {
 					if (!content[4].toString().equals("000")) {
 						// System.out.println(content[4]);
 						existe_maquina = true;
-						StringBuffer buf = new StringBuffer(data);
+						StringBuffer buf = new StringBuffer(data_A);
 						buf.replace(70, 84, "              ");
 						buf.replace(47, 48, "1");
 						data_maquina = buf.toString();
 						lider = false;
 					}
-					data_inicio = data.substring(0, 87);
+					data_inicio = data_A.substring(0, 87);
+				}
+				data +=data_A;
+				if(estado.equals("P")){
+					linha_utz.put(content[1].toString(), data_A);
+					linha_utz_inicio.put(content[1].toString(), data_A.substring(0, 87));
 				}
 
 			}
 
-			if (existe_maquina && tipo.equals("PF")) {
+			if (existe_maquina && tipo.equals("PF") && !estado.equals("P")) {
 				data_maquina += data;
 				data = data_maquina;
 			}
 
-			if (tipo.equals("PF") && !estado.equals("M")) {
+			// PAUSA
+			if (estado.equals("P")) {
+				
 				Query query2 = entityManager.createNativeQuery("select c.DATA_INI,c.HORA_INI,c.DATA_FIM,c.HORA_FIM, "
 						+ "cast((DATEDIFF(second,DATEADD(DAY, DATEDIFF(DAY, c.HORA_INI, c.DATA_INI ), CAST(c.HORA_INI AS DATETIME)), DATEADD(DAY, DATEDIFF(DAY, c.HORA_FIM, c.DATA_FIM ), CAST(c.HORA_FIM AS DATETIME)))/3600.00) as decimal(18,4)) as timediff, "
-						+ "c.TIPO_PARAGEM,c.MOMENTO_PARAGEM from RP_OF_CAB a "
+						+ "c.TIPO_PARAGEM,c.MOMENTO_PARAGEM,c.ID_UTZ_CRIA as utz1,a.ID_UTZ_CRIA as utz2 from RP_OF_CAB a "
 						+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
 						+ "inner join RP_OF_PARA_LIN c on c.ID_OP_CAB = b.ID_OP_CAB " + "where a.ID_OF_CAB = " + id);
 
 				List<Object[]> dados2 = query2.getResultList();
 
+				Integer count = 0;
 				for (Object[] content2 : dados2) {
-
+					count++;
 					String data_pausa = "";
+					String data_pausa_p = "";
 					data_pausa += "B"; // Type d'élément B
 					data_pausa += content2[0].toString().replaceAll("-", ""); // Date
 					// début
@@ -1223,394 +1230,434 @@ public class SIIP {
 					data_pausa += SINAL; // Signe
 					data_pausa += "                                       \r\n"; // Texte
 																					// libre
-					if (existe_maquina && tipo.equals("PF"))
-						data += data_maquina.substring(0, 87) + data_pausa;
-					data += data_inicio + data_pausa;
+
+					String seq = sequencia();
+					
+					StringBuffer buf3 = new StringBuffer(linha_utz.get(content2[7].toString()));
+					buf3.replace(18, 27, seq);
+					String linha3 = buf3.toString();
+					data_pausa_p += linha3;
+					if(existe_maquina){
+						StringBuffer buf6 = new StringBuffer(data_maquina);
+						buf6.replace(18, 27, seq);
+						String linha6 = buf6.toString();
+						data_pausa_p += linha6;
+					}
+					
+					if (existe_maquina && tipo.equals("PF") && (content2[7].toString().equals(content2[8].toString()))) {
+						StringBuffer buf2 = new StringBuffer(data_maquina);
+						buf2.replace(18, 27, seq);
+						String linha2 = buf2.toString();
+						data_pausa_p += linha2.substring(0, 87) + data_pausa;
+						
+						
+					}
+					StringBuffer buf = new StringBuffer(linha_utz_inicio.get(content2[7].toString()));
+					buf.replace(18, 27, seq);
+					String linha = buf.toString();
+					data_pausa_p += linha + data_pausa;
+
+					criar_ficheiro_Pausa(data_pausa_p, path2, count);
+
 				}
 			}
 
-			String data3 = "";
+			if (!estado.equals("P")) {
+				String data3 = "";
 
-			data3 = " ,CASE when (c.QUANT_BOAS_TOTAL_M1 != c.QUANT_BOAS_TOTAL_M2 or e.QUANT_BOAS_M1 != e.QUANT_BOAS_M2   ) then 1 else 0 END as alterado ";
+				data3 = " ,CASE when (c.QUANT_BOAS_TOTAL_M1 != c.QUANT_BOAS_TOTAL_M2 or e.QUANT_BOAS_M1 != e.QUANT_BOAS_M2   ) then 1 else 0 END as alterado ";
 
-			Query query3 = entityManager.createNativeQuery(
-					"Select a.ID_OF_CAB_ORIGEM,a.OF_NUM,e.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,d."
-							+ DATA_INI + ",d." + HORA_INI + ",d." + DATA_FIM + ",d." + HORA_FIM
-							+ ",d.ID_UTZ_CRIA,c.REF_IND,cast(c." + QUANT_BOAS_TOTAL
-							+ " as decimal(18,4)) as qtd1,cast(e." + QUANT_BOAS + " as decimal(18,4)) as qtd2 "
-							+ ", a.OP_PREVISTA, c.OBS_REF, (select ID_TURNO from RP_CONF_TURNO where CAST( d."
-							+ HORA_INI + "  as time) between HORA_INICIO and HORA_FIM ) as turno, a.OP_COD_ORIGEM "
-							+ data3 + " from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
-							+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
-							+ "inner join RP_OF_OP_FUNC d on d.ID_OP_CAB = b.ID_OP_CAB and d.ID_OP_CAB in (select x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
-							+ id_origem + " ) " + "left join RP_OF_OP_ETIQUETA e on e.ID_OP_LIN = c.ID_OP_LIN "
-							+ "where a.ID_OF_CAB = " + id
-							+ " and (a.OF_NUM is not null or e.OF_NUM_ORIGEM is not null) ");
+				Query query3 = entityManager.createNativeQuery(
+						"Select a.ID_OF_CAB_ORIGEM,a.OF_NUM,e.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,d."
+								+ DATA_INI + ",d." + HORA_INI + ",d." + DATA_FIM + ",d." + HORA_FIM
+								+ ",d.ID_UTZ_CRIA,c.REF_IND,cast(c." + QUANT_BOAS_TOTAL
+								+ " as decimal(18,4)) as qtd1,cast(e." + QUANT_BOAS + " as decimal(18,4)) as qtd2 "
+								+ ", a.OP_PREVISTA, c.OBS_REF, (select ID_TURNO from RP_CONF_TURNO where CAST( d."
+								+ HORA_INI + "  as time) between HORA_INICIO and HORA_FIM ) as turno, a.OP_COD_ORIGEM "
+								+ data3 + " from RP_OF_CAB a "
+								+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
+								+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
+								+ "inner join RP_OF_OP_FUNC d on d.ID_OP_CAB = b.ID_OP_CAB and d.ID_OP_CAB in (select x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
+								+ id_origem + " ) " + "left join RP_OF_OP_ETIQUETA e on e.ID_OP_LIN = c.ID_OP_LIN "
+								+ "where a.ID_OF_CAB = " + id
+								+ " and (a.OF_NUM is not null or e.OF_NUM_ORIGEM is not null) ");
 
-			Query query3_COMP = entityManager.createNativeQuery(
-					"Select a.ID_OF_CAB_ORIGEM,a.OF_NUM,e.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,d."
-							+ DATA_INI + ",d." + HORA_INI + ",d." + DATA_FIM + ",d." + HORA_FIM
-							+ ",d.ID_UTZ_CRIA,c.REF_IND,cast(c." + QUANT_BOAS_TOTAL
-							+ " as decimal(18,4)) as qtd1,cast(e." + QUANT_BOAS + " as decimal(18,4)) as qtd2 "
-							+ ", a.OP_PREVISTA, c.OBS_REF, (select ID_TURNO from RP_CONF_TURNO where CAST( d."
-							+ HORA_INI + "  as time) between HORA_INICIO and HORA_FIM ) as turno,a.OP_COD_ORIGEM "
-							+ data3 + " from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
-							+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
-							+ "inner join RP_OF_OP_FUNC d on d.ID_OP_CAB = (select top 1 x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
-							+ id_origem + " ) " + "left join RP_OF_OP_ETIQUETA e on e.ID_OP_LIN = c.ID_OP_LIN "
-							+ "where a.ID_OF_CAB = " + id
-							+ " and (a.OF_NUM is not null or e.OF_NUM_ORIGEM is not null)  and e.ID_REF_ETIQUETA ="
-							+ id_etiqueta);
+				Query query3_COMP = entityManager.createNativeQuery(
+						"Select a.ID_OF_CAB_ORIGEM,a.OF_NUM,e.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,d."
+								+ DATA_INI + ",d." + HORA_INI + ",d." + DATA_FIM + ",d." + HORA_FIM
+								+ ",d.ID_UTZ_CRIA,c.REF_IND,cast(c." + QUANT_BOAS_TOTAL
+								+ " as decimal(18,4)) as qtd1,cast(e." + QUANT_BOAS + " as decimal(18,4)) as qtd2 "
+								+ ", a.OP_PREVISTA, c.OBS_REF, (select ID_TURNO from RP_CONF_TURNO where CAST( d."
+								+ HORA_INI + "  as time) between HORA_INICIO and HORA_FIM ) as turno,a.OP_COD_ORIGEM "
+								+ data3 + " from RP_OF_CAB a "
+								+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
+								+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
+								+ "inner join RP_OF_OP_FUNC d on d.ID_OP_CAB = (select top 1 x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
+								+ id_origem + " ) " + "left join RP_OF_OP_ETIQUETA e on e.ID_OP_LIN = c.ID_OP_LIN "
+								+ "where a.ID_OF_CAB = " + id
+								+ " and (a.OF_NUM is not null or e.OF_NUM_ORIGEM is not null)  and e.ID_REF_ETIQUETA ="
+								+ id_etiqueta);
 
-			List<Object[]> dados3;
+				List<Object[]> dados3;
 
-			if (tipo.equals("COMP")) {
-				dados3 = query3_COMP.getResultList();
-			} else {
-				dados3 = query3.getResultList();
-			}
-
-			for (Object[] content3 : dados3) {
-				// alteracoes = true;
-				String data_quantidades = "";
-
-				data_quantidades += "01        ";// Société
-				data_quantidades += data_atual; // Date suivi
-
-				data_quantidades += sequencia; // N° séquence
-
-				if (content3[18].toString().equals("1") || estado.equals("M")) {
-					data_quantidades += "    ";// + Ligne de production
+				if (tipo.equals("COMP")) {
+					dados3 = query3_COMP.getResultList();
 				} else {
-					data_quantidades += (content3[21] + "    ").substring(0, 4);// +
-																				// Ligne
-																				// de
-					// production
+					dados3 = query3.getResultList();
 				}
 
-				data_quantidades += "1";// Type N° OF
+				for (Object[] content3 : dados3) {
+					// alteracoes = true;
+					String data_quantidades = "";
 
-				if (content3[0] == null) {
-					data_quantidades += (content3[1] + "         ").substring(0, 10); // N°
-																						// OF
-				} else {
-					data_quantidades += (content3[2] + "         ").substring(0, 10); // N°
-																						// OF
-				}
+					data_quantidades += "01        ";// Société
+					data_quantidades += data_atual; // Date suivi
 
-				if (estado.equals("M")) {
-					data_quantidades += "1";// Type opération
-				} else {
-					data_quantidades += content3[18];// Type opération
-				}
+					data_quantidades += sequencia; // N° séquence
 
-				if (content3[18].toString().equals("1")) {
-					data_quantidades += ("0000" + content3[3]).substring(("0000" + content3[3]).length() - 4,
-							("0000" + content3[3]).length()); // N° Opération
-				} else {
-					data_quantidades += ("    ").substring(0, 4);// N° Opération
-				}
+					if (content3[18].toString().equals("1") || estado.equals("M")) {
+						data_quantidades += "    ";// + Ligne de production
+					} else {
+						data_quantidades += (content3[21] + "    ").substring(0, 4);// +
+																					// Ligne
+																					// de
+						// production
+					}
 
-				data_quantidades += "1";// Position ( S12 )
+					data_quantidades += "1";// Type N° OF
 
-				data_quantidades += (content3[9] + "         ").substring(0, 10);// Code
-				// section
-				data_quantidades += (content3[8] + "         ").substring(0, 10); // Code
-				// sous-section
+					if (content3[0] == null) {
+						data_quantidades += (content3[1] + "         ").substring(0, 10); // N°
+																							// OF
+					} else {
+						data_quantidades += (content3[2] + "         ").substring(0, 10); // N°
+																							// OF
+					}
 
-				if (content3[20] != null) {
-					data_quantidades += content3[20]; // N° d'équipe
-				} else {
-					data_quantidades += "01";
-				}
+					if (estado.equals("M")) {
+						data_quantidades += "1";// Type opération
+					} else {
+						data_quantidades += content3[18];// Type opération
+					}
 
-				// Type de ressource
-				if (content3[0] == null) {
-					if (content3[8].toString().equals("000")) {
+					if (content3[18].toString().equals("1")) {
+						data_quantidades += ("0000" + content3[3]).substring(("0000" + content3[3]).length() - 4,
+								("0000" + content3[3]).length()); // N°
+																	// Opération
+					} else {
+						data_quantidades += ("    ").substring(0, 4);// N°
+																		// Opération
+					}
+
+					data_quantidades += "1";// Position ( S12 )
+
+					data_quantidades += (content3[9] + "         ").substring(0, 10);// Code
+					// section
+					data_quantidades += (content3[8] + "         ").substring(0, 10); // Code
+					// sous-section
+
+					if (content3[20] != null) {
+						data_quantidades += content3[20]; // N° d'équipe
+					} else {
+						data_quantidades += "01";
+					}
+
+					// Type de ressource
+					if (content3[0] == null) {
+						if (content3[8].toString().equals("000")) {
+							data_quantidades += ("MO" + "         ").substring(0, 4);
+						} else {
+							data_quantidades += "    ";
+						}
+					} else {
 						data_quantidades += ("MO" + "         ").substring(0, 4);
-					} else {
-						data_quantidades += "    ";
 					}
-				} else {
-					data_quantidades += ("MO" + "         ").substring(0, 4);
-				}
 
-				// Code ressource
-				if (content3[0] == null) {
-					if (content3[8].toString().equals("000")) {
+					// Code ressource
+					if (content3[0] == null) {
+						if (content3[8].toString().equals("000")) {
+							data_quantidades += (content3[14] + "         ").substring(0, 10);
+						} else {
+							data_quantidades += "          ";
+						}
+					} else {
 						data_quantidades += (content3[14] + "         ").substring(0, 10);
+					}
+
+					data_quantidades += "   Q"; // N° établissement + Type
+												// d'élément
+												// Q
+
+					data_quantidades += content3[10].toString().replaceAll("-", ""); // Date
+																						// début
+					data_quantidades += content3[11].toString().replace(":", "").substring(0, 6); // Heure
+					// début
+					data_quantidades += content3[12].toString().replaceAll("-", ""); // Date
+					// fin
+					data_quantidades += content3[13].toString().replace(":", "").substring(0, 6); // Heure
+					// fin
+
+					// Référence produit
+					data_quantidades += (content3[4] + "                 ").substring(0, 17);
+					// Variante (1)
+					data_quantidades += (content3[5] + "                 ").substring(0, 10);
+					// Variante (2)
+					data_quantidades += (content3[6] + "                 ").substring(0, 10);
+					// Indice produit
+					data_quantidades += (content3[15] + "                 ").substring(0, 10);
+					// N° enreg. Produit
+					if (content3[7] != null) {
+						data_quantidades += ("000000000" + content3[7]).substring(
+								("000000000" + content3[7]).length() - 9, ("000000000" + content3[7]).length());
 					} else {
-						data_quantidades += "          ";
-					}
-				} else {
-					data_quantidades += (content3[14] + "         ").substring(0, 10);
-				}
-
-				data_quantidades += "   Q"; // N° établissement + Type d'élément
-											// Q
-
-				data_quantidades += content3[10].toString().replaceAll("-", ""); // Date
-																					// début
-				data_quantidades += content3[11].toString().replace(":", "").substring(0, 6); // Heure
-				// début
-				data_quantidades += content3[12].toString().replaceAll("-", ""); // Date
-				// fin
-				data_quantidades += content3[13].toString().replace(":", "").substring(0, 6); // Heure
-				// fin
-
-				// Référence produit
-				data_quantidades += (content3[4] + "                 ").substring(0, 17);
-				// Variante (1)
-				data_quantidades += (content3[5] + "                 ").substring(0, 10);
-				// Variante (2)
-				data_quantidades += (content3[6] + "                 ").substring(0, 10);
-				// Indice produit
-				data_quantidades += (content3[15] + "                 ").substring(0, 10);
-				// N° enreg. Produit
-				if (content3[7] != null) {
-					data_quantidades += ("000000000" + content3[7]).substring(("000000000" + content3[7]).length() - 9,
-							("000000000" + content3[7]).length());
-				} else {
-					data_quantidades += "000000000";
-				}
-
-				data_quantidades += "1";// PType quantité
-
-				// Quantité bonne
-				String quantidades = "000000000000000";
-
-				if (content3[0] == null) {
-					if (content3[16] != null) {
-						String parts = content3[16].toString().replace(".", "");
-						String size = quantidades + parts;
-						quantidades = (size).substring(size.length() - 15, size.length());
-					}
-				} else {
-					if (content3[17] != null) {
-						String parts = content3[17].toString().replace(".", "");
-						String size = quantidades + parts;
-						quantidades = (size).substring(size.length() - 15, size.length());
+						data_quantidades += "000000000";
 					}
 
+					data_quantidades += "1";// PType quantité
+
+					// Quantité bonne
+					String quantidades = "000000000000000";
+
+					if (content3[0] == null) {
+						if (content3[16] != null) {
+							String parts = content3[16].toString().replace(".", "");
+							String size = quantidades + parts;
+							quantidades = (size).substring(size.length() - 15, size.length());
+						}
+					} else {
+						if (content3[17] != null) {
+							String parts = content3[17].toString().replace(".", "");
+							String size = quantidades + parts;
+							quantidades = (size).substring(size.length() - 15, size.length());
+						}
+
+					}
+
+					if (estado.equals("M")) {
+						if (content3[22].toString().equals("0")) {
+							quantidades = "000000000000000";
+							data_quantidades += quantidades + "  ";
+						} else {
+							data_quantidades += quantidades + "  ";
+							alteracoes = true;
+						}
+
+					} else {
+						data_quantidades += quantidades + "  ";
+					}
+
+					data_quantidades += SINAL; // Signe
+					data_quantidades += "    "; // Unité
+					data_quantidades += "000000000000000"; // Qté bonne (US2)
+					// N° d'étiquette suivie + N° enreg. étiquette + Lieu (
+					// entrée )
+					// + Emplacement ( entrée ) +
+					// Référence du lot ( entrée ) + N° d'étiquette ( entrée )
+					// +Texte libre
+					data_quantidades += "                                                                                    ";
+					String obs = (content3[19] != null) ? content3[19].toString() : "";
+
+					data_quantidades += (obs + "                                        ").substring(0, 39);
+					data_quantidades += "\r\n";
+					data += data_quantidades;
+					/*
+					 * StringBuffer buf = new StringBuffer(data_quantidades);
+					 * buf.replace(70, 84, "              "); data_maquina =
+					 * buf.toString(); data += data_maquina;
+					 */
+
 				}
+			}
+
+			if (!estado.equals("P")) {
+
+				String data4 = "";
 
 				if (estado.equals("M")) {
-					if (content3[22].toString().equals("0")) {
-						quantidades = "000000000000000";
-						data_quantidades += quantidades + "  ";
+					if (ficheiro == 1) {
+						data4 = " and (d.QUANT_DEF_M1 != d.QUANT_DEF_M2) ";
 					} else {
-						data_quantidades += quantidades + "  ";
-						alteracoes = true;
+						data4 = " and (d.QUANT_DEF_M1 != d.QUANT_DEF_M2 and d.QUANT_DEF_M2 != 0) ";
 					}
 
-				} else {
-					data_quantidades += quantidades + "  ";
 				}
 
-				data_quantidades += SINAL; // Signe
-				data_quantidades += "    "; // Unité
-				data_quantidades += "000000000000000"; // Qté bonne (US2)
-				// N° d'étiquette suivie + N° enreg. étiquette + Lieu ( entrée )
-				// + Emplacement ( entrée ) +
-				// Référence du lot ( entrée ) + N° d'étiquette ( entrée )
-				// +Texte libre
-				data_quantidades += "                                                                                    ";
-				String obs = (content3[19] != null) ? content3[19].toString() : "";
+				Query query4 = entityManager.createNativeQuery("Select d.COD_DEF,cast(d." + QUANT_DEF
+						+ " as decimal(18,4)),a.ID_OF_CAB_ORIGEM,a.OF_NUM,f.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,e."
+						+ DATA_INI + ",e." + HORA_INI + ",e." + DATA_FIM + ",e." + HORA_FIM + ", "
+						+ "d.ID_UTZ_CRIA,c.REF_IND,c." + QUANT_BOAS_TOTAL + ",f." + QUANT_BOAS + " ,d.OBS_DEF "
+						+ ", a.OP_PREVISTA , (select ID_TURNO from RP_CONF_TURNO where CAST( e." + HORA_INI
+						+ "  as time) between HORA_INICIO and HORA_FIM ) as turno,a.OP_COD_ORIGEM "
+						+ "from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
+						+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
+						+ "inner join RP_OF_DEF_LIN d on d.ID_OP_LIN = c.ID_OP_LIN "
+						+ "inner join RP_OF_OP_FUNC e on e.ID_OP_CAB = (select top 1 x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
+						+ id_origem + " ) "
+						+ "left join RP_OF_OP_ETIQUETA f on f.ID_OP_LIN = c.ID_OP_LIN and f.ID_REF_ETIQUETA = d.ID_REF_ETIQUETA "
+						+ "where a.ID_OF_CAB = " + id + data4 + " order by c.REF_NUM,d.COD_DEF");
 
-				data_quantidades += (obs + "                                        ").substring(0, 39);
-				data_quantidades += "\r\n";
-				data += data_quantidades;
-				/*
-				 * StringBuffer buf = new StringBuffer(data_quantidades);
-				 * buf.replace(70, 84, "              "); data_maquina =
-				 * buf.toString(); data += data_maquina;
-				 */
+				Query query4_COMP = entityManager.createNativeQuery("Select d.COD_DEF,cast(d." + QUANT_DEF
+						+ " as decimal(18,4)),a.ID_OF_CAB_ORIGEM,a.OF_NUM,f.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,e."
+						+ DATA_INI + ",e." + HORA_INI + ",e." + DATA_FIM + ",e." + HORA_FIM + ", "
+						+ "d.ID_UTZ_CRIA,c.REF_IND,c." + QUANT_BOAS_TOTAL + ",f." + QUANT_BOAS + " ,d.OBS_DEF "
+						+ ", a.OP_PREVISTA , (select ID_TURNO from RP_CONF_TURNO where CAST( e." + HORA_INI
+						+ "  as time) between HORA_INICIO and HORA_FIM ) as turno, a.OP_COD_ORIGEM  "
+						+ "from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
+						+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
+						+ "inner join RP_OF_DEF_LIN d on d.ID_OP_LIN = c.ID_OP_LIN "
+						+ "inner join RP_OF_OP_FUNC e on e.ID_OP_CAB = (select top 1 x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
+						+ id_origem + " ) "
+						+ "left join RP_OF_OP_ETIQUETA f on f.ID_OP_LIN = c.ID_OP_LIN and f.ID_REF_ETIQUETA = d.ID_REF_ETIQUETA "
+						+ "where a.ID_OF_CAB = " + id + data4 + " and d.ID_REF_ETIQUETA = " + id_etiqueta
+						+ " order by c.REF_NUM,d.COD_DEF");
 
-			}
+				List<Object[]> dados4;
 
-			String data4 = "";
-
-			if (estado.equals("M")) {
-				if (ficheiro == 1) {
-					data4 = " and (d.QUANT_DEF_M1 != d.QUANT_DEF_M2) ";
+				if (tipo.equals("COMP")) {
+					dados4 = query4_COMP.getResultList();
 				} else {
-					data4 = " and (d.QUANT_DEF_M1 != d.QUANT_DEF_M2 and d.QUANT_DEF_M2 != 0) ";
+					dados4 = query4.getResultList();
 				}
 
-			}
+				for (Object[] content4 : dados4) {
+					alteracoes = true;
+					String data_defeitos = "";
+					data_defeitos += "01        ";// Société
+					data_defeitos += data_atual; // Date suivi
 
-			Query query4 = entityManager.createNativeQuery("Select d.COD_DEF,cast(d." + QUANT_DEF
-					+ " as decimal(18,4)),a.ID_OF_CAB_ORIGEM,a.OF_NUM,f.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,e."
-					+ DATA_INI + ",e." + HORA_INI + ",e." + DATA_FIM + ",e." + HORA_FIM + ", "
-					+ "d.ID_UTZ_CRIA,c.REF_IND,c." + QUANT_BOAS_TOTAL + ",f." + QUANT_BOAS + " ,d.OBS_DEF "
-					+ ", a.OP_PREVISTA , (select ID_TURNO from RP_CONF_TURNO where CAST( e." + HORA_INI
-					+ "  as time) between HORA_INICIO and HORA_FIM ) as turno,a.OP_COD_ORIGEM " + "from RP_OF_CAB a "
-					+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
-					+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
-					+ "inner join RP_OF_DEF_LIN d on d.ID_OP_LIN = c.ID_OP_LIN "
-					+ "inner join RP_OF_OP_FUNC e on e.ID_OP_CAB = (select top 1 x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
-					+ id_origem + " ) "
-					+ "left join RP_OF_OP_ETIQUETA f on f.ID_OP_LIN = c.ID_OP_LIN and f.ID_REF_ETIQUETA = d.ID_REF_ETIQUETA "
-					+ "where a.ID_OF_CAB = " + id + data4 + " order by c.REF_NUM,d.COD_DEF");
+					data_defeitos += sequencia; // N° séquence
+					if (content4[21].toString().equals("1") || estado.equals("M")) {
+						data_defeitos += "    ";// + Ligne de production
+					} else {
+						data_defeitos += (content4[23] + "    ").substring(0, 4);// +
+																					// Ligne
+																					// de
+						// production
+					}
+					data_defeitos += "1";// Type N° OF
 
-			Query query4_COMP = entityManager.createNativeQuery("Select d.COD_DEF,cast(d." + QUANT_DEF
-					+ " as decimal(18,4)),a.ID_OF_CAB_ORIGEM,a.OF_NUM,f.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,e."
-					+ DATA_INI + ",e." + HORA_INI + ",e." + DATA_FIM + ",e." + HORA_FIM + ", "
-					+ "d.ID_UTZ_CRIA,c.REF_IND,c." + QUANT_BOAS_TOTAL + ",f." + QUANT_BOAS + " ,d.OBS_DEF "
-					+ ", a.OP_PREVISTA , (select ID_TURNO from RP_CONF_TURNO where CAST( e." + HORA_INI
-					+ "  as time) between HORA_INICIO and HORA_FIM ) as turno, a.OP_COD_ORIGEM  " + "from RP_OF_CAB a "
-					+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
-					+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
-					+ "inner join RP_OF_DEF_LIN d on d.ID_OP_LIN = c.ID_OP_LIN "
-					+ "inner join RP_OF_OP_FUNC e on e.ID_OP_CAB = (select top 1 x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
-					+ id_origem + " ) "
-					+ "left join RP_OF_OP_ETIQUETA f on f.ID_OP_LIN = c.ID_OP_LIN and f.ID_REF_ETIQUETA = d.ID_REF_ETIQUETA "
-					+ "where a.ID_OF_CAB = " + id + data4 + " and d.ID_REF_ETIQUETA = " + id_etiqueta
-					+ " order by c.REF_NUM,d.COD_DEF");
+					if (content4[2] == null) {
+						data_defeitos += (content4[3] + "         ").substring(0, 10); // N°
+																						// OF
+					} else {
+						data_defeitos += (content4[4] + "         ").substring(0, 10); // N°
+																						// OF
+					}
 
-			List<Object[]> dados4;
+					if (estado.equals("M")) {
+						data_defeitos += "1";// Type opération
+					} else {
+						data_defeitos += content4[21];// Type opération
+					}
 
-			if (tipo.equals("COMP")) {
-				dados4 = query4_COMP.getResultList();
-			} else {
-				dados4 = query4.getResultList();
-			}
+					if (content4[21].toString().equals("1")) {
+						data_defeitos += ("0000" + content4[5]).substring(("0000" + content4[5]).length() - 4,
+								("0000" + content4[5]).length()); // N°
+																	// Opération
 
-			for (Object[] content4 : dados4) {
-				alteracoes = true;
-				String data_defeitos = "";
-				data_defeitos += "01        ";// Société
-				data_defeitos += data_atual; // Date suivi
+					} else {
+						data_defeitos += ("    ").substring(0, 4);// N°
+																	// Opération
+					}
 
-				data_defeitos += sequencia; // N° séquence
-				if (content4[21].toString().equals("1") || estado.equals("M")) {
-					data_defeitos += "    ";// + Ligne de production
-				} else {
-					data_defeitos += (content4[23] + "    ").substring(0, 4);// +
-																				// Ligne
-																				// de
-					// production
-				}
-				data_defeitos += "1";// Type N° OF
+					data_defeitos += "1";// Position ( S12 )
 
-				if (content4[2] == null) {
-					data_defeitos += (content4[3] + "         ").substring(0, 10); // N°
-																					// OF
-				} else {
-					data_defeitos += (content4[4] + "         ").substring(0, 10); // N°
-																					// OF
-				}
+					data_defeitos += (content4[11] + "         ").substring(0, 10);// Code
+					// section
+					data_defeitos += (content4[10] + "         ").substring(0, 10); // Code
+					// sous-section
+					if (content4[22] != null) {
+						data_defeitos += content4[22]; // N° d'équipe
+					} else {
+						data_defeitos += "01";
+					}
 
-				if (estado.equals("M")) {
-					data_defeitos += "1";// Type opération
-				} else {
-					data_defeitos += content4[21];// Type opération
-				}
-
-				if (content4[21].toString().equals("1")) {
-					data_defeitos += ("0000" + content4[5]).substring(("0000" + content4[5]).length() - 4,
-							("0000" + content4[5]).length()); // N° Opération
-
-				} else {
-					data_defeitos += ("    ").substring(0, 4);// N° Opération
-				}
-
-				data_defeitos += "1";// Position ( S12 )
-
-				data_defeitos += (content4[11] + "         ").substring(0, 10);// Code
-				// section
-				data_defeitos += (content4[10] + "         ").substring(0, 10); // Code
-				// sous-section
-				if (content4[22] != null) {
-					data_defeitos += content4[22]; // N° d'équipe
-				} else {
-					data_defeitos += "01";
-				}
-
-				// Type de ressource
-				if (content4[2] == null) {
-					if (content4[10].toString().equals("000")) {
+					// Type de ressource
+					if (content4[2] == null) {
+						if (content4[10].toString().equals("000")) {
+							data_defeitos += ("MO" + "         ").substring(0, 4);
+						} else {
+							data_defeitos += "    ";
+						}
+					} else {
 						data_defeitos += ("MO" + "         ").substring(0, 4);
-					} else {
-						data_defeitos += "    ";
 					}
-				} else {
-					data_defeitos += ("MO" + "         ").substring(0, 4);
-				}
 
-				// Code ressource
-				if (content4[2] == null) {
-					if (content4[10].toString().equals("000")) {
+					// Code ressource
+					if (content4[2] == null) {
+						if (content4[10].toString().equals("000")) {
+							data_defeitos += (content4[16] + "         ").substring(0, 10);
+						} else {
+							data_defeitos += "          ";
+						}
+					} else {
 						data_defeitos += (content4[16] + "         ").substring(0, 10);
-					} else {
-						data_defeitos += "          ";
 					}
-				} else {
-					data_defeitos += (content4[16] + "         ").substring(0, 10);
+
+					data_defeitos += "   R"; // N° établissement + Type
+												// d'élément Q
+
+					data_defeitos += content4[12].toString().replaceAll("-", ""); // Date
+																					// début
+					data_defeitos += content4[13].toString().replace(":", "").substring(0, 6); // Heure
+					// début
+					data_defeitos += content4[14].toString().replaceAll("-", ""); // Date
+					// fin
+					data_defeitos += content4[15].toString().replace(":", "").substring(0, 6); // Heure
+					// fin
+
+					// Référence produit
+					data_defeitos += (content4[6] + "                 ").substring(0, 17);
+					// Variante (1)
+					data_defeitos += (content4[7] + "                 ").substring(0, 10);
+					// Variante (2)
+					data_defeitos += (content4[8] + "                 ").substring(0, 10);
+					// Indice produit
+					data_defeitos += (content4[17] + "                 ").substring(0, 10);
+					// N° enreg. Produit
+					if (content4[9] != null) {
+						data_defeitos += ("000000000" + content4[9]).substring(("000000000" + content4[9]).length() - 9,
+								("000000000" + content4[9]).length());
+					} else {
+						data_defeitos += "000000000";
+					}
+
+					// Code rebut
+					data_defeitos += (content4[0] + "    ").substring(0, 4);
+
+					data_defeitos += "1"; // Type quantité
+
+					// Quantité rebutée
+					String quantidades = "000000000000000";
+
+					if (content4[1] != null) {
+						String parts = content4[1].toString().replace(".", "");
+						String size = quantidades + parts;
+						quantidades = (size).substring(size.length() - 15, size.length());
+					}
+
+					data_defeitos += quantidades + "  ";
+
+					data_defeitos += SINAL; // Signe
+					data_defeitos += "                                                                                                       ";
+					String obs = (content4[20] != null) ? content4[20].toString() : "";
+
+					data_defeitos += (obs + "                                        ").substring(0, 39); // Texte
+																											// libre
+					data_defeitos += "\r\n";
+					data += data_defeitos;
+					/*
+					 * StringBuffer buf = new StringBuffer(data_defeitos);
+					 * buf.replace(70, 84, "              "); data_maquina =
+					 * buf.toString(); data += data_maquina;
+					 */
 				}
-
-				data_defeitos += "   R"; // N° établissement + Type d'élément Q
-
-				data_defeitos += content4[12].toString().replaceAll("-", ""); // Date
-																				// début
-				data_defeitos += content4[13].toString().replace(":", "").substring(0, 6); // Heure
-				// début
-				data_defeitos += content4[14].toString().replaceAll("-", ""); // Date
-				// fin
-				data_defeitos += content4[15].toString().replace(":", "").substring(0, 6); // Heure
-				// fin
-
-				// Référence produit
-				data_defeitos += (content4[6] + "                 ").substring(0, 17);
-				// Variante (1)
-				data_defeitos += (content4[7] + "                 ").substring(0, 10);
-				// Variante (2)
-				data_defeitos += (content4[8] + "                 ").substring(0, 10);
-				// Indice produit
-				data_defeitos += (content4[17] + "                 ").substring(0, 10);
-				// N° enreg. Produit
-				if (content4[9] != null) {
-					data_defeitos += ("000000000" + content4[9]).substring(("000000000" + content4[9]).length() - 9,
-							("000000000" + content4[9]).length());
-				} else {
-					data_defeitos += "000000000";
-				}
-
-				// Code rebut
-				data_defeitos += (content4[0] + "    ").substring(0, 4);
-
-				data_defeitos += "1"; // Type quantité
-
-				// Quantité rebutée
-				String quantidades = "000000000000000";
-
-				if (content4[1] != null) {
-					String parts = content4[1].toString().replace(".", "");
-					String size = quantidades + parts;
-					quantidades = (size).substring(size.length() - 15, size.length());
-				}
-
-				data_defeitos += quantidades + "  ";
-
-				data_defeitos += SINAL; // Signe
-				data_defeitos += "                                                                                                       ";
-				String obs = (content4[20] != null) ? content4[20].toString() : "";
-
-				data_defeitos += (obs + "                                        ").substring(0, 39); // Texte
-																										// libre
-				data_defeitos += "\r\n";
-				data += data_defeitos;
-				/*
-				 * StringBuffer buf = new StringBuffer(data_defeitos);
-				 * buf.replace(70, 84, "              "); data_maquina =
-				 * buf.toString(); data += data_maquina;
-				 */
 			}
 
 			/// String data = "Campo1: \r\n" + "Campo2:\r\n" + "Campo3:\r\n" +
 			/// "Campo4:";
 
-			if (!estado.equals("M")) {
+			if (!estado.equals("M") && !estado.equals("P") ) {
 				File file = new File(path);
 
 				// if file doesnt exists, then create it
@@ -1622,7 +1669,7 @@ public class SIIP {
 				bw = new BufferedWriter(fw);
 
 				bw.write(data);
-			} else if (estado.equals("M") && alteracoes) {
+			} else if (estado.equals("M") && alteracoes && !estado.equals("P")) {
 				File file = new File(path);
 
 				// if file doesnt exists, then create it
@@ -1646,11 +1693,12 @@ public class SIIP {
 
 			try {
 
-				if (bw != null)
+				if (bw != null) {
 					bw.close();
-
-				if (fw != null)
+				}
+				if (fw != null) {
 					fw.close();
+				}
 
 			} catch (IOException ex) {
 
@@ -1658,6 +1706,81 @@ public class SIIP {
 
 			}
 		}
+	}
+
+	public void criar_ficheiro_Pausa(String data, String path2, Integer count) {
+		File file2 = new File(path2 + "_" + count + ".txt");
+
+		// if file doesnt exists, then create it
+
+		try {
+			file2.createNewFile();
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		BufferedWriter bw2 = null;
+		FileWriter fw2 = null;
+		// true = append file
+		try {
+			fw2 = new FileWriter(file2.getAbsoluteFile(), true);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		bw2 = new BufferedWriter(fw2);
+		try {
+			bw2.write(data);
+			if (bw2 != null) {
+				bw2.close();
+			}
+			if (fw2 != null) {
+				fw2.close();
+			}
+		} catch (IOException e) {
+			if (bw2 != null) {
+				try {
+					bw2.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			if (fw2 != null) {
+				try {
+					fw2.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			e.printStackTrace();
+		}
+	}
+
+	public String sequencia() {
+		String sequencia = "000000000";
+		Query query_seq = entityManager.createNativeQuery(
+				"select top 1 NUMERO_SEQUENCIA,DATA_SEQUENCIA from GER_SEQUENCIA_FICHEIRO where DATA_SEQUENCIA = CONVERT (date, GETDATE())");
+
+		List<Object[]> dados_seq = query_seq.getResultList();
+		if (dados_seq.size() > 0) {
+			Integer val = 1;
+			for (Object[] contentseq : dados_seq) {
+				val = Integer.parseInt(contentseq[0].toString()) + 1;
+				sequencia = ("000000000" + val).substring(("000000000" + val).length() - 9,
+						("000000000" + val).length());
+			}
+			entityManager.createNativeQuery("UPDATE GER_SEQUENCIA_FICHEIRO SET NUMERO_SEQUENCIA = " + val
+					+ " where DATA_SEQUENCIA = CONVERT (date, GETDATE())").executeUpdate();
+		} else {
+			sequencia = "000000001";
+			entityManager
+					.createNativeQuery(
+							"INSERT INTO GER_SEQUENCIA_FICHEIRO (DATA_SEQUENCIA,NUMERO_SEQUENCIA) VALUES (GETDATE(),1)")
+					.executeUpdate();
+		}
+		return sequencia;
 	}
 
 	/* Email ************************************/
