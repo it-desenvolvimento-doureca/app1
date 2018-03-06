@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.persistence.Query;
+
 public class ConnectProgress {
 
 	private static final String QUERY = "select * from SOFA where utimod= 'recep1'";
@@ -458,7 +460,7 @@ public class ConnectProgress {
 
 	public List<HashMap<String, String>> getOPtop1(String ofanumenr,String url) throws SQLException {
 
-		String query = "select top 1 * from SOFD a where ofanumenr= '" + ofanumenr
+		String query = "select * from SOFD a where ofanumenr= '" + ofanumenr
 				+ "' and OPECOD != '' order by a.OPENUM desc";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
@@ -616,5 +618,45 @@ public class ConnectProgress {
 		}
 		return list;
 	}
+	
+	
+	public String GetOP_NUM(String RESCOD,String DATDEB,String PROREF,String OFNUM,String OPECOD,String url,String HEUDEB) throws SQLException {
+
+		/*String query ="SELECT d.OPENUM	"
+				+ "FROM SCPSVQ a	"
+				+ "INNER JOIN SCPSVA b ON a.svanumenr = b.svanumenr	"
+				+ "INNER JOIN SOFA c ON b.svanumenr = c.ofanumenr "
+				+ "INNER JOIN SOFD d ON d.OFANUMENR = c.ofanumenr "
+				+ "INNER JOIN SOFB e ON d.OFANUMENR = e.ofanumenr "
+				+ "WHERE b.rescod ='"+RESCOD+"' AND b.DATDEB='"+DATDEB+"'	"
+				+ "AND e.PROREF ='"+PROREF+"' AND c.OFNUM='"+OFNUM+"' AND d.OPECOD='"+OPECOD+"'";*/
+		String query = "SELECT b.OPENUM FROM SCPSVA	a "
+				+ "INNER JOIN SOFD b ON a.OFANUMENR = b.OFANUMENR "
+				+ " INNER JOIN SOFA c ON a.ofanumenr = c.ofanumenr "
+				+ "INNER JOIN SOFB e ON c.OFANUMENR = e.ofanumenr "
+				+ "WHERE a.rescod ='"+RESCOD+"' AND a.DATDEB='"+DATDEB+"'	and a.HEUDEB ='"+HEUDEB.substring(0, 8)+"' "
+				+ " AND e.PROREF ='"+PROREF+"' AND c.OFNUM='"+OFNUM+"' AND b.OPECOD='"+OPECOD+"'";
+		String val = null;
+
+		// Usa sempre assim que fecha os resources automaticamente
+		try (Connection connection = getConnection(url);
+				Statement stmt = connection.createStatement();
+				ResultSet rs = stmt.executeQuery(query)) {
+			while (rs.next()) {
+				// parser das operações
+				val = rs.getString("OPENUM");
+			}
+			stmt.close();
+			rs.close();
+			connection.close();
+			globalconnection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			globalconnection.close();
+		}
+		return val;
+	}
+
 
 }
