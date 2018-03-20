@@ -114,19 +114,23 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 				+ "where a.ID_UTZ_CRIA = c.ID_UTZ_CRIA and c.ID_OP_CAB=b.ID_OP_CAB and a.ID_OF_CAB = b.ID_OF_CAB and"
 				+ "	a.ID_OF_CAB in( "
 				+ "	select f.ID_OF_CAB from RP_OF_OP_CAB f,RP_OF_OP_LIN c where f.ID_OP_CAB = c.ID_OP_CAB and  "
-				+ "						(((not :design_ref != null) or (c.REF_DES like :design_ref)) and "
-				+ "						((not :ref != null) or (c.REF_NUM like :ref)) )" + "	) "
+				+ "			(((not :design_ref != null) or (c.REF_DES like :design_ref)) and "
+				+ "			((not :ref != null) or (c.REF_NUM like :ref)) and "
+				+ "			((not '" + firstMap.get("qtt") + "' != 'null') or (c.QUANT_BOAS_TOTAL_M2 >=  '" + firstMap.get("qtt") + "')) and ((not '" + firstMap.get("qttmenor") + "' != 'null') or (c.QUANT_BOAS_TOTAL_M2 <= '" + firstMap.get("qttmenor") + "'))) " 
+				+ "	) "
 				+ "and a.ID_OF_CAB in("
 				+ "select h.ID_OF_CAB from RP_OF_OP_CAB h,RP_OF_OP_FUNC e where h.ID_OP_CAB = e.ID_OP_CAB and "
 				+ "((not :date3 != null) or (e.DATA_INI <= :date3)) and ((not :date1 !=  null) or (e.DATA_INI >= :date1)) and "
 				+ "((not :date4 != null) or (e.DATA_FIM <= :date4)) and ((not :date2 != null) or (e.DATA_FIM >= :date2)) and "
+				+ "((not '" + firstMap.get("estado") + "' != 'null') or (e.ESTADO like '" + firstMap.get("estado") + "')) and "
+				+ "((not '" + firstMap.get("tempo_prod_maior") + "' != 'null') or (h.TEMPO_EXEC_TOTAL_M2 >=  '" + firstMap.get("tempo_prod_maior") + "')) and ((not '" + firstMap.get("tempo_prod_menor") + "' != 'null') or (h.TEMPO_EXEC_TOTAL_M2 <= '" + firstMap.get("tempo_prod_menor") + "')) and "
 				+ "((not '" + firstMap.get("hora4") + "' != 'null') or (e.HORA_FIM <= '" + firstMap.get("hora4")
 				+ "')) and ((not '" + firstMap.get("hora2") + "' != 'null') or (e.HORA_FIM >= '" + firstMap.get("hora2")
 				+ "')) and " + "((not '" + firstMap.get("hora3") + "' != 'null') or (e.HORA_INI <= '"
 				+ firstMap.get("hora3") + "')) and ((not '" + firstMap.get("hora1") + "' != 'null') or (e.HORA_INI >= '"
 				+ firstMap.get("hora1") + "')) and "
-				+ "((not :func != null) or (e.NOME_UTZ_CRIA like :func))) and ((not :ordem != null) or (a.OF_NUM like :ordem)) and "
-				+ "((not :operacao != null) or (a.OP_NUM like :operacao)) and ((not :maquina != null) or (a.MAQ_NUM like :maquina)) and"
+				+ "((not :func != null) or (e.NOME_UTZ_CRIA like :func) or (e.ID_UTZ_CRIA like :func))) and ((not :ordem != null) or (a.OF_NUM like :ordem)) and "
+				+ "((not :operacao != null) or (a.OP_COD_ORIGEM like :operacao)) and ((not :maquina != null) or (a.MAQ_NUM like :maquina)) and"
 				+ " a.ID_OF_CAB_ORIGEM = null  order by c.DATA_INI desc, c.HORA_INI desc");
 
 		// query.setParameter("estado", '%'+firstMap.get("estado")+'%');

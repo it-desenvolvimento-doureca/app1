@@ -629,13 +629,19 @@ public class ConnectProgress {
 				+ "INNER JOIN SOFD d ON d.OFANUMENR = c.ofanumenr "
 				+ "INNER JOIN SOFB e ON d.OFANUMENR = e.ofanumenr "
 				+ "WHERE b.rescod ='"+RESCOD+"' AND b.DATDEB='"+DATDEB+"'	"
-				+ "AND e.PROREF ='"+PROREF+"' AND c.OFNUM='"+OFNUM+"' AND d.OPECOD='"+OPECOD+"'";*/
-		String query = "SELECT b.OPENUM FROM SCPSVA	a "
+				+ "AND e.PROREF ='"+PROREF+"' AND c.OFNUM='"+OFNUM+"' AND d.OPECOD='"+OPECOD+"'";
+		String query = "SELECT top 1 b.OPENUM FROM SCPSVA	a "
 				+ "INNER JOIN SOFD b ON a.OFANUMENR = b.OFANUMENR "
 				+ " INNER JOIN SOFA c ON a.ofanumenr = c.ofanumenr "
 				+ "INNER JOIN SOFB e ON c.OFANUMENR = e.ofanumenr "
 				+ "WHERE a.rescod ='"+RESCOD+"' AND a.DATDEB='"+DATDEB+"'	and a.HEUDEB ='"+HEUDEB.substring(0, 8)+"' "
-				+ " AND e.PROREF ='"+PROREF+"' AND c.OFNUM='"+OFNUM+"' AND b.OPECOD='"+OPECOD+"'";
+				+ " AND e.PROREF ='"+PROREF+"' AND c.OFNUM='"+OFNUM+"' AND b.OPECOD='"+OPECOD+"' order by b.OPENUM desc";*/
+		String query = "SELECT SOFD.OPENUM FROM SCPSVA "
+				+ "INNER JOIN SOFD ON SCPSVA.ofdnumenr = SOFD.ofdnumenr "
+				+ "INNER JOIN SOFA ON SOFD.ofanumenr = SOFA.ofanumenr "
+				+ "INNER JOIN SOFB ON SOFB.ofanumenr = SOFA.ofanumenr "
+				+ "WHERE SCPSVA.rescod = '"+RESCOD+"' AND SCPSVA.datdeb = '"+DATDEB+"' AND SCPSVA.heudeb = '"+HEUDEB.substring(0, 8)+"' AND SOFB.proref = '"+PROREF+"' "
+				+ "AND SOFA.ofnum = '"+OFNUM+"' AND SOFD.opecod = '"+OPECOD+"' ";
 		String val = null;
 
 		// Usa sempre assim que fecha os resources automaticamente
