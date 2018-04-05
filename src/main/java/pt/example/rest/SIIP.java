@@ -173,6 +173,14 @@ public class SIIP {
 	public List<RP_CONF_CHEF_SEC> getRP_CONF_CHEF_SEC() {
 		return dao2.allEntries();
 	}
+	
+	@GET
+	@Path("/getRP_CONF_CHEF_SECbyidUSER/{id}")
+	@Produces("application/json")
+	public List<RP_CONF_CHEF_SEC> getRP_CONF_CHEF_SECbyID(@PathParam("id") String id) {
+		return dao2.getallbyid(id);
+	}
+	
 
 	@DELETE
 	@Path("/deleteRP_CONF_CHEF_SEC/{id}")
@@ -259,11 +267,12 @@ public class SIIP {
 
 	// RP_OF_CAB***********************************************************
 
-	@GET
+	@POST
 	@Path("/getRP_OF_CAB")
+	@Consumes("*/*")
 	@Produces("application/json")
-	public List<RP_OF_CAB> listof() {
-		return dao.getall();
+	public List<RP_OF_CAB> listof(final String data) {
+		return dao.getall(data);
 	}
 
 	@POST

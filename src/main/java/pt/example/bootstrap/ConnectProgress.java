@@ -109,7 +109,7 @@ public class ConnectProgress {
 
 	public List<HashMap<String, String>> getOP(String ofanumenr,String url) throws SQLException {
 
-		String query = "select OPECOD,OPENUM,OPEDES,SECNUMENR1 from SOFD where ofanumenr= '" + ofanumenr + "'";
+		String query = "select OPECOD,OPENUM,OPEDES,SECNUMENR1 from SOFD where ofanumenr= '" + ofanumenr + "' order by OPENUM";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
