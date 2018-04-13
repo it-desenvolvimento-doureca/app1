@@ -1023,6 +1023,7 @@ public class SIIP {
 			for (Object[] content : dados) {
 				String inform_file = "";
 				Boolean pausa = true;
+				Integer total = 1;
 				// se for PF cria ficheiro (se o estado for modificação cria 2)
 				if (content[1] == null) {
 					Integer id_origem = Integer.parseInt(content[0].toString());
@@ -1030,6 +1031,7 @@ public class SIIP {
 							"select ID_OP_LIN,REF_NUM from RP_OF_OP_LIN where ID_OP_CAB in (select xx.ID_OP_CAB from RP_OF_OP_CAB xx where xx.ID_OF_CAB = "
 									+ id_origem + ")");
 					List<Object[]> dados3 = query3.getResultList();
+					total = dados3.size();
 					for (Object[] content3 : dados3) {
 
 						inform_file = content[2].toString() + "_" + content3[1].toString() + "_PF";
@@ -1043,16 +1045,16 @@ public class SIIP {
 							if (OPNUM == null)
 								OPNUM = (content[4] == null) ? "NULL" : content[4].toString();
 							criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
-									estado, null, OPNUM, content3[0].toString(), false);
+									estado, null, OPNUM, content3[0].toString(), false,total);
 						} else {
 							criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
-									"P", data + inform_file2, OPNUM, content3[0].toString(), pausa);
+									"P", data + inform_file2, OPNUM, content3[0].toString(), pausa,total);
 							pausa = false;
 						}
 
 						nome_ficheiro = data + inform_file + ".txt";
 						criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null, estado,
-								data + inform_file2, OPNUM, content3[0].toString(), false);
+								data + inform_file2, OPNUM, content3[0].toString(), false,total);
 
 						// se for COMP verifica se exitem etiquetas para o comp
 						// e cria
@@ -1082,12 +1084,12 @@ public class SIIP {
 							if (OPNUM == null)
 								OPNUM = (content2[3] == null) ? "NULL" : content2[3].toString();
 							criarFicheiro(id_of_cab, 1, nome_ficheiro, "COMP", content2[0].toString(), id_origem,
-									etiqueta, estado, null, OPNUM, content2[4].toString(), false);
+									etiqueta, estado, null, OPNUM, content2[4].toString(), false,1);
 						}
 
 						nome_ficheiro = data + inform_file + ".txt";
 						criarFicheiro(id_of_cab, 2, nome_ficheiro, "COMP", content2[0].toString(), id_origem, etiqueta,
-								estado, null, OPNUM, content2[4].toString(), false);
+								estado, null, OPNUM, content2[4].toString(), false,1);
 					}
 					if (dados2.size() > 0)
 						comp_num++;
@@ -1101,7 +1103,7 @@ public class SIIP {
 
 	public void criarFicheiro(Integer id, Integer ficheiro, String nome_ficheiro, String tipo, String of,
 			Integer id_origem, Integer id_etiqueta, String estado, String nome_ficheiro2, String OP_NUM,
-			String ID_OP_LIN, Boolean cria_pausa) throws IOException, ParseException {
+			String ID_OP_LIN, Boolean cria_pausa,Integer total) throws IOException, ParseException {
 
 		String DATA_INI, HORA_INI, DATA_FIM, HORA_FIM, SINAL, QUANT_BOAS_TOTAL, QUANT_BOAS, QUANT_DEF, TEMPO_PREP_TOTAL,
 				TEMPO_EXEC_TOTAL = "";
@@ -1269,8 +1271,9 @@ public class SIIP {
 
 					double number = Double.parseDouble(parts[0]) + (Double.parseDouble(parts[1]) / 60)
 							+ (Double.parseDouble(parts[2]) / 3600);
+					number= number/total;
 					String parts_prep = String.format("%.4f", number).replace(",", "");
-					String size = temp_pre + parts_prep.replace("$", "0");
+					String size = temp_pre + parts_prep.replace("$", "");
 					temp_pre = (size).substring(size.length() - 15, size.length());
 				}
 
@@ -1294,8 +1297,9 @@ public class SIIP {
 
 					double number2 = Double.parseDouble(parts2[0]) + (Double.parseDouble(parts2[1]) / 60)
 							+ (Double.parseDouble(parts2[2]) / 3600);
+					number2= number2/total;
 					String parts_exec = String.format("%.4f", number2).replace(",", "");
-					String size = temp_exec + parts_exec.replace("$", "0");
+					String size = temp_exec + parts_exec.replace("$", "");
 					temp_exec = (size).substring(size.length() - 15, size.length());
 				}
 				if (tipo.equals("PF") && !estado.equals("M") && !estado.equals("P")) {
