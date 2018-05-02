@@ -33,7 +33,6 @@
 			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/it2/Downloads/jdbc.jar"/>
 	<classpathentry kind="lib" path="C:/Users/it2/Downloads/openedge.jar"/>
 	<classpathentry kind="lib" path="C:/Users/it2/wildfly-10.0.0.Final/modules/system/layers/base/javax/persistence/api/main/hibernate-jpa-2.1-api-1.0.0.Final.jar"/>
 	<classpathentry kind="lib" path="src/main/webapp/WEB-INF/lib/openedge.jar"/>
