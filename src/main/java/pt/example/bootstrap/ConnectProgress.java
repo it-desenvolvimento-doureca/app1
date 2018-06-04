@@ -355,7 +355,7 @@ public class ConnectProgress {
 	public List<HashMap<String, String>> getfilhos(String pai,String url) throws SQLException {
 
 		String query = "select b.PROREF,b.PRODES1,b.PRODES2,a.PROREFCST,b.PRDFAMCOD from SDTNCL a "
-				+ "inner join SDTPRA b on a.PROREFCST = b.PROREF  " + " where a.PROREFCSE ='" + pai + "'";
+				+ "inner join SDTPRA b on a.PROREFCST = b.PROREF  " + " where a.PROREFCSE ='" + pai + "' and  b.PROTYPCOD != 'COM'";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
@@ -421,7 +421,7 @@ public class ConnectProgress {
 				+ "inner join SPAFAM c on b.PRDFAMCOD = c.FAMCOD  "
 				+ "left join (select * from SDTZPA f where f.ZPACOD='ALER') d on b.ZPANUM = d.ZPANUM "
 				+ "inner join SPAPRT e on b.PROTYPCOD = e.PROTYPCOD " + "where a.OFANUMENR= '" + OFANUMENR
-				+ "'  and e.FABCON = 1";
+				+ "'  and e.FABCON = 1  and  b.PROTYPCOD != 'COM'";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 

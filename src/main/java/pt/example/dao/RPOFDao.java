@@ -119,7 +119,12 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 		if (firstMap.get("sec_num").equals("ADMIN")) {
 			querydata = "";
 		}
-
+		String estado  ="null";
+		if(firstMap.get("estado") != null){
+			estado = "C";
+		}
+		
+		
 		Query query = entityManager.createQuery("select a,b,c from RP_OF_CAB a, RP_OF_OP_CAB b,RP_OF_OP_FUNC c "
 				+ "where a.ID_UTZ_CRIA = c.ID_UTZ_CRIA and c.ID_OP_CAB=b.ID_OP_CAB and a.ID_OF_CAB = b.ID_OF_CAB and"
 				+ "	a.ID_OF_CAB in( "
@@ -132,8 +137,8 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 				+ "select h.ID_OF_CAB from RP_OF_OP_CAB h,RP_OF_OP_FUNC e where h.ID_OP_CAB = e.ID_OP_CAB and "
 				+ "((not :date3 != null) or (e.DATA_INI <= :date3)) and ((not :date1 !=  null) or (e.DATA_INI >= :date1)) and "
 				+ "((not :date4 != null) or (e.DATA_FIM <= :date4)) and ((not :date2 != null) or (e.DATA_FIM >= :date2)) and "
-				+ "((not '" + firstMap.get("estado") + "' != 'null') or (e.ESTADO like '" + firstMap.get("estado")
-				+ "')) and " + "((not '" + firstMap.get("tempo_prod_maior")
+				+ "((not '" + estado + "' != 'null') or (e.ESTADO in (" + firstMap.get("estado")
+				+ "))) and " + "((not '" + firstMap.get("tempo_prod_maior")
 				+ "' != 'null') or (h.TEMPO_EXEC_TOTAL_M2 >=  '" + firstMap.get("tempo_prod_maior") + "')) and ((not '"
 				+ firstMap.get("tempo_prod_menor") + "' != 'null') or (h.TEMPO_EXEC_TOTAL_M2 <= '"
 				+ firstMap.get("tempo_prod_menor") + "')) and " + "((not '" + firstMap.get("hora4")
