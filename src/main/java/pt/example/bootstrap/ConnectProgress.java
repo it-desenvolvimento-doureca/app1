@@ -325,7 +325,7 @@ public class ConnectProgress {
 
 	public List<HashMap<String, String>> getFamilias(String url) throws SQLException {
 
-		String query = "select DISTINCT LEFT(QUACOD,2) as fam from SPUA";
+		String query = "select DISTINCT LEFT(QUACOD,2) as fam from SPAQUA";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
