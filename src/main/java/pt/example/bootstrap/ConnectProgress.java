@@ -498,7 +498,7 @@ public class ConnectProgress {
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
-		 System.out.println(query);
+		 //System.out.println(query);
 		// Usa sempre assim que fecha os resources automaticamente
 		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();

@@ -33,6 +33,7 @@ public class RP_OF_OP_ETIQUETA {
 	private Integer VERSAO_MODIF;
 	private String OP_NUM;
 	private String OP_COD_FAM;
+	private Boolean NOVO;
 
 	@Id
 	@Column(name = "ID_REF_ETIQUETA")
@@ -197,7 +198,7 @@ public class RP_OF_OP_ETIQUETA {
 	public void setVERSAO_MODIF(Integer vERSAO_MODIF) {
 		VERSAO_MODIF = vERSAO_MODIF;
 	}
-	
+
 	@Column(name = "OP_NUM")
 	public String getOP_NUM() {
 		return OP_NUM;
@@ -206,7 +207,7 @@ public class RP_OF_OP_ETIQUETA {
 	public void setOP_NUM(String oP_NUM) {
 		OP_NUM = oP_NUM;
 	}
-	
+
 	@Column(name = "OP_COD_FAM")
 	public String getOP_COD_FAM() {
 		return OP_COD_FAM;
@@ -214,6 +215,15 @@ public class RP_OF_OP_ETIQUETA {
 
 	public void setOP_COD_FAM(String oP_COD_FAM) {
 		OP_COD_FAM = oP_COD_FAM;
+	}
+
+	@Column(name = "NOVO")
+	public Boolean getNOVO() {
+		return NOVO;
+	}
+
+	public void setNOVO(Boolean nOVO) {
+		NOVO = nOVO;
 	}
 
 }

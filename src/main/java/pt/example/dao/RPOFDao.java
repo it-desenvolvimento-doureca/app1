@@ -137,7 +137,9 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 				+ "from RP_OF_CAB a, RP_OF_OP_CAB b,RP_OF_OP_FUNC c "
 				+ "where a.ID_UTZ_CRIA = c.ID_UTZ_CRIA and c.ID_OP_CAB=b.ID_OP_CAB and a.ID_OF_CAB = b.ID_OF_CAB and"
 				+ "	a.ID_OF_CAB in( "
-				+ "	select f.ID_OF_CAB from RP_OF_OP_CAB f,RP_OF_OP_LIN c where f.ID_OP_CAB = c.ID_OP_CAB and  "
+				+ "	select "
+				+ "CASE WHEN ss.ID_OF_CAB_ORIGEM is null THEN f.ID_OF_CAB  ELSE ss.ID_OF_CAB_ORIGEM END "
+				+ "from RP_OF_OP_CAB f,RP_OF_OP_LIN c, RP_OF_CAB ss  where f.ID_OP_CAB = c.ID_OP_CAB and f.ID_OF_CAB = ss.ID_OF_CAB and  "
 				+ "			(((not :design_ref != null) or (c.REF_DES like :design_ref)) and "
 				+ "			((not :ref != null) or (c.REF_NUM like :ref)) and " + "			((not '"
 				+ firstMap.get("qtt") + "' != 'null') or (c.QUANT_BOAS_TOTAL_M2 >=  '" + firstMap.get("qtt")
