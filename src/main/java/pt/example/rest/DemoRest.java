@@ -8,7 +8,9 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -27,7 +29,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getOF(ofnum,getURL());
+		List<HashMap<String, String>> dados = connectionProgress.getOF(ofnum, getURL());
 		return dados;
 	}
 
@@ -39,10 +41,10 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getOP(ofanumenr,getURL());
+		List<HashMap<String, String>> dados = connectionProgress.getOP(ofanumenr, getURL());
 		return dados;
 	}
-	
+
 	@GET
 	@Path("/operacaoTop1/{ofanumenr}")
 	@Produces("application/json")
@@ -51,7 +53,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getOPtop1(ofanumenr,getURL());
+		List<HashMap<String, String>> dados = connectionProgress.getOPtop1(ofanumenr, getURL());
 		return dados;
 	}
 
@@ -66,25 +68,27 @@ public class DemoRest {
 		return dados;
 	}
 
-	@GET
-	@Path("/allopNOTIN/{data}")
+	@POST
+	@Path("/allopNOTIN")
+	@Consumes("*/*")
 	@Produces("application/json")
-	public List<HashMap<String, String>> allopNOTIN(@PathParam("data") String data)
+	public List<HashMap<String, String>> allopNOTIN(final List<String> data)
 			throws SQLException, ClassNotFoundException {
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getallOPNOTIN(data,getURL());
+		List<HashMap<String, String>> dados = connectionProgress.getallOPNOTIN(data, getURL());
 		return dados;
 	}
 
-	@GET
-	@Path("/allfamNOTIN/{data}")
+	@POST
+	@Path("/allfamNOTIN")
+	@Consumes("*/*")
 	@Produces("application/json")
-	public List<HashMap<String, String>> allfamNOTIN(@PathParam("data") String data)
+	public List<HashMap<String, String>> allfamNOTIN(final List<String> data)
 			throws SQLException, ClassNotFoundException {
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getallfamNOTIN(data,getURL());
+		List<HashMap<String, String>> dados = connectionProgress.getallfamNOTIN(data, getURL());
 		return dados;
 	}
 
@@ -96,7 +100,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getMaq(SECNUMENR,getURL());
+		List<HashMap<String, String>> dados = connectionProgress.getMaq(SECNUMENR, getURL());
 		return dados;
 	}
 
@@ -108,7 +112,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getAllMaq(SECCOD,getURL());
+		List<HashMap<String, String>> dados = connectionProgress.getAllMaq(SECCOD, getURL());
 		return dados;
 	}
 
@@ -142,25 +146,23 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getUser(RESCOD,getURL());
+		List<HashMap<String, String>> dados = connectionProgress.getUser(RESCOD, getURL());
 		return dados;
 	}
-	
-	
+
 	@PersistenceContext(unitName = "persistenceUnit")
 	protected EntityManager entityManager;
-	public String getURL(){
-		String url ="";
-		Query query_folder = entityManager.createNativeQuery(
-				"select top 1 * from GER_PARAMETROS a");
+
+	public String getURL() {
+		String url = "";
+		Query query_folder = entityManager.createNativeQuery("select top 1 * from GER_PARAMETROS a");
 
 		List<Object[]> dados_folder = query_folder.getResultList();
-		
 
 		for (Object[] content : dados_folder) {
 			url = content[2].toString();
-		}	
-		
+		}
+
 		return url;
 	}
 
@@ -183,10 +185,10 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getEtiqueta(etiqueta,getURL());
+		List<HashMap<String, String>> dados = connectionProgress.getEtiqueta(etiqueta, getURL());
 		return dados;
 	}
-	
+
 	@GET
 	@Path("/referencias/{OFANUMENR}")
 	@Produces("application/json")
@@ -195,10 +197,10 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getRef(OFANUMENR,getURL());
+		List<HashMap<String, String>> dados = connectionProgress.getRef(OFANUMENR, getURL());
 		return dados;
 	}
-	
+
 	@GET
 	@Path("/familias")
 	@Produces("application/json")
@@ -209,15 +211,16 @@ public class DemoRest {
 		List<HashMap<String, String>> dados = connectionProgress.getFamilias(getURL());
 		return dados;
 	}
-	
+
 	@GET
 	@Path("/getfilhos/{pai}")
 	@Produces("application/json")
-	public List<HashMap<String, String>> getfilhos(@PathParam("pai") String pai) throws SQLException, ClassNotFoundException {
+	public List<HashMap<String, String>> getfilhos(@PathParam("pai") String pai)
+			throws SQLException, ClassNotFoundException {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getfilhos(pai,getURL());
+		List<HashMap<String, String>> dados = connectionProgress.getfilhos(pai, getURL());
 		return dados;
 	}
 
@@ -229,7 +232,7 @@ public class DemoRest {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getDefeitos(fam,getURL());
+		List<HashMap<String, String>> dados = connectionProgress.getDefeitos(fam, getURL());
 		return dados;
 	}
 

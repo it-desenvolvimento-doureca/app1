@@ -16,7 +16,7 @@
   <link rel="stylesheet" type="text/css" href="assets/bootstrap.min.css" />
   <link rel="stylesheet" type="text/css" href="assets/primeng.min.css" />
   <link rel="stylesheet" type="text/css" href="assets/theme.css" />
-  <script src="assets/web-animations.min.js?v=1.1.5"></script>
+  <script src="assets/web-animations.min.js"></script>
 
 
 <link href="styles.e715b9913044b2750501.bundle.css" rel="stylesheet"/></head>
@@ -32,7 +32,7 @@
       </div>
     </app-root>
   </div>
-<script type="text/javascript" src="inline.a1f80a1b0e030ac7e32f.bundle.js?v=1.1.5"></script><script type="text/javascript" src="polyfills.a6095c137edf51c8fa6d.bundle.js?v=1.1.5"></script><script type="text/javascript" src="scripts.3efdb9c34fc639f04cc9.bundle.js?v=1.1.5"></script><script type="text/javascript" src="vendor.9e24912876d695608700.bundle.js?v=1.1.5"></script><script type="text/javascript" src="main.d9504351d61eea54a22d.bundle.js?v=1.1.5"></script></body>
+<script type="text/javascript" src="inline.a1f80a1b0e030ac7e32f.bundle.js"></script><script type="text/javascript" src="polyfills.a6095c137edf51c8fa6d.bundle.js"></script><script type="text/javascript" src="scripts.3efdb9c34fc639f04cc9.bundle.js"></script><script type="text/javascript" src="vendor.9e24912876d695608700.bundle.js"></script><script type="text/javascript" src="main.d9504351d61eea54a22d.bundle.js"></script></body>
 
 </html>
 

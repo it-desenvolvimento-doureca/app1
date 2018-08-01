@@ -29,12 +29,14 @@ public class RP_OF_CAB {
 	private String NOME_UTZ_CRIA;
 	private Timestamp DATA_HORA_CRIA;
 	private String ID_UTZ_MODIF;
+	private String ID_UTZ_EDICAO;
 	private String NOME_UTZ_MODIF;
 	private Timestamp DATA_HORA_MODIF;
 	private String ESTADO;
 	private String OP_COD_ORIGEM;
 	private String OP_PREVISTA;
 	private Integer VERSAO_MODIF;
+	private String ESTADO_INICIAL;
 
 	@Id
 	@Column(name = "ID_OF_CAB")
@@ -234,6 +236,24 @@ public class RP_OF_CAB {
 
 	public void setMAQ_NUM_ORIG(String mAQ_NUM_ORIG) {
 		MAQ_NUM_ORIG = mAQ_NUM_ORIG;
+	}
+
+	@Column(name = "ID_UTZ_EDICAO")
+	public String getID_UTZ_EDICAO() {
+		return ID_UTZ_EDICAO;
+	}
+
+	public void setID_UTZ_EDICAO(String iD_UTZ_EDICAO) {
+		ID_UTZ_EDICAO = iD_UTZ_EDICAO;
+	}
+
+	@Column(name = "ESTADO_INICIAL")
+	public String getESTADO_INICIAL() {
+		return ESTADO_INICIAL;
+	}
+
+	public void setESTADO_INICIAL(String eSTADO_INICIAL) {
+		ESTADO_INICIAL = eSTADO_INICIAL;
 	}
 
 }

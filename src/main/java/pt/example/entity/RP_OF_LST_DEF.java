@@ -3,13 +3,14 @@ package pt.example.entity;
 import java.sql.Timestamp;
 
 import javax.persistence.Column;
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-@Entity
+@Embeddable
 @Table(name = "RP_OF_LST_DEF")
 public class RP_OF_LST_DEF {
 

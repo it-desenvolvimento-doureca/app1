@@ -25,8 +25,14 @@ public class RP_OF_PARA_LIN {
 	private String ID_UTZ_MODIF;
 	private Timestamp DATA_HORA_MODIF;
 	private String TIPO_PARAGEM;
+	private String TIPO_PARAGEM_M1;
+	private String TIPO_PARAGEM_M2;
 	private String DES_PARAGEM;
+	private String DES_PARAGEM_M1;
+	private String DES_PARAGEM_M2;
 	private String MOMENTO_PARAGEM;
+	private String MOMENTO_PARAGEM_M1;
+	private String MOMENTO_PARAGEM_M2;
 
 	private String ESTADO;
 
@@ -228,5 +234,60 @@ public class RP_OF_PARA_LIN {
 
 	public void setESTADO(String eSTADO) {
 		ESTADO = eSTADO;
+	}
+
+	@Column(name = "TIPO_PARAGEM_M1")
+	public String getTIPO_PARAGEM_M1() {
+		return TIPO_PARAGEM_M1;
+	}
+
+	@Column(name = "TIPO_PARAGEM_M2")
+	public String getTIPO_PARAGEM_M2() {
+		return TIPO_PARAGEM_M2;
+	}
+
+	@Column(name = "DES_PARAGEM_M1")
+
+	public String getDES_PARAGEM_M1() {
+		return DES_PARAGEM_M1;
+	}
+
+	@Column(name = "DES_PARAGEM_M2")
+	public String getDES_PARAGEM_M2() {
+		return DES_PARAGEM_M2;
+	}
+
+	@Column(name = "MOMENTO_PARAGEM_M1")
+	public String getMOMENTO_PARAGEM_M1() {
+		return MOMENTO_PARAGEM_M1;
+	}
+
+	@Column(name = "MOMENTO_PARAGEM_M2")
+	public String getMOMENTO_PARAGEM_M2() {
+		return MOMENTO_PARAGEM_M2;
+	}
+
+	public void setTIPO_PARAGEM_M1(String tIPO_PARAGEM_M1) {
+		TIPO_PARAGEM_M1 = tIPO_PARAGEM_M1;
+	}
+
+	public void setTIPO_PARAGEM_M2(String tIPO_PARAGEM_M2) {
+		TIPO_PARAGEM_M2 = tIPO_PARAGEM_M2;
+	}
+
+	public void setDES_PARAGEM_M1(String dES_PARAGEM_M1) {
+		DES_PARAGEM_M1 = dES_PARAGEM_M1;
+	}
+
+	public void setDES_PARAGEM_M2(String dES_PARAGEM_M2) {
+		DES_PARAGEM_M2 = dES_PARAGEM_M2;
+	}
+
+	public void setMOMENTO_PARAGEM_M1(String mOMENTO_PARAGEM_M1) {
+		MOMENTO_PARAGEM_M1 = mOMENTO_PARAGEM_M1;
+	}
+
+	public void setMOMENTO_PARAGEM_M2(String mOMENTO_PARAGEM_M2) {
+		MOMENTO_PARAGEM_M2 = mOMENTO_PARAGEM_M2;
 	}
 }

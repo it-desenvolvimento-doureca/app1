@@ -1,10 +1,12 @@
 package pt.example.rest;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -60,6 +62,7 @@ import pt.example.dao.RP_OF_OP_LINDao;
 import pt.example.dao.RP_OF_OUTRODEF_LINDao;
 import pt.example.dao.RP_OF_PARA_LINDao;
 import pt.example.dao.RP_OF_PREP_LINDao;
+import pt.example.dao.VERSAO_APPDao;
 import pt.example.entity.EMAIL;
 import pt.example.entity.GER_EVENTO;
 import pt.example.entity.GER_EVENTOS_CONF;
@@ -78,6 +81,7 @@ import pt.example.entity.RP_OF_OP_LIN;
 import pt.example.entity.RP_OF_OUTRODEF_LIN;
 import pt.example.entity.RP_OF_PARA_LIN;
 import pt.example.entity.RP_OF_PREP_LIN;
+import pt.example.entity.VERSAO_APP;
 
 @Stateless
 @Path("/siip")
@@ -133,6 +137,9 @@ public class SIIP {
 
 	@Inject
 	private GER_EVENTODao dao15;
+	
+	@Inject
+	private VERSAO_APPDao dao16;
 
 	// RP_CONF_UTZ_PERF***************************************************************
 	@POST
@@ -841,6 +848,13 @@ public class SIIP {
 	public void deleteRP_OF_LST_DEFid_op_lin(@PathParam("id") Integer id) {
 		dao14.apagar_idop_lin(id);
 	}
+	//VERSAO_APP*************************************************
+	@GET
+	@Path("/getVERSAO_APP")
+	@Produces("application/json")
+	public List<VERSAO_APP> getVERSAO_APPO() {
+		return dao16.getallv();
+	}
 
 	// GER_EVENTO***************************************************************
 	@POST
@@ -904,7 +918,7 @@ public class SIIP {
 						+ id + " or ID_OF_CAB_ORIGEM = " + id + ")"
 						+ "UPDATE RP_OF_OP_FUNC SET DATA_FIM_M1 = DATA_FIM_M2  , DATA_INI_M1 = DATA_INI_M2  , HORA_FIM_M1 = HORA_FIM_M2  , HORA_INI_M1 = HORA_INI_M2 where ID_OP_FUNC in (select c.ID_OP_FUNC from RP_OF_CAB a inner join RP_OF_OP_CAB b on b.ID_OF_CAB = a.ID_OF_CAB inner join RP_OF_OP_FUNC c on c.ID_OP_CAB = b.ID_OP_CAB where a.ID_OF_CAB = "
 						+ id + " ) "
-						+ "UPDATE RP_OF_PARA_LIN SET DATA_FIM_M1 = DATA_FIM_M2  , DATA_INI_M1 = DATA_INI_M2  , HORA_FIM_M1 = HORA_FIM_M2  , HORA_INI_M1 = HORA_INI_M2 where ID_OP_CAB in (select b.ID_OP_CAB from RP_OF_CAB a inner join RP_OF_OP_CAB b on b.ID_OF_CAB = a.ID_OF_CAB where a.ID_OF_CAB = "
+						+ "UPDATE RP_OF_PARA_LIN SET  TIPO_PARAGEM_M1 = TIPO_PARAGEM_M2, DES_PARAGEM_M1 = DES_PARAGEM_M2, MOMENTO_PARAGEM_M1 = MOMENTO_PARAGEM_M2 ,DATA_FIM_M1 = DATA_FIM_M2  , DATA_INI_M1 = DATA_INI_M2  , HORA_FIM_M1 = HORA_FIM_M2  , HORA_INI_M1 = HORA_INI_M2 where ID_OP_CAB in (select b.ID_OP_CAB from RP_OF_CAB a inner join RP_OF_OP_CAB b on b.ID_OF_CAB = a.ID_OF_CAB where a.ID_OF_CAB = "
 						+ id + " ) "
 						+ "UPDATE RP_OF_PREP_LIN SET DATA_FIM_M1 = DATA_FIM_M2  , DATA_INI_M1 = DATA_INI_M2  , HORA_FIM_M1 = HORA_FIM_M2  , HORA_INI_M1 = HORA_INI_M2 where ID_OP_CAB in (select b.ID_OP_CAB from RP_OF_CAB a inner join RP_OF_OP_CAB b on b.ID_OF_CAB = a.ID_OF_CAB where a.ID_OF_CAB = "
 						+ id + " ) "
@@ -916,16 +930,108 @@ public class SIIP {
 		return dados;
 	}
 
+	public int atualizarcampos2(Integer id) {
+
+		Query query = entityManager.createNativeQuery(
+				"UPDATE RP_OF_DEF_LIN SET QUANT_DEF_M2 = QUANT_DEF_M1  where ID_OP_LIN in (select c.ID_OP_LIN from RP_OF_CAB a inner join RP_OF_OP_CAB b on b.ID_OF_CAB = a.ID_OF_CAB  inner join RP_OF_OP_LIN c on c.ID_OP_CAB = b.ID_OP_CAB  where a.ID_OF_CAB = "
+						+ id + " or ID_OF_CAB_ORIGEM = " + id + ") "
+						+ "UPDATE RP_OF_OP_CAB SET TEMPO_PARA_TOTAL_M2 = TEMPO_PARA_TOTAL_M1  , TEMPO_EXEC_TOTAL_M2 = TEMPO_EXEC_TOTAL_M1 , TEMPO_PREP_TOTAL_M2 = TEMPO_PREP_TOTAL_M1  WHERE ID_OF_CAB = "
+						+ id + " "
+						+ "UPDATE RP_OF_OP_ETIQUETA SET QUANT_BOAS_M2 = QUANT_BOAS_M1 , QUANT_DEF_M2 = QUANT_DEF_M1  where ID_OP_LIN in (select c.ID_OP_LIN from RP_OF_CAB a inner join RP_OF_OP_CAB b on b.ID_OF_CAB = a.ID_OF_CAB  inner join RP_OF_OP_LIN c on c.ID_OP_CAB = b.ID_OP_CAB  where a.ID_OF_CAB = "
+						+ id + " or ID_OF_CAB_ORIGEM = " + id + ") and NOVO != 1"
+						+ "UPDATE RP_OF_OP_FUNC SET DATA_FIM_M2 = DATA_FIM_M1  , DATA_INI_M2 = DATA_INI_M1  , HORA_FIM_M2 = HORA_FIM_M1  , HORA_INI_M2 = HORA_INI_M1 where ID_OP_FUNC in (select c.ID_OP_FUNC from RP_OF_CAB a inner join RP_OF_OP_CAB b on b.ID_OF_CAB = a.ID_OF_CAB inner join RP_OF_OP_FUNC c on c.ID_OP_CAB = b.ID_OP_CAB where a.ID_OF_CAB = "
+						+ id + " ) "
+						+ "UPDATE RP_OF_PARA_LIN SET  TIPO_PARAGEM_M2 = TIPO_PARAGEM_M1, DES_PARAGEM_M2= DES_PARAGEM_M1, MOMENTO_PARAGEM_M2 = MOMENTO_PARAGEM_M1 ,DATA_FIM_M2 = DATA_FIM_M1  , DATA_INI_M2 = DATA_INI_M1  , HORA_FIM_M2 = HORA_FIM_M1  , HORA_INI_M2 = HORA_INI_M1 where ID_OP_CAB in (select b.ID_OP_CAB from RP_OF_CAB a inner join RP_OF_OP_CAB b on b.ID_OF_CAB = a.ID_OF_CAB where a.ID_OF_CAB = "
+						+ id + " ) "
+						+ "UPDATE RP_OF_PREP_LIN SET DATA_FIM_M2 = DATA_FIM_M1  , DATA_INI_M2 = DATA_INI_M1  , HORA_FIM_M2 = HORA_FIM_M1  , HORA_INI_M2 = HORA_INI_M1 where ID_OP_CAB in (select b.ID_OP_CAB from RP_OF_CAB a inner join RP_OF_OP_CAB b on b.ID_OF_CAB = a.ID_OF_CAB where a.ID_OF_CAB = "
+						+ id + " ) "
+						+ "UPDATE RP_OF_OP_LIN SET QUANT_BOAS_TOTAL_M2 = QUANT_BOAS_TOTAL_M1 , QUANT_DEF_TOTAL_M2 = QUANT_DEF_TOTAL_M1 where ID_OP_LIN in (select c.ID_OP_LIN from RP_OF_CAB a inner join RP_OF_OP_CAB b on b.ID_OF_CAB = a.ID_OF_CAB  inner join RP_OF_OP_LIN c on c.ID_OP_CAB = b.ID_OP_CAB  where a.ID_OF_CAB = "
+						+ id + " or ID_OF_CAB_ORIGEM = " + id + ")");
+
+		int dados = query.executeUpdate();
+
+		return dados;
+	}
+
+	@GET
+	@Path("/verificaopnum/{id}")
+	@Produces("application/json")
+	public List<RP_OF_OP_ETIQUETA> verificaopnum(@PathParam("id") Integer id) {
+		return dao13.verificaopnum(id);
+	}
+
 	@GET
 	@Path("/atualizaropenum/{id}")
 	@Produces("application/json")
 	public void atualizaropenum(@PathParam("id") Integer id) {
-		atualiza_editar(id);
+		atualiza_editar(id, getURL());
+	}
+
+	@GET
+	@Path("/atualizarestado/{id}/{user}/{estado}")
+	@Produces("application/json")
+	public void atualizarestado(@PathParam("id") Integer id, @PathParam("user") String user,
+			@PathParam("estado") String estado) {
+		entityManager.createNativeQuery("UPDATE RP_OF_OP_FUNC SET ESTADO = '" + estado
+				+ "' ,DATA_HORA_MODIF = GETDATE(),ID_UTZ_MODIF = '" + user
+				+ "' WHERE ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB =  " + id + ")")
+				.executeUpdate();
+		String query_user = "";
+		if (estado.equals("R")) {
+			query_user = ",ID_UTZ_EDICAO = '" + user + "' ,ESTADO_INICIAL = ESTADO";
+		} else if (estado.equals("C")) {
+			atualizarcampos2(id);
+		}
+		entityManager.createNativeQuery(
+				"UPDATE RP_OF_CAB SET ESTADO = '" + estado + "',DATA_HORA_MODIF = GETDATE(),ID_UTZ_MODIF = '" + user
+						+ "' " + query_user + " WHERE ID_OF_CAB = " + id + "")
+				.executeUpdate();
+	}
+
+	@GET
+	@Path("/atualizartotais/{id}/{modo}")
+	@Produces("application/json")
+	public void atualizartotais(@PathParam("id") Integer id, @PathParam("modo") Boolean modo) {
+		String query = "";
+		String query2 = "";
+		String query3 = "";
+		if (modo) {
+			query = " QUANT_BOAS_TOTAL_M2 = r.boas, QUANT_DEF_TOTAL_M2 = r.def ";
+			query2 = "QUANT_DEF_TOTAL_M2 = r.def ";
+			query3 = "QUANT_DEF_M2 = r.def ";
+		} else {
+			query = "QUANT_BOAS_TOTAL = r.boas,QUANT_BOAS_TOTAL_M1 = r.boas, QUANT_BOAS_TOTAL_M2 = r.boas,QUANT_DEF_TOTAL = r.def,QUANT_DEF_TOTAL_M1 = r.def, QUANT_DEF_TOTAL_M2 = r.def ";
+			query2 = "QUANT_DEF_TOTAL = r.def,QUANT_DEF_TOTAL_M1 = r.def, QUANT_DEF_TOTAL_M2 = r.def ";
+			query3 = "QUANT_DEF = r.def,QUANT_DEF_M1 = r.def, QUANT_DEF_M2 = r.def ";
+		}
+
+		entityManager
+				.createNativeQuery("UPDATE tt  set " + query + " from "
+						+ "(select ID_OP_CAB, (select coalesce(SUM(QUANT_DEF_M2),0) from RP_OF_DEF_LIN where ID_OP_LIN = a.ID_OP_LIN) as def "
+						+ ",(select coalesce(SUM(x.QUANT_BOAS_M2),0) from RP_OF_OP_ETIQUETA x where ID_OP_LIN = a.ID_OP_LIN) as boas from RP_OF_OP_LIN a "
+						+ "where ID_OP_CAB in (Select b.ID_OP_CAB from RP_OF_OP_CAB b "
+						+ "inner join RP_OF_CAB c on b.ID_OF_CAB = c.ID_OF_CAB where c.ID_OF_CAB_ORIGEM in  (select ID_OF_CAB from RP_OF_OP_CAB where ID_OP_CAB = "
+						+ id + ") )) as r ,RP_OF_OP_LIN as tt where tt.ID_OP_CAB = r.ID_OP_CAB")
+				.executeUpdate();
+		entityManager.createNativeQuery("UPDATE tt  set " + query2 + " from "
+				+ "(select ID_OP_CAB, (select coalesce(SUM(QUANT_DEF_M2),0) from RP_OF_DEF_LIN where ID_OP_LIN = a.ID_OP_LIN) as def "
+				+ "from RP_OF_OP_LIN a " + "where ID_OP_CAB = " + id
+				+ ") as r ,RP_OF_OP_LIN as tt where tt.ID_OP_CAB = r.ID_OP_CAB").executeUpdate();
+
+		entityManager
+				.createNativeQuery("UPDATE tt  set " + query3 + " from "
+						+ "(select x.ID_REF_ETIQUETA, (select coalesce(SUM(QUANT_DEF_M2),0) from RP_OF_DEF_LIN where ID_OP_LIN = a.ID_OP_LIN and ID_REF_ETIQUETA = x.ID_REF_ETIQUETA) as def "
+						+ "from RP_OF_OP_LIN a " + "inner join RP_OF_OP_ETIQUETA x on a.ID_OP_LIN = x.ID_OP_LIN "
+						+ "where ID_OP_CAB in (Select b.ID_OP_CAB from RP_OF_OP_CAB b "
+						+ "inner join RP_OF_CAB c on b.ID_OF_CAB = c.ID_OF_CAB where c.ID_OF_CAB_ORIGEM in  (select ID_OF_CAB from RP_OF_OP_CAB where ID_OP_CAB = "
+						+ id + ") )) as r ,RP_OF_OP_ETIQUETA as tt where tt.ID_REF_ETIQUETA = r.ID_REF_ETIQUETA")
+				.executeUpdate();
+
 	}
 
 	// ATUALIZA OP_NUM
 	// **************************************************************
-	public void atualiza_editar(Integer id) {
+	public void atualiza_editar(Integer id, String url) {
 		Query query = entityManager.createNativeQuery(
 				"select ID_OF_CAB,ID_OF_CAB_ORIGEM,ID_UTZ_CRIA,OF_NUM,OP_NUM from RP_OF_CAB where ID_OF_CAB = " + id
 						+ " or ID_OF_CAB_ORIGEM = " + id);
@@ -941,7 +1047,7 @@ public class SIIP {
 								+ id_origem + ")");
 				List<Object[]> dados3 = query3.getResultList();
 				for (Object[] content3 : dados3) {
-					atualiza(id_origem, "PF", null);
+					atualiza(id_origem, "PF", null, url);
 				}
 			} else {
 				Integer id_origem = Integer.parseInt(content[1].toString());
@@ -954,7 +1060,7 @@ public class SIIP {
 
 				for (Object[] content2 : dados2) {
 					Integer etiqueta = Integer.parseInt(content2[2].toString());
-					atualiza(etiqueta, "C", null);
+					atualiza(etiqueta, "C", null, url);
 				}
 
 			}
@@ -963,7 +1069,7 @@ public class SIIP {
 
 	}
 
-	public String atualiza(Integer id, String tipo, Integer estado) {
+	public String atualiza(Integer id, String tipo, Integer estado, String url) {
 		String estad = "";
 		if (estado != null)
 			estad = "and ESTADO = 0";
@@ -978,7 +1084,7 @@ public class SIIP {
 
 			try {
 				op_num = connectionProgress.GetOP_NUM(content[0].toString(), content[1].toString(),
-						content[2].toString(), content[3].toString(), content[4].toString(), getURL(),
+						content[2].toString(), content[3].toString(), content[4].toString(), url,
 						content[6].toString());
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
@@ -1024,6 +1130,40 @@ public class SIIP {
 		return url;
 	}
 
+	@POST
+	@Path("/getANALISERAPIDA")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public List<HashMap<String, String>> allopNOTIN(final List<HashMap<String, String>>  data) {
+		
+		HashMap<String, String> firstMap = data.get(0);
+		String OF_NUM = firstMap.get("OF_NUM");
+		String MAQ_NUM = firstMap.get("MAQ_NUM");
+		String ID_UTZ_CRIA = firstMap.get("ID_UTZ_CRIA");
+		String OP_NUM = firstMap.get("OP_NUM");
+		
+		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
+		Query query = entityManager.createNativeQuery("select "
+				+ "d.ID_UTZ_CRIA,AVG(CASE WHEN DATEPART(HOUR, CONVERT( TIME,b.TEMPO_EXEC_TOTAL_M2)) = 0 THEN 0 ELSE c.QUANT_BOAS_TOTAL_M2/DATEPART(HOUR, CONVERT( TIME,b.TEMPO_EXEC_TOTAL_M2)) END) as TimeStampHour "
+				+ "from RP_OF_CAB a "
+				+ "inner join RP_OF_OP_CAB b on a.ID_OF_CAB = b.ID_OF_CAB "
+				+ "inner join RP_OF_OP_LIN c on b.ID_OP_CAB = c.ID_OP_CAB "
+				+ "inner join RP_OF_OP_FUNC d on b.ID_OP_CAB = d.ID_OP_CAB "
+				+ "where a.ID_OF_CAB_ORIGEM is null "
+				+ "and a.OP_COD_ORIGEM = 85 "
+				+ " and a.MAQ_NUM = '032'and a.OF_NUM = 1806322495 and d.DATA_INI_M2 >= DATEADD(MONTH, -3, GETDATE()) GROUP BY d.ID_UTZ_CRIA");
+		
+		List<Object[]> dados = query.getResultList();
+
+		for (Object[] content : dados) {
+			HashMap<String, String> x = new HashMap<>();
+			x.put("ID_UTZ_CRIA", content[0].toString());
+			x.put("MEDIA", content[1].toString());
+			list.add(x);
+		}
+		return list;
+	}
+
 	// CRIAR
 	// FICHEIRO****************************************************************
 
@@ -1034,6 +1174,7 @@ public class SIIP {
 			@PathParam("ficheiros") Boolean ficheirosdownload) throws IOException, ParseException {
 
 		String data = new SimpleDateFormat("yyyyMMddHHmmss_").format(new Date());
+		String url = getURL();
 		try {
 			Thread.sleep(3000);
 			Integer comp_num = 1;
@@ -1066,15 +1207,18 @@ public class SIIP {
 						String OPNUM = (content[4] == null) ? "NULL" : content[4].toString();
 
 						if (estado.equals("M")) {
-							OPNUM = atualiza(id_origem, "PF", 0);
+							OPNUM = atualiza(id_origem, "PF", 0, url);
 							nome_ficheiro = "correcao" + data + inform_file + ".txt";
 							inform_file2 = content[2].toString() + "_correcao_PAUSA";
 
 							if (OPNUM == null)
 								OPNUM = (content[4] == null) ? "NULL" : content[4].toString();
 							criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
-									estado, data + inform_file2, OPNUM, content3[0].toString(), pausa, total,
-									ficheirosdownload, data, null);
+									"P", data + inform_file2, OPNUM, content3[0].toString(), pausa, total,
+									ficheirosdownload, data, null, estado);
+							criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
+									estado, data + inform_file2, OPNUM, content3[0].toString(), false, total,
+									ficheirosdownload, data, null, estado);
 
 							/*
 							 * criarFicheiro(id_origem, 1, nome_ficheiro, "PF",
@@ -1101,10 +1245,16 @@ public class SIIP {
 						 */
 
 						nome_ficheiro = data + inform_file + ".txt";
+						if (estado.equals("A")) {
+							nome_ficheiro = "anulacao_" + nome_ficheiro;
+						}
+						criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null, "P",
+								data + inform_file2, OPNUM, content3[0].toString(), pausa, total, ficheirosdownload,
+								data, null, estado);
+						pausa = false;
 						criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null, estado,
 								data + inform_file2, OPNUM, content3[0].toString(), pausa, total, ficheirosdownload,
-								data, null);
-						pausa = false;
+								data, null, estado);
 
 						// se for COMP verifica se exitem etiquetas para o comp
 						// e cria
@@ -1114,8 +1264,9 @@ public class SIIP {
 					Integer id_origem = Integer.parseInt(content[1].toString());
 					String data_query = "";
 					if (estado.equals("M"))
-						data_query = " and  c.VERSAO_MODIF != (select VERSAO_MODIF from RP_OF_CAB where ID_OF_CAB = "
-								+ id_origem + ") ";
+						data_query = " and  (c.VERSAO_MODIF != (select VERSAO_MODIF from RP_OF_CAB where ID_OF_CAB = "
+								+ id_origem
+								+ ") or (c.QUANT_BOAS_M1 != c.QUANT_BOAS_M2 or c.QUANT_DEF_M1 != c.QUANT_DEF_M2 or c.NOVO = 1)) ";
 					Query query2 = entityManager.createNativeQuery(
 							"select OF_NUM_ORIGEM,a.ID_OF_CAB,c.ID_REF_ETIQUETA,c.OP_NUM,b.ID_OP_LIN,c.NOVO  from RP_OF_OP_CAB a inner join RP_OF_OP_LIN b on a.ID_OP_CAB = b.ID_OP_CAB inner join RP_OF_CAB d on  d.ID_OF_CAB = a.ID_OF_CAB inner join RP_OF_OP_ETIQUETA c on b.ID_OP_LIN = c.ID_OP_LIN  where a.ID_OF_CAB = "
 									+ Integer.parseInt(content[0].toString()) + data_query);
@@ -1133,18 +1284,22 @@ public class SIIP {
 							novaet = "1";
 						}
 						if (estado.equals("M") && !novaet.equals("1")) {
-							OPNUM = atualiza(etiqueta, "C", 0);
+							OPNUM = atualiza(etiqueta, "C", 0, url);
 							nome_ficheiro = "correcao" + data + inform_file + ".txt";
 							if (OPNUM == null)
 								OPNUM = (content2[3] == null) ? "NULL" : content2[3].toString();
 							criarFicheiro(id_of_cab, 1, nome_ficheiro, "COMP", content2[0].toString(), id_origem,
 									etiqueta, estado, null, OPNUM, content2[4].toString(), false, 1, ficheirosdownload,
-									data, novaet);
+									data, novaet, estado);
 						}
 
 						nome_ficheiro = data + inform_file + ".txt";
+						if (estado.equals("A")) {
+							nome_ficheiro = "anulacao_" + nome_ficheiro;
+						}
 						criarFicheiro(id_of_cab, 2, nome_ficheiro, "COMP", content2[0].toString(), id_origem, etiqueta,
-								estado, null, OPNUM, content2[4].toString(), false, 1, ficheirosdownload, data, novaet);
+								estado, null, OPNUM, content2[4].toString(), false, 1, ficheirosdownload, data, novaet,
+								estado);
 					}
 					if (dados2.size() > 0)
 						comp_num++;
@@ -1178,13 +1333,16 @@ public class SIIP {
 	public void criarFicheiro(Integer id, Integer ficheiro, String nome_ficheiro, String tipo, String of,
 			Integer id_origem, Integer id_etiqueta, String estado, String nome_ficheiro2, String OP_NUM,
 			String ID_OP_LIN, Boolean cria_pausa, Integer total, Boolean ficheirosdownload, String nomezip,
-			String novaetiqueta) throws IOException, ParseException {
+			String novaetiqueta, String estado2) throws IOException, ParseException {
 
 		String DATA_INI, HORA_INI, DATA_FIM, HORA_FIM, SINAL, QUANT_BOAS_TOTAL, QUANT_BOAS, QUANT_DEF, TEMPO_PREP_TOTAL,
-				TEMPO_EXEC_TOTAL = "";
+				TIPO_PARAGEM, MOMENTO_PARAGEM, TEMPO_EXEC_TOTAL = "";
 
 		if (novaetiqueta == null)
 			novaetiqueta = "0";
+		if (estado.equals("A") || estado2.equals("A")) {
+			nome_ficheiro2 = "anulacao_" + nome_ficheiro2;
+		}
 
 		Boolean alteracoes = false;
 
@@ -1199,6 +1357,8 @@ public class SIIP {
 			QUANT_DEF = "QUANT_DEF_M1";
 			TEMPO_PREP_TOTAL = "TEMPO_PREP_TOTAL_M1";
 			TEMPO_EXEC_TOTAL = "TEMPO_EXEC_TOTAL_M1";
+			TIPO_PARAGEM = "TIPO_PARAGEM_M1";
+			MOMENTO_PARAGEM = "MOMENTO_PARAGEM_M1";
 		} else {
 			DATA_INI = "DATA_INI_M2";
 			HORA_INI = "HORA_INI_M2";
@@ -1210,7 +1370,13 @@ public class SIIP {
 			QUANT_DEF = "QUANT_DEF_M2";
 			TEMPO_PREP_TOTAL = "TEMPO_PREP_TOTAL_M2";
 			TEMPO_EXEC_TOTAL = "TEMPO_EXEC_TOTAL_M2";
+			TIPO_PARAGEM = "TIPO_PARAGEM_M2";
+			MOMENTO_PARAGEM = "MOMENTO_PARAGEM_M2";
 
+		}
+
+		if (estado.equals("A") || estado2.equals("A")) {
+			SINAL = "-";
 		}
 
 		BufferedWriter bw = null;
@@ -1271,7 +1437,8 @@ public class SIIP {
 				if (novaetiqueta.equals("1")) {
 					data_A += (content[12] + "    ").substring(0, 4);
 				} else {
-					if (content[11].toString().equals("1") || estado.equals("M")) {
+					if (content[11].toString().equals("1") || estado.equals("M") || estado.equals("A")
+							|| estado2.equals("A")) {
 						data_A += "    ";// + Ligne de production
 					} else {
 						data_A += (content[12] + "    ").substring(0, 4);// +
@@ -1430,7 +1597,7 @@ public class SIIP {
 
 			}
 
-			if (existe_maquina && tipo.equals("PF") && !estado.equals("P")) {
+			if (existe_maquina && tipo.equals("PF") /* && !estado.equals("P") */) {
 				data_maquina += data;
 				data = data_maquina;
 			}
@@ -1443,9 +1610,9 @@ public class SIIP {
 						+ DATA_FIM + ",c." + HORA_FIM + ", " + "cast((DATEDIFF(second,DATEADD(DAY, DATEDIFF(DAY, c."
 						+ HORA_INI + ", c." + DATA_INI + " ), CAST(c." + HORA_INI
 						+ " AS DATETIME)), DATEADD(DAY, DATEDIFF(DAY, c." + HORA_FIM + ", c." + DATA_FIM + " ), CAST(c."
-						+ HORA_FIM + " AS DATETIME)))/3600.00) as decimal(18,4)) as timediff, "
-						+ "c.TIPO_PARAGEM,c.MOMENTO_PARAGEM,c.ID_UTZ_CRIA as utz1,a.ID_UTZ_CRIA as utz2, "
-						+ "CASE when (c.DATA_INI_M2 != c.DATA_INI_M1 or c.HORA_INI_M1 != c.HORA_INI_M2 or c.DATA_FIM_M2 != c.DATA_FIM_M1 or c.HORA_FIM_M1 != c.HORA_FIM_M2 ) then 1 else 0 END as alterado, "
+						+ HORA_FIM + " AS DATETIME)))/3600.00) as decimal(18,4)) as timediff, " + "c." + TIPO_PARAGEM
+						+ ",c." + MOMENTO_PARAGEM + ",c.ID_UTZ_CRIA as utz1,a.ID_UTZ_CRIA as utz2, "
+						+ "CASE when (c.MOMENTO_PARAGEM_M2 != c.MOMENTO_PARAGEM_M1 or c.TIPO_PARAGEM_M2 != c.TIPO_PARAGEM_M1 or c.DATA_INI_M2 != c.DATA_INI_M1 or c.HORA_INI_M1 != c.HORA_INI_M2 or c.DATA_FIM_M2 != c.DATA_FIM_M1 or c.HORA_FIM_M1 != c.HORA_FIM_M2 ) then 1 else 0 END as alterado, "
 						+ "CASE when (c.DATA_INI_M1 is null or c.HORA_INI_M1 is null or c.DATA_FIM_M1 is null or c.HORA_FIM_M1 is null ) then 1 else 0 END as novo "
 						+ "from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
 						+ "inner join RP_OF_PARA_LIN c on c.ID_OP_CAB = b.ID_OP_CAB " + "where a.ID_OF_CAB = " + id);
@@ -1477,7 +1644,7 @@ public class SIIP {
 					// Temps d'arrêt/prépa.
 
 					String temp_pre = "000000000000000";
-					if (content2[6].toString().equals("P")) {
+					if (content2[6] != null && content2[6].toString().equals("P")) {
 						String parts_prep = (((content2[4] != null) ? content2[4] : "").toString()).replace(".", "");
 						String size = temp_pre + parts_prep;
 						temp_pre = (size).substring(size.length() - 15, size.length());
@@ -1488,7 +1655,7 @@ public class SIIP {
 
 					// Temps d'arrêt/exécution
 					String temp_exec = "000000000000000";
-					if (content2[6].toString().equals("E")) {
+					if (content2[6] != null && content2[6].toString().equals("E")) {
 						String parts_exec = ((content2[4] != null) ? content2[4] : "").toString().replace(".", "");
 						String size = temp_exec + parts_exec;
 						temp_exec = (size).substring(size.length() - 15, size.length());
@@ -1503,12 +1670,23 @@ public class SIIP {
 					StringBuffer buf3 = new StringBuffer(linha_utz.get(content2[7].toString()));
 					buf3.replace(18, 27, seq);
 					String linha3 = buf3.toString();
-					data_pausa_p += linha3;
+					if (!existe_maquina) {
+						data_pausa_p += linha3;
+					}
+
 					if (existe_maquina) {
-						StringBuffer buf6 = new StringBuffer(data_maquina);
-						buf6.replace(18, 27, seq);
-						String linha6 = buf6.toString();
-						data_pausa_p += linha6;
+
+						BufferedReader bufReader = new BufferedReader(new StringReader(data_maquina));
+
+						String line = null;
+						while ((line = bufReader.readLine()) != null) {
+
+							StringBuffer buf6 = new StringBuffer(line);
+							buf6.replace(18, 27, seq);
+							String linha6 = buf6.toString();
+							data_pausa_p += linha6 + "\r\n";
+						}
+
 					}
 
 					if (existe_maquina && tipo.equals("PF")
@@ -1517,19 +1695,19 @@ public class SIIP {
 						buf2.replace(18, 27, seq);
 						String linha2 = buf2.toString();
 						data_pausa_p += linha2.substring(0, 87) + data_pausa;
-
 					}
+
 					StringBuffer buf = new StringBuffer(linha_utz_inicio.get(content2[7].toString()));
 					buf.replace(18, 27, seq);
 					String linha = buf.toString();
 					data_pausa_p += linha + data_pausa;
 
-					if (estado.equals("M") && content2[9].toString().equals("1")
+					if (estado2.equals("M") && content2[9].toString().equals("1")
 							&& !content2[10].toString().equals("1")) {
 						criar_ficheiro_Pausa(data_pausa_p, path2, count, ficheirosdownload, nome_ficheiro2, nomezip);
-					} else if (estado.equals("M") && content2[10].toString().equals("1") && ficheiro == 2) {
+					} else if (estado2.equals("M") && content2[10].toString().equals("1") && ficheiro == 2) {
 						criar_ficheiro_Pausa(data_pausa_p, path2, count, ficheirosdownload, nome_ficheiro2, nomezip);
-					} else if (!estado.equals("M")) {
+					} else if (!estado2.equals("M")) {
 						criar_ficheiro_Pausa(data_pausa_p, path2, count, ficheirosdownload, nome_ficheiro2, nomezip);
 					}
 
@@ -1592,7 +1770,8 @@ public class SIIP {
 					if (novaetiqueta.equals("1")) {
 						data_quantidades += (content3[21] + "    ").substring(0, 4);
 					} else {
-						if (content3[18].toString().equals("1") || estado.equals("M")) {
+						if (content3[18].toString().equals("1") || estado.equals("M") || estado.equals("A")
+								|| estado2.equals("A")) {
 							data_quantidades += "    ";// + Ligne de production
 						} else {
 							data_quantidades += (content3[21] + "    ").substring(0, 4);// +
@@ -1765,7 +1944,7 @@ public class SIIP {
 
 				if (estado.equals("M")) {
 					if (ficheiro == 1) {
-						data4 = " and (d.QUANT_DEF_M1 != d.QUANT_DEF_M2) ";
+						data4 = " and (d.QUANT_DEF_M1 != d.QUANT_DEF_M2 and d.QUANT_DEF_M1 != 0) ";
 					} else {
 						data4 = " and (d.QUANT_DEF_M1 != d.QUANT_DEF_M2 and d.QUANT_DEF_M2 != 0) ";
 					}
@@ -1819,7 +1998,8 @@ public class SIIP {
 					if (novaetiqueta.equals("1")) {
 						data_defeitos += (content4[23] + "    ").substring(0, 4);
 					} else {
-						if (content4[21].toString().equals("1") || estado.equals("M")) {
+						if (content4[21].toString().equals("1") || estado.equals("M") || estado.equals("A")
+								|| estado2.equals("A")) {
 							data_defeitos += "    ";// + Ligne de production
 						} else {
 							data_defeitos += (content4[23] + "    ").substring(0, 4);// +
@@ -2238,11 +2418,13 @@ public class SIIP {
 
 	public void atualizatabela_AUX(String RESCOD, String DATDEB, String PROREF, String OFNUM, String OPECOD,
 			Integer ID_OF_CAB, String TIPO, String HEUDEB) {
-		entityManager
-				.createNativeQuery(
-						"INSERT INTO RP_AUX_OPNUM (RESCOD,DATDEB,PROREF,OFNUM,OPECOD,DATA_CRIACAO,DATA_MODIFICACAO,ID_CAMPO,ESTADO,TIPO,HEUDEB) VALUES ("
-								+ " '" + RESCOD + "','" + DATDEB + "','" + PROREF + "','" + OFNUM + "','" + OPECOD
-								+ "',GETDATE(),GETDATE()," + ID_OF_CAB + ",0,'" + TIPO + "','" + HEUDEB + "')")
+		entityManager.createNativeQuery(
+				"BEGIN IF NOT EXISTS  ( SELECT * FROM RP_AUX_OPNUM WHERE RESCOD = " + RESCOD + " and DATDEB = '"
+						+ DATDEB + "' and PROREF = '" + PROREF + "' and OFNUM = '" + OFNUM + "' and OPECOD = " + OPECOD
+						+ " and ID_CAMPO = " + ID_OF_CAB + " and TIPO = '" + TIPO + "' and HEUDEB = '" + HEUDEB + "')"
+						+ "BEGIN INSERT INTO RP_AUX_OPNUM (RESCOD,DATDEB,PROREF,OFNUM,OPECOD,DATA_CRIACAO,DATA_MODIFICACAO,ID_CAMPO,ESTADO,TIPO,HEUDEB) VALUES ("
+						+ " '" + RESCOD + "','" + DATDEB + "','" + PROREF + "','" + OFNUM + "','" + OPECOD
+						+ "',GETDATE(),GETDATE()," + ID_OF_CAB + ",0,'" + TIPO + "','" + HEUDEB + "') " + "END END")
 				.executeUpdate();
 	}
 

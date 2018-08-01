@@ -27,7 +27,7 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 				+ "(select count(d.ID_EVENTO) from GER_EVENTO d where d.ID_ORIGEM = a.ID_OF_CAB and d.CAMPO_ORIGEM= 'ID_OF_CAB' and d.ESTADO = 'L') as estado "
 				+ "from RP_OF_CAB a, RP_OF_OP_CAB b,RP_OF_OP_FUNC c "
 				+ "where a.ID_UTZ_CRIA = c.ID_UTZ_CRIA and c.ID_OP_CAB=b.ID_OP_CAB and a.ID_OF_CAB = b.ID_OF_CAB and a.ID_OF_CAB_ORIGEM = null "
-				+ querydata + " order by c.DATA_INI desc, c.HORA_INI desc ");
+				+ querydata + " order by c.DATA_INI_M2 desc, c.HORA_INI_M2 desc ");
 		List<RP_OF_CAB> utz = query.getResultList();
 		return utz;
 
@@ -81,8 +81,8 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 
 	public List<RP_OF_CAB> getbyid(String id_utz) {
 
-		Query query = entityManager
-				.createQuery("Select a from RP_OF_CAB a where a.ID_UTZ_CRIA = :id and a.ESTADO NOT IN ('C','A','M')");
+		Query query = entityManager.createQuery(
+				"Select a from RP_OF_CAB a where a.ID_UTZ_CRIA = :id and a.ESTADO NOT IN ('C','A','M','R')");
 		query.setParameter("id", id_utz);
 		List<RP_OF_CAB> utz = query.getResultList();
 		return utz;
@@ -101,7 +101,7 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 	public List<RP_OF_CAB> verifica(String of_num, String op_cod, String op_num) {
 
 		Query query = entityManager.createQuery(
-				"Select a from RP_OF_CAB a where a.OF_NUM = :of_num and a.OP_NUM = :op_num and a.OP_COD = :op_cod and a.ESTADO NOT IN ('C','A','M')");
+				"Select a from RP_OF_CAB a where a.OF_NUM = :of_num and a.OP_NUM = :op_num and a.OP_COD = :op_cod and a.ESTADO NOT IN ('C','A','M','R')");
 		query.setParameter("of_num", of_num);
 		query.setParameter("op_cod", op_cod);
 		query.setParameter("op_num", op_num);
@@ -115,13 +115,13 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 		SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
 		Date date;
 		String squery;
-		String ordenacao = "order by c.DATA_INI desc, c.HORA_INI desc";
-		System.out.println(firstMap.get("ordenacao"));
-		
-		if(firstMap.get("ordenacao") != null){
+		String ordenacao = "order by c.DATA_INI_M2 desc, c.HORA_INI_M2 desc";
+		// System.out.println(firstMap.get("ordenacao"));
+
+		if (firstMap.get("ordenacao") != null) {
 			ordenacao = "order by " + firstMap.get("ordenacao");
 		}
-		
+
 		String querydata = "and a.SEC_NUM in (" + firstMap.get("sec_num") + ")";
 		if (firstMap.get("sec_num").equals("ADMIN")) {
 			querydata = "";
@@ -136,8 +136,7 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 				+ "(select count(d.ID_EVENTO) from GER_EVENTO d where d.ID_ORIGEM = a.ID_OF_CAB and d.CAMPO_ORIGEM= 'ID_OF_CAB' and d.ESTADO = 'L') as estado "
 				+ "from RP_OF_CAB a, RP_OF_OP_CAB b,RP_OF_OP_FUNC c "
 				+ "where a.ID_UTZ_CRIA = c.ID_UTZ_CRIA and c.ID_OP_CAB=b.ID_OP_CAB and a.ID_OF_CAB = b.ID_OF_CAB and"
-				+ "	a.ID_OF_CAB in( "
-				+ "	select "
+				+ "	a.ID_OF_CAB in( " + "	select "
 				+ "CASE WHEN ss.ID_OF_CAB_ORIGEM is null THEN f.ID_OF_CAB  ELSE ss.ID_OF_CAB_ORIGEM END "
 				+ "from RP_OF_OP_CAB f,RP_OF_OP_LIN c, RP_OF_CAB ss  where f.ID_OP_CAB = c.ID_OP_CAB and f.ID_OF_CAB = ss.ID_OF_CAB and  "
 				+ "			(((not :design_ref != null) or (c.REF_DES like :design_ref)) and "
@@ -146,20 +145,20 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 				+ "')) and ((not '" + firstMap.get("qttmenor") + "' != 'null') or (c.QUANT_BOAS_TOTAL_M2 <= '"
 				+ firstMap.get("qttmenor") + "'))) " + "	) " + "and a.ID_OF_CAB in("
 				+ "select h.ID_OF_CAB from RP_OF_OP_CAB h,RP_OF_OP_FUNC e where h.ID_OP_CAB = e.ID_OP_CAB and "
-				+ "((not :date3 != null) or (e.DATA_INI <= :date3)) and ((not :date1 !=  null) or (e.DATA_INI >= :date1)) and "
-				+ "((not :date4 != null) or (e.DATA_FIM <= :date4)) and ((not :date2 != null) or (e.DATA_FIM >= :date2)) and "
+				+ "((not :date3 != null) or (e.DATA_INI_M2 <= :date3)) and ((not :date1 !=  null) or (e.DATA_INI_M2 >= :date1)) and "
+				+ "((not :date4 != null) or (e.DATA_FIM_M2 <= :date4)) and ((not :date2 != null) or (e.DATA_FIM_M2 >= :date2)) and "
 				+ "((not '" + estado + "' != 'null') or (e.ESTADO in (" + firstMap.get("estado") + "))) and "
 				+ "((not '" + firstMap.get("tempo_prod_maior") + "' != 'null') or (h.TEMPO_EXEC_TOTAL_M2 >=  '"
 				+ firstMap.get("tempo_prod_maior") + "')) and ((not '" + firstMap.get("tempo_prod_menor")
 				+ "' != 'null') or (h.TEMPO_EXEC_TOTAL_M2 <= '" + firstMap.get("tempo_prod_menor") + "')) and "
-				+ "((not '" + firstMap.get("hora4") + "' != 'null') or (e.HORA_FIM <= '" + firstMap.get("hora4")
-				+ "')) and ((not '" + firstMap.get("hora2") + "' != 'null') or (e.HORA_FIM >= '" + firstMap.get("hora2")
-				+ "')) and " + "((not '" + firstMap.get("hora3") + "' != 'null') or (e.HORA_INI <= '"
-				+ firstMap.get("hora3") + "')) and ((not '" + firstMap.get("hora1") + "' != 'null') or (e.HORA_INI >= '"
-				+ firstMap.get("hora1") + "')) and "
+				+ "((not '" + firstMap.get("hora4") + "' != 'null') or (e.HORA_FIM_M2 <= '" + firstMap.get("hora4")
+				+ "')) and ((not '" + firstMap.get("hora2") + "' != 'null') or (e.HORA_FIM_M2 >= '"
+				+ firstMap.get("hora2") + "')) and " + "((not '" + firstMap.get("hora3")
+				+ "' != 'null') or (e.HORA_INI_M2 <= '" + firstMap.get("hora3") + "')) and ((not '"
+				+ firstMap.get("hora1") + "' != 'null') or (e.HORA_INI_M2 >= '" + firstMap.get("hora1") + "')) and "
 				+ "((not :func != null) or (e.NOME_UTZ_CRIA like :func) or (e.ID_UTZ_CRIA like :func))) and ((not :ordem != null) or (a.OF_NUM like :ordem)) and "
 				+ "((not :operacao != null) or (a.OP_COD_ORIGEM like :operacao)) and ((not :maquina != null) or (a.MAQ_NUM like :maquina)) and"
-				+ " a.ID_OF_CAB_ORIGEM = null " + querydata + " "+ordenacao+"");
+				+ " a.ID_OF_CAB_ORIGEM = null " + querydata + " " + ordenacao + "");
 
 		// query.setParameter("estado", '%'+firstMap.get("estado")+'%');
 		squery = (firstMap.get("func") == null ? null : '%' + firstMap.get("func") + '%');

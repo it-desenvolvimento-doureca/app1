@@ -26,15 +26,16 @@ public class ConnectProgress {
 
 			// pasta.teste();
 			// the openedge driver string
-			
-			//Class.forName("com.ddtek.jdbcx.openedge.OpenEdgeDataSource40");
+
+			// Class.forName("com.ddtek.jdbcx.openedge.OpenEdgeDataSource40");
 			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
 			// the openedge url
-			//String url2 = pasta.filePath;
+			// String url2 = pasta.filePath;
 			// String url =
 			// "jdbc:datadirect:openedge://192.168.30.25:20612;DatabaseName=silv-exp;User=SYSPROGRESS;Password=SYSPROGRESS;";
 			// get the openedge database connection
-			//url = "jdbc:sqlserver://localhost:54447;databaseName=demo;User=admin;Password=sa123;";
+			// url =
+			// "jdbc:sqlserver://localhost:54447;databaseName=demo;User=admin;Password=sa123;";
 			globalconnection = DriverManager.getConnection(url);
 
 		} catch (ClassNotFoundException e) {
@@ -76,7 +77,7 @@ public class ConnectProgress {
 		return x;
 	}
 
-	public List<HashMap<String, String>> getOF(String ofnum,String url) throws SQLException {
+	public List<HashMap<String, String>> getOF(String ofnum, String url) throws SQLException {
 
 		String query = "select a.ofnum,a.ofanumenr,a.ofref,b.OFETAT from SOFA a "
 				+ " left join SOFB b on a.OFANUMENR = b.OFANUMENR where a.ofnum= '" + ofnum + "'";
@@ -107,9 +108,10 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getOP(String ofanumenr,String url) throws SQLException {
+	public List<HashMap<String, String>> getOP(String ofanumenr, String url) throws SQLException {
 
-		String query = "select OPECOD,OPENUM,OPEDES,SECNUMENR1 from SOFD where ofanumenr= '" + ofanumenr + "' order by OPENUM";
+		String query = "select OPECOD,OPENUM,OPEDES,SECNUMENR1 from SOFD where ofanumenr= '" + ofanumenr
+				+ "' order by OPENUM";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
@@ -168,10 +170,18 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getallOPNOTIN(String data,String url) throws SQLException {
+	public List<HashMap<String, String>> getallOPNOTIN(List<String> data, String url) throws SQLException {
 		String query = "select OPECOD,OPEDES,SECNUMENR1 from SDTOPP";
-		if (!data.equals("null")) {
-			query += " where OPECOD not in(" + data + ")";
+		if (data != null) {
+			String inString = "";
+
+			for (int i = 0; i < data.size(); i++) {
+				if (i == 0)
+					inString = inString + "'" + (String) data.get(i) + "'";
+				else
+					inString = inString + ",'" + (String) data.get(i) + "'";
+			}
+			query += " where OPECOD not in(" + inString + ")";
 		}
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
@@ -200,10 +210,17 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getallfamNOTIN(String data,String url) throws SQLException {
+	public List<HashMap<String, String>> getallfamNOTIN(List<String> data, String url) throws SQLException {
 		String query = "select FAMCOD,FAMLIB from SPAFAM";
-		if (!data.equals("null")) {
-			query += " where FAMCOD not in(" + data + ")";
+		if (data != null) {
+			String inString = "";
+			for (int i = 0; i < data.size(); i++) {
+				if (i == 0)
+					inString = inString + "'" + (String) data.get(i) + "'";
+				else
+					inString = inString + ",'" + (String) data.get(i) + "'";
+			}
+			query += " where FAMCOD not in(" + inString + ")";
 		}
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
@@ -260,11 +277,11 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getMaq(String SECNUMENR,String url) throws SQLException {
+	public List<HashMap<String, String>> getMaq(String SECNUMENR, String url) throws SQLException {
 
 		String query = "select a.SECCOD, a.ssecod ,c.SECLIB,b.SSEDES from SDTSEC a "
-				+ "inner join SPASSE b on a.ssecod = b.ssecod "
-				+ "inner join SPASEC c on a.seccod = c.seccod " + "where a.SECNUMENR= '" + SECNUMENR + "'";
+				+ "inner join SPASSE b on a.ssecod = b.ssecod " + "inner join SPASEC c on a.seccod = c.seccod "
+				+ "where a.SECNUMENR= '" + SECNUMENR + "'";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
@@ -293,7 +310,7 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getAllMaq(String SECCOD,String url) throws SQLException {
+	public List<HashMap<String, String>> getAllMaq(String SECCOD, String url) throws SQLException {
 
 		String query = "select b.ssecod,a.SSEDES from SPASSE a inner join SDTSEC b on a.ssecod = b.ssecod where b.SECCOD= '"
 				+ SECCOD + "'";
@@ -352,10 +369,11 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getfilhos(String pai,String url) throws SQLException {
+	public List<HashMap<String, String>> getfilhos(String pai, String url) throws SQLException {
 
-		String query = "select b.PROREF,b.PRODES1,b.PRODES2,a.PROREFCST,b.PRDFAMCOD from SDTNCL a "
-				+ "inner join SDTPRA b on a.PROREFCST = b.PROREF  " + " where a.PROREFCSE ='" + pai + "' and  b.PROTYPCOD != 'COM'";
+		String query = "select b.PROREF,b.PRODES1,b.PRODES2,a.PROREFCST,b.PRDFAMCOD,c.ZPAVAL from SDTNCL a "
+				+ "inner join SDTPRA b on a.PROREFCST = b.PROREF  left join SDTZPA c on b.ZPANUM = c.ZPANUM and  c.zpacod='ALER' "
+				+ " where a.PROREFCSE ='" + pai + "' and  b.PROTYPCOD != 'COM'";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
@@ -371,6 +389,7 @@ public class ConnectProgress {
 				x.put("PRODES2", rs.getString("PRODES2"));
 				x.put("PROREFCST", rs.getString("PROREFCST"));
 				x.put("PRDFAMCOD", rs.getString("PRDFAMCOD"));
+				x.put("ZPAVAL", rs.getString("ZPAVAL"));
 				list.add(x);
 			}
 			stmt.close();
@@ -385,7 +404,7 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getDefeitos(String fam,String url) throws SQLException {
+	public List<HashMap<String, String>> getDefeitos(String fam, String url) throws SQLException {
 
 		String query = "select QUACOD,QUALIB from SPAQUA where  LEFT(QUACOD,2)='" + fam + "'";
 
@@ -414,7 +433,7 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getRef(String OFANUMENR,String url) throws SQLException {
+	public List<HashMap<String, String>> getRef(String OFANUMENR, String url) throws SQLException {
 
 		String query = "select a.PROREF, b.PRODES1,b.PRODES2,a.VA1REF, a.VA2REF,a.INDREF,a.OFBQTEINI,a.INDNUMENR,c.FAMCOD,d.ZPAVAL,b.PRDFAMCOD "
 				+ "from SOFB a " + "inner join SDTPRA b on a.PROREF = b.PROREF  "
@@ -458,7 +477,7 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getOPtop1(String ofanumenr,String url) throws SQLException {
+	public List<HashMap<String, String>> getOPtop1(String ofanumenr, String url) throws SQLException {
 
 		String query = "select * from SOFD a where ofanumenr= '" + ofanumenr
 				+ "' and OPECOD != '' order by a.OPENUM desc";
@@ -490,15 +509,21 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getEtiqueta(String etiqueta,String url) throws SQLException {
+	public List<HashMap<String, String>> getEtiqueta(String etiqueta, String url) throws SQLException {
 
+		/*
+		 * String query =
+		 * "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,c.INDNUMENR,c.VA1REF,c.VA2REF,c.INDREF,c.PROREF from SETQDE a "
+		 * +
+		 * "inner join SOFA b on b.ofnum = left(a.etqoridoc1,10) inner join SOFB c on b.ofanumenr = c.ofanumenr"
+		 * + " where a.etqnum = '" + etiqueta + "'";
+		 */
 		String query = "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,c.INDNUMENR,c.VA1REF,c.VA2REF,c.INDREF,c.PROREF from SETQDE a "
-				+ "inner join SOFA b on b.ofnum = left(a.etqoridoc1,10) inner join SOFB c on b.ofanumenr = c.ofanumenr" + " where a.etqnum = '" + etiqueta
-				+ "'";
-
+				+ "LEFT join SOFB c on  c.ofbnumenr = a.orinumenr LEFT join SOFA b on b.ofanumenr = c.ofanumenr "
+				+ " where a.etqnum = '" + etiqueta + "'";
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
-		 //System.out.println(query);
+		// System.out.println(query);
 		// Usa sempre assim que fecha os resources automaticamente
 		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
@@ -559,7 +584,7 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getUser(String RESCOD,String url) throws SQLException {
+	public List<HashMap<String, String>> getUser(String RESCOD, String url) throws SQLException {
 
 		String query = "select RESCOD,RESDES from SDTRES  where RESTYPCOD = 'MO' and RESCOD='" + RESCOD + "'";
 
@@ -618,30 +643,33 @@ public class ConnectProgress {
 		}
 		return list;
 	}
-	
-	
-	public String GetOP_NUM(String RESCOD,String DATDEB,String PROREF,String OFNUM,String OPECOD,String url,String HEUDEB) throws SQLException {
 
-		/*String query ="SELECT d.OPENUM	"
-				+ "FROM SCPSVQ a	"
-				+ "INNER JOIN SCPSVA b ON a.svanumenr = b.svanumenr	"
-				+ "INNER JOIN SOFA c ON b.svanumenr = c.ofanumenr "
-				+ "INNER JOIN SOFD d ON d.OFANUMENR = c.ofanumenr "
-				+ "INNER JOIN SOFB e ON d.OFANUMENR = e.ofanumenr "
-				+ "WHERE b.rescod ='"+RESCOD+"' AND b.DATDEB='"+DATDEB+"'	"
-				+ "AND e.PROREF ='"+PROREF+"' AND c.OFNUM='"+OFNUM+"' AND d.OPECOD='"+OPECOD+"'";
-		String query = "SELECT top 1 b.OPENUM FROM SCPSVA	a "
-				+ "INNER JOIN SOFD b ON a.OFANUMENR = b.OFANUMENR "
-				+ " INNER JOIN SOFA c ON a.ofanumenr = c.ofanumenr "
-				+ "INNER JOIN SOFB e ON c.OFANUMENR = e.ofanumenr "
-				+ "WHERE a.rescod ='"+RESCOD+"' AND a.DATDEB='"+DATDEB+"'	and a.HEUDEB ='"+HEUDEB.substring(0, 8)+"' "
-				+ " AND e.PROREF ='"+PROREF+"' AND c.OFNUM='"+OFNUM+"' AND b.OPECOD='"+OPECOD+"' order by b.OPENUM desc";*/
-		String query = "SELECT SOFD.OPENUM FROM SCPSVA "
-				+ "INNER JOIN SOFD ON SCPSVA.ofdnumenr = SOFD.ofdnumenr "
+	public String GetOP_NUM(String RESCOD, String DATDEB, String PROREF, String OFNUM, String OPECOD, String url,
+			String HEUDEB) throws SQLException {
+
+		/*
+		 * String query ="SELECT d.OPENUM	" + "FROM SCPSVQ a	" +
+		 * "INNER JOIN SCPSVA b ON a.svanumenr = b.svanumenr	" +
+		 * "INNER JOIN SOFA c ON b.svanumenr = c.ofanumenr " +
+		 * "INNER JOIN SOFD d ON d.OFANUMENR = c.ofanumenr " +
+		 * "INNER JOIN SOFB e ON d.OFANUMENR = e.ofanumenr " +
+		 * "WHERE b.rescod ='"+RESCOD+"' AND b.DATDEB='"+DATDEB+"'	" +
+		 * "AND e.PROREF ='"+PROREF+"' AND c.OFNUM='"+OFNUM+"' AND d.OPECOD='"
+		 * +OPECOD+"'"; String query = "SELECT top 1 b.OPENUM FROM SCPSVA	a "
+		 * + "INNER JOIN SOFD b ON a.OFANUMENR = b.OFANUMENR " +
+		 * " INNER JOIN SOFA c ON a.ofanumenr = c.ofanumenr " +
+		 * "INNER JOIN SOFB e ON c.OFANUMENR = e.ofanumenr " +
+		 * "WHERE a.rescod ='"+RESCOD+"' AND a.DATDEB='"
+		 * +DATDEB+"'	and a.HEUDEB ='"+HEUDEB.substring(0, 8)+"' " +
+		 * " AND e.PROREF ='"+PROREF+"' AND c.OFNUM='"+OFNUM+"' AND b.OPECOD='"
+		 * +OPECOD+"' order by b.OPENUM desc";
+		 */
+		String query = "SELECT SOFD.OPENUM FROM SCPSVA " + "INNER JOIN SOFD ON SCPSVA.ofdnumenr = SOFD.ofdnumenr "
 				+ "INNER JOIN SOFA ON SOFD.ofanumenr = SOFA.ofanumenr "
-				+ "INNER JOIN SOFB ON SOFB.ofanumenr = SOFA.ofanumenr "
-				+ "WHERE SCPSVA.rescod = '"+RESCOD+"' AND SCPSVA.datdeb = '"+DATDEB+"' AND SCPSVA.heudeb = '"+HEUDEB.substring(0, 8)+"' AND SOFB.proref = '"+PROREF+"' "
-				+ "AND SOFA.ofnum = '"+OFNUM+"' AND SOFD.opecod = '"+OPECOD+"' ";
+				+ "INNER JOIN SOFB ON SOFB.ofanumenr = SOFA.ofanumenr " + "WHERE SCPSVA.rescod = '" + RESCOD
+				+ "' AND SCPSVA.datdeb = '" + DATDEB + "' AND SCPSVA.heudeb = '" + HEUDEB.substring(0, 8)
+				+ "' AND SOFB.proref = '" + PROREF + "' " + "AND SOFA.ofnum = '" + OFNUM + "' AND SOFD.opecod = '"
+				+ OPECOD + "' ";
 		String val = null;
 
 		// Usa sempre assim que fecha os resources automaticamente
@@ -663,6 +691,5 @@ public class ConnectProgress {
 		}
 		return val;
 	}
-
 
 }

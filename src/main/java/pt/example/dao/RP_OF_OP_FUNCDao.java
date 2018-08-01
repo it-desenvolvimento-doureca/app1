@@ -38,7 +38,7 @@ public class RP_OF_OP_FUNCDao extends GenericDaoJpaImpl<RP_OF_OP_FUNC, Integer>
 
 		Query query = entityManager.createQuery("Select a,b from RP_OF_OP_FUNC a,RP_OF_OP_CAB b, RP_OF_CAB c "
 				+ "where a.ID_OP_CAB = b.ID_OP_CAB and b.ID_OF_CAB = c.ID_OF_CAB and c.ID_OF_CAB_ORIGEM IS NULL and "
-				+ "a.ID_UTZ_CRIA = :user and a.ESTADO NOT IN ('C','A','M')");
+				+ "a.ID_UTZ_CRIA = :user and a.ESTADO NOT IN ('C','A','M','R')");
 
 		query.setParameter("user", user);
 		List<RP_OF_OP_FUNC> utz = query.getResultList();
@@ -60,7 +60,7 @@ public class RP_OF_OP_FUNCDao extends GenericDaoJpaImpl<RP_OF_OP_FUNC, Integer>
 	public List<RP_OF_OP_FUNC> getUsers(Integer id) {
 
 		Query query = entityManager.createQuery(
-				"select a from RP_OF_OP_FUNC a, RP_OF_OP_CAB b, RP_OF_CAB c where c.ID_OF_CAB = :id and b.ID_OF_CAB = c.ID_OF_CAB and b.ID_OP_CAB = a.ID_OP_CAB and a.ESTADO NOT IN ('C','A','M')");
+				"select a from RP_OF_OP_FUNC a, RP_OF_OP_CAB b, RP_OF_CAB c where c.ID_OF_CAB = :id and b.ID_OF_CAB = c.ID_OF_CAB and b.ID_OP_CAB = a.ID_OP_CAB and a.ESTADO NOT IN ('C','A','M','R')");
 		query.setParameter("id", id);
 		List<RP_OF_OP_FUNC> utz = query.getResultList();
 		return utz;
