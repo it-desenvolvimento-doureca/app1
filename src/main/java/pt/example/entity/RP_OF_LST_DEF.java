@@ -10,7 +10,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-@Embeddable
+@Entity
 @Table(name = "RP_OF_LST_DEF")
 public class RP_OF_LST_DEF {
 
