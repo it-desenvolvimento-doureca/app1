@@ -15,6 +15,7 @@ public class RP_CONF_UTZ_PERF {
 	private String ID_UTZ;
 	private String PERFIL;
 	private String NOME_UTZ;
+	private String PASSWORD;
 	
 	@Id
 	@Column(name = "ID_CONF_UTZ_PERF")
@@ -41,6 +42,15 @@ public class RP_CONF_UTZ_PERF {
 	@Column(name = "PERFIL")
 	public String getPERFIL() {
 		return PERFIL;
+	}
+
+	@Column(name = "PASSWORD")
+	public String getPASSWORD() {
+		return PASSWORD;
+	}
+
+	public void setPASSWORD(String pASSWORD) {
+		PASSWORD = pASSWORD;
 	}
 
 	public void setID_CONF_UTZ_PERF(Integer ID_CONF_UTZ_PERF) {

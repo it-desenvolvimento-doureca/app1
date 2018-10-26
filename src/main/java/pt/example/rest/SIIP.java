@@ -137,7 +137,7 @@ public class SIIP {
 
 	@Inject
 	private GER_EVENTODao dao15;
-	
+
 	@Inject
 	private VERSAO_APPDao dao16;
 
@@ -170,6 +170,15 @@ public class SIIP {
 		RP_CONF_UTZ_PERF RP_CONF_UTZ_PERF = new RP_CONF_UTZ_PERF();
 		RP_CONF_UTZ_PERF.setID_CONF_UTZ_PERF(id);
 		dao1.delete(RP_CONF_UTZ_PERF);
+	}
+
+	@PUT
+	@Path("/updateRP_CONF_UTZ_PERF")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public RP_CONF_UTZ_PERF updateuser(final RP_CONF_UTZ_PERF RP_CONF_UTZ_PERF) {
+		RP_CONF_UTZ_PERF.setID_CONF_UTZ_PERF(RP_CONF_UTZ_PERF.getID_CONF_UTZ_PERF());
+		return dao1.update(RP_CONF_UTZ_PERF);
 	}
 
 	// RP_CONF_CHEF_SEC***************************************************************
@@ -848,7 +857,8 @@ public class SIIP {
 	public void deleteRP_OF_LST_DEFid_op_lin(@PathParam("id") Integer id) {
 		dao14.apagar_idop_lin(id);
 	}
-	//VERSAO_APP*************************************************
+
+	// VERSAO_APP*************************************************
 	@GET
 	@Path("/getVERSAO_APP")
 	@Produces("application/json")
@@ -1134,25 +1144,23 @@ public class SIIP {
 	@Path("/getANALISERAPIDA")
 	@Consumes("*/*")
 	@Produces("application/json")
-	public List<HashMap<String, String>> allopNOTIN(final List<HashMap<String, String>>  data) {
-		
+	public List<HashMap<String, String>> allopNOTIN(final List<HashMap<String, String>> data) {
+
 		HashMap<String, String> firstMap = data.get(0);
 		String OF_NUM = firstMap.get("OF_NUM");
 		String MAQ_NUM = firstMap.get("MAQ_NUM");
 		String ID_UTZ_CRIA = firstMap.get("ID_UTZ_CRIA");
 		String OP_NUM = firstMap.get("OP_NUM");
-		
+
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 		Query query = entityManager.createNativeQuery("select "
 				+ "d.ID_UTZ_CRIA,AVG(CASE WHEN DATEPART(HOUR, CONVERT( TIME,b.TEMPO_EXEC_TOTAL_M2)) = 0 THEN 0 ELSE c.QUANT_BOAS_TOTAL_M2/DATEPART(HOUR, CONVERT( TIME,b.TEMPO_EXEC_TOTAL_M2)) END) as TimeStampHour "
-				+ "from RP_OF_CAB a "
-				+ "inner join RP_OF_OP_CAB b on a.ID_OF_CAB = b.ID_OF_CAB "
+				+ "from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on a.ID_OF_CAB = b.ID_OF_CAB "
 				+ "inner join RP_OF_OP_LIN c on b.ID_OP_CAB = c.ID_OP_CAB "
-				+ "inner join RP_OF_OP_FUNC d on b.ID_OP_CAB = d.ID_OP_CAB "
-				+ "where a.ID_OF_CAB_ORIGEM is null "
+				+ "inner join RP_OF_OP_FUNC d on b.ID_OP_CAB = d.ID_OP_CAB " + "where a.ID_OF_CAB_ORIGEM is null "
 				+ "and a.OP_COD_ORIGEM = 85 "
 				+ " and a.MAQ_NUM = '032'and a.OF_NUM = 1806322495 and d.DATA_INI_M2 >= DATEADD(MONTH, -3, GETDATE()) GROUP BY d.ID_UTZ_CRIA");
-		
+
 		List<Object[]> dados = query.getResultList();
 
 		for (Object[] content : dados) {

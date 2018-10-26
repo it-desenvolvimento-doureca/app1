@@ -373,7 +373,7 @@ public class ConnectProgress {
 
 		String query = "select b.PROREF,b.PRODES1,b.PRODES2,a.PROREFCST,b.PRDFAMCOD,c.ZPAVAL from SDTNCL a "
 				+ "inner join SDTPRA b on a.PROREFCST = b.PROREF  left join SDTZPA c on b.ZPANUM = c.ZPANUM and  c.zpacod='ALER' "
-				+ " where a.PROREFCSE ='" + pai + "' and  b.PROTYPCOD != 'COM'";
+				+ " where a.PROREFCSE ='" + pai + "' and  (b.PROTYPCOD != 'COM' and b.PROTYPCOD != 'EMBA')";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
@@ -406,7 +406,7 @@ public class ConnectProgress {
 
 	public List<HashMap<String, String>> getDefeitos(String fam, String url) throws SQLException {
 
-		String query = "select QUACOD,QUALIB from SPAQUA where  LEFT(QUACOD,2)='" + fam + "'";
+		String query = "select QUACOD,QUALIB from SPAQUA where  LEFT(QUACOD,2)='" + fam + "' and QUATYP != '2'";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
