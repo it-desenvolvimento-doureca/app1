@@ -1459,7 +1459,7 @@ public class SIIP {
 				data_A += "1";// Type N° OF
 				data_A += (of + "         ").substring(0, 10); // N° OF
 
-				if (estado.equals("M") && !novaetiqueta.equals("1")) {
+				if ((estado.equals("A") || (estado.equals("M"))) && !novaetiqueta.equals("1")) {
 					data_A += "1";// Type opération
 				} else {
 					data_A += content[11];// Type opération
@@ -1584,7 +1584,7 @@ public class SIIP {
 						lider = false;
 					}
 					data_inicio = data_A.substring(0, 87);
-					if (content[11].toString().equals("2") && estado.equals("C") && atualiza) {
+					if (content[11].toString().equals("2") && (estado.equals("C") || estado.equals("M")) && atualiza) {
 						Integer id_t = id_etiqueta;
 						String tipo_t = "C";
 						if (id_etiqueta == null) {
@@ -1798,7 +1798,7 @@ public class SIIP {
 																							// OF
 					}
 
-					if (estado.equals("M") && !novaetiqueta.equals("1")) {
+					if ((estado.equals("A") || estado.equals("M")) && !novaetiqueta.equals("1")) {
 						data_quantidades += "1";// Type opération
 					} else {
 						data_quantidades += content3[18];// Type opération
@@ -2026,7 +2026,7 @@ public class SIIP {
 																						// OF
 					}
 
-					if (estado.equals("M") && !novaetiqueta.equals("1")) {
+					if ((estado.equals("A") || estado.equals("M")) && !novaetiqueta.equals("1")) {
 						data_defeitos += "1";// Type opération
 					} else {
 						data_defeitos += content4[21];// Type opération
@@ -2389,7 +2389,7 @@ public class SIIP {
 			String mensagem = borderTypes.getEMAIL_MENSAGEM();
 			String assunto = borderTypes.getEMAIL_ASSUNTO();
 			for (String pair : keyValuePairs) {
-				String[] entry = pair.split(":");
+				String[] entry = pair.split("::");
 				mensagem = mensagem.replace("{" + entry[0].trim() + "}", entry[1].trim());
 				assunto = assunto.replace("{" + entry[0].trim() + "}", (entry.length > 1) ? entry[1].trim() : "");
 			}
