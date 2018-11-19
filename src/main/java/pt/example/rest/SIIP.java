@@ -1439,7 +1439,7 @@ public class SIIP {
 				String data_A = "";
 				// System.out.println(content[0]);
 				data_A += "01        ";// Société
-				data_A += data_atual; // Date suivi
+				data_A += content[5].toString().replaceAll("-", ""); // Date suivi
 				data_A += sequencia; // N° séquence
 
 				if (novaetiqueta.equals("1")) {
@@ -1771,7 +1771,7 @@ public class SIIP {
 					String data_quantidades = "";
 
 					data_quantidades += "01        ";// Société
-					data_quantidades += data_atual; // Date suivi
+					data_quantidades += content3[10].toString().replaceAll("-", "");; // Date suivi
 
 					data_quantidades += sequencia; // N° séquence
 
@@ -1999,7 +1999,7 @@ public class SIIP {
 					alteracoes = true;
 					String data_defeitos = "";
 					data_defeitos += "01        ";// Société
-					data_defeitos += data_atual; // Date suivi
+					data_defeitos += content4[12].toString().replaceAll("-", ""); // Date suivi
 
 					data_defeitos += sequencia; // N° séquence
 

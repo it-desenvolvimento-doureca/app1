@@ -30,7 +30,8 @@ public class RP_OF_OP_ETIQUETADao extends GenericDaoJpaImpl<RP_OF_OP_ETIQUETA, I
 						+ id + " and OP_NUM is null ) as totalof " + " from RP_OF_OP_ETIQUETA a "
 						+ "left join RP_OF_OP_LIN b on a.ID_OP_LIN = b.ID_OP_LIN "
 						+ "left join RP_OF_OP_CAB c on b.ID_OP_CAB = c.ID_OP_CAB "
-						+ "left join RP_OF_CAB d on c.ID_OF_CAB = d.ID_OF_CAB where d.ID_OF_CAB_ORIGEM = " + id + " ");
+						+ "left join RP_OF_CAB d on c.ID_OF_CAB = d.ID_OF_CAB where d.ID_OF_CAB_ORIGEM = " + id + " "
+						+ "and ((a.QUANT_BOAS_M2 > 0 and a.QUANT_DEF_M2 = 0) or (a.QUANT_BOAS_M2 = 0 and a.QUANT_DEF_M2 > 0) or (a.QUANT_BOAS_M2 > 0 and a.QUANT_DEF_M2 > 0) )");
 		List<RP_OF_OP_ETIQUETA> data = query.getResultList();
 		return data;
 
