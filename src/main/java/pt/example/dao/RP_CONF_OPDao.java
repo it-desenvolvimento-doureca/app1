@@ -13,8 +13,8 @@ public class RP_CONF_OPDao extends GenericDaoJpaImpl<RP_CONF_OP,Integer> impleme
 	}
 	public List<RP_CONF_OP> getbyid(String id_utz) {
 
-		Query query = entityManager.createQuery("Select a from RP_CONF_OP a where a.ID_OP_PRINC = :id order by a.ID_OP_SEC");
-		query.setParameter("id", id_utz);
+		Query query = entityManager.createQuery("Select a from RP_CONF_OP a where a.ID_OP_PRINC in ("+id_utz+") order by a.ID_OP_SEC");
+		//query.setParameter("id", id_utz);
 		List<RP_CONF_OP> utz = query.getResultList();
 		return utz;
 

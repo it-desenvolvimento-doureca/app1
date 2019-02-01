@@ -52,6 +52,18 @@ public class RP_OF_PARA_LINDao extends GenericDaoJpaImpl<RP_OF_PARA_LIN, Integer
 
 	}
 
+	public List<RP_OF_PARA_LIN> getbyallUserIDOFCAB(Integer id, String user) {
+
+		Query query = entityManager.createNativeQuery(
+				"select TIPO_PARAGEM_M2 from RP_OF_PARA_LIN WHERE ID_OP_CAB in ( " + "select a.ID_OP_CAB from RP_OF_OP_CAB  a "
+						+ "inner join RP_OF_OP_FUNC b on a.ID_OP_CAB = b.ID_OP_CAB and b.ID_UTZ_CRIA = '" + user + "' "
+						+ "where ID_OF_CAB = " + id + ")  ");
+
+		List<RP_OF_PARA_LIN> utz = query.getResultList();
+		return utz;
+
+	}
+
 	public List<RP_OF_PARA_LIN> getbyid_op_cab(Integer id) {
 
 		Query query = entityManager

@@ -30,7 +30,8 @@ public class RP_OF_OP_LIN {
 	private Integer QUANT_BOAS_TOTAL_M2;
 	private Integer QUANT_DEF_TOTAL_M2;
 	private Integer VERSAO_MODIF;
-
+	private String GESCOD;
+	
 	@Id
 	@Column(name = "ID_OP_LIN")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -202,6 +203,15 @@ public class RP_OF_OP_LIN {
 
 	public void setVERSAO_MODIF(Integer vERSAO_MODIF) {
 		VERSAO_MODIF = vERSAO_MODIF;
+	}
+
+	@Column(name = "GESCOD")
+	public String getGESCOD() {
+		return GESCOD;
+	}
+
+	public void setGESCOD(String gESCOD) {
+		GESCOD = gESCOD;
 	}
 
 }

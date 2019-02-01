@@ -1,5 +1,6 @@
 package pt.example.entity;
 
+import java.sql.Date;
 import java.sql.Timestamp;
 
 import javax.persistence.Column;
@@ -34,6 +35,7 @@ public class RP_OF_OP_ETIQUETA {
 	private String OP_NUM;
 	private String OP_COD_FAM;
 	private Boolean NOVO;
+	private Date OFDATFR;
 
 	@Id
 	@Column(name = "ID_REF_ETIQUETA")
@@ -224,6 +226,15 @@ public class RP_OF_OP_ETIQUETA {
 
 	public void setNOVO(Boolean nOVO) {
 		NOVO = nOVO;
+	}
+
+	@Column(name = "OFDATFR")
+	public Date getOFDATFR() {
+		return OFDATFR;
+	}
+
+	public void setOFDATFR(Date oFDATFR) {
+		OFDATFR = oFDATFR;
 	}
 
 }

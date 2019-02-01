@@ -255,11 +255,11 @@ public class SIIP {
 		return dao3.update(RP_CONF_OP);
 	}
 
-	@GET
-	@Path("/getRP_CONF_OPbyid/{id}")
+	@PUT
+	@Path("/getRP_CONF_OPbyid")
 	@Produces("application/json")
-	public List<RP_CONF_OP> getRP_CONF_OPbyid(@PathParam("id") String id) {
-		return dao3.getbyid(id);
+	public List<RP_CONF_OP> getRP_CONF_OPbyid(final String id) {
+		return dao3.getbyid(id.replace("\"", ""));
 	}
 
 	// RP_CONF_OP_NPREV***********************************************************
@@ -290,11 +290,19 @@ public class SIIP {
 	// RP_OF_CAB***********************************************************
 
 	@POST
-	@Path("/getRP_OF_CAB")
+	@Path("/getRP_OF_CAB/{start}")
 	@Consumes("*/*")
 	@Produces("application/json")
-	public List<RP_OF_CAB> listof(final String data) {
-		return dao.getall(data);
+	public List<RP_OF_CAB> listof(final String data, @PathParam("start") Integer start) {
+		return dao.getall(data, start);
+	}
+
+	@POST
+	@Path("/getRP_OF_CAB2/{start}")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public List<RP_OF_CAB> listof2(final String data, @PathParam("start") Integer start) {
+		return dao.getall2(data, start);
 	}
 
 	@POST
@@ -327,11 +335,11 @@ public class SIIP {
 	}
 
 	@GET
-	@Path("/verifica/{of_num}/{op_cod}/{op_num}")
+	@Path("/verifica/{of_num}/{op_cod}/{op_num}/{user}")
 	@Produces("application/json")
 	public List<RP_OF_CAB> verifica(@PathParam("of_num") String of_num, @PathParam("op_cod") String op_cod,
-			@PathParam("op_num") String op_num) {
-		return dao.verifica(of_num, op_cod, op_num);
+			@PathParam("op_num") String op_num, @PathParam("user") String user) {
+		return dao.verifica(of_num, op_cod, op_num, user);
 	}
 
 	@POST
@@ -351,11 +359,12 @@ public class SIIP {
 	}
 
 	@POST
-	@Path("/pesquisa_avancada")
+	@Path("/pesquisa_avancada/{start}")
 	@Consumes("*/*")
 	@Produces("application/json")
-	public List<RP_OF_CAB> pesquisa_avancada(final List<HashMap<String, String>> data) throws ParseException {
-		return dao.pesquisa_avancada(data);
+	public List<RP_OF_CAB> pesquisa_avancada(final List<HashMap<String, String>> data,
+			@PathParam("start") Integer start) throws ParseException {
+		return dao.pesquisa_avancada(data, start);
 	}
 
 	@PUT
@@ -432,6 +441,13 @@ public class SIIP {
 	@Produces("application/json")
 	public List<RP_OF_OP_LIN> getbyid(@PathParam("id") Integer id) {
 		return dao7.getbyid(id);
+	}
+
+	@GET
+	@Path("/getRP_OF_OP_LINidcontrolo/{id}")
+	@Produces("application/json")
+	public List<RP_OF_OP_LIN> getbyidontrolo(@PathParam("id") Integer id) {
+		return dao7.getbyidcontrolo(id);
 	}
 
 	@GET
@@ -596,6 +612,13 @@ public class SIIP {
 		return dao11.getallUsers(id);
 	}
 
+	@GET
+	@Path("/getallUsersTEMPPREP/{id}")
+	@Produces("application/json")
+	public List<RP_OF_OP_FUNC> getallUsersTEMPPREP(@PathParam("id") Integer id) {
+		return dao11.getallUsersTEMPPREP(id);
+	}
+
 	// RP_OF_PARA_LIN******************************************
 
 	@GET
@@ -613,10 +636,27 @@ public class SIIP {
 	}
 
 	@GET
+	@Path("/getbyallUSERIDOFCAB/{id}/{user}")
+	@Produces("application/json")
+	public List<RP_OF_PARA_LIN> getbyallUSERIDOFCAB(@PathParam("id") Integer id, @PathParam("user") String user) {
+		return dao9.getbyallUserIDOFCAB(id, user);
+	}
+
+	@GET
 	@Path("/getbyidRP_OF_PARA_LIN/{id}")
 	@Produces("application/json")
 	public List<RP_OF_PARA_LIN> getbyidRP_OF_PARA_LIN(@PathParam("id") Integer id) {
 		return dao9.getbyid(id);
+	}
+
+	@GET
+	@Path("/apagapausasbyid_op_cab/{id}")
+	@Produces("application/json")
+	public void apagapausasbyid_op_cab(@PathParam("id") Integer id) {
+		Query query = entityManager.createNativeQuery(
+				"delete RP_OF_PARA_LIN where ID_OP_CAB = " + id + " and DATA_FIM is null and DATA_FIM_M1 is null");
+
+		query.executeUpdate();
 	}
 
 	@GET
@@ -733,6 +773,14 @@ public class SIIP {
 	@Produces("application/json")
 	public List<RP_OF_OUTRODEF_LIN> getbyidRP_OF_OUTRODEF_LIN(@PathParam("id") Integer id) {
 		return dao12.getbyid(id);
+	}
+
+	@GET
+	@Path("/getbyidRP_OF_OUTRODEF_LINFetiqueta/{id}/{etiqueta}")
+	@Produces("application/json")
+	public List<RP_OF_OUTRODEF_LIN> getbyidRP_OF_OUTRODEF_LINetiqueta(@PathParam("id") Integer id,
+			@PathParam("etiqueta") Integer etiqueta) {
+		return dao12.getbyidetiqueta(id, etiqueta);
 	}
 
 	@PUT
@@ -978,6 +1026,13 @@ public class SIIP {
 	}
 
 	@GET
+	@Path("/testeligacao")
+	@Produces("application/json")
+	public boolean testeligacao() {
+		return true;
+	}
+
+	@GET
 	@Path("/atualizarestado/{id}/{user}/{estado}")
 	@Produces("application/json")
 	public void atualizarestado(@PathParam("id") Integer id, @PathParam("user") String user,
@@ -1014,6 +1069,22 @@ public class SIIP {
 			query2 = "QUANT_DEF_TOTAL = r.def,QUANT_DEF_TOTAL_M1 = r.def, QUANT_DEF_TOTAL_M2 = r.def ";
 			query3 = "QUANT_DEF = r.def,QUANT_DEF_M1 = r.def, QUANT_DEF_M2 = r.def ";
 		}
+
+		entityManager.createNativeQuery(
+				"DELETE RP_OF_DEF_LIN WHERE ID_DEF_LIN in (SELECT T2.ID_DEF_LIN FROM RP_OF_DEF_LIN T1,RP_OF_DEF_LIN T2 "
+						+ "WHERE  T1.ID_DEF_LIN < T2.ID_DEF_LIN AND  T1.COD_DEF = T2.COD_DEF AND  T1.ID_OP_LIN = T2.ID_OP_LIN "
+						+ "AND T1.ID_OP_LIN = (select top 1 ID_OP_LIN from RP_OF_OP_LIN where ID_OP_CAB = " + id
+						+ ") )")
+				.executeUpdate();
+
+		entityManager.createNativeQuery(
+				"DELETE RP_OF_DEF_LIN WHERE ID_DEF_LIN in (SELECT T2.ID_DEF_LIN FROM RP_OF_DEF_LIN T1,RP_OF_DEF_LIN T2 "
+						+ "WHERE  T1.ID_DEF_LIN < T2.ID_DEF_LIN AND  T1.COD_DEF = T2.COD_DEF AND  T1.ID_OP_LIN = T2.ID_OP_LIN AND T1.ID_REF_ETIQUETA = T2 .ID_REF_ETIQUETA AND T1.ID_REF_ETIQUETA is not null  AND T2.ID_REF_ETIQUETA is not null "
+						+ "AND T1.ID_OP_LIN in (select ID_OP_LIN from RP_OF_OP_LIN where ID_OP_CAB in ( "
+						+ "select ID_OP_CAB from  RP_OF_OP_CAB a inner join RP_OF_CAB b on a.ID_OF_CAB = b.ID_OF_CAB "
+						+ "where b.ID_OF_CAB_ORIGEM in (select ID_OF_CAB from RP_OF_OP_CAB where ID_OP_CAB = " + id
+						+ ") )))")
+				.executeUpdate();
 
 		entityManager
 				.createNativeQuery("UPDATE tt  set " + query + " from "
@@ -1175,11 +1246,222 @@ public class SIIP {
 	// CRIAR
 	// FICHEIRO****************************************************************
 
+	@POST
+	@Path("/ficheiroManual")
+	@Produces("application/zip")
+	public Response getFicheiroManual(final List<String> dados_of) throws IOException, ParseException {
+
+		String data = new SimpleDateFormat("yyyyMMddHHmmss_").format(new Date());
+		String data_file = new SimpleDateFormat("yyyyMMddHHmmss_").format(new Date());
+		String url = getURL();
+		String estado = "C";
+		Boolean ficheirosdownload = true;
+
+		Boolean pausa = true;
+		Integer comp_num = 1;
+
+		String nome_ficheiro = "";
+		for (String content_of : dados_of) {
+
+			ConnectProgress connectionProgress = new ConnectProgress();
+			String op_num = null;
+
+			if (op_num == null || op_num.isEmpty()) {
+
+				Query query = entityManager.createNativeQuery(
+						"select ID_OF_CAB,ID_OF_CAB_ORIGEM,ID_UTZ_CRIA,OF_NUM,OP_NUM from RP_OF_CAB where ID_OF_CAB = "
+								+ content_of + " or ID_OF_CAB_ORIGEM = " + content_of);
+
+				List<Object[]> dados = query.getResultList();
+
+				for (Object[] content : dados) {
+					data = new SimpleDateFormat("yyyyMMddHHmmss_").format(new Date());
+					String inform_file = "";
+					Integer total = 1;
+					// se for PF cria ficheiro (se o estado for modificação
+					// cria
+					// 2)
+					if (content[1] == null) {
+						Integer id_origem = Integer.parseInt(content[0].toString());
+						Query query3 = entityManager.createNativeQuery(
+								"select ID_OP_LIN,REF_NUM from RP_OF_OP_LIN where ID_OP_CAB in (select xx.ID_OP_CAB from RP_OF_OP_CAB xx where xx.ID_OF_CAB = "
+										+ id_origem + ")");
+						List<Object[]> dados3 = query3.getResultList();
+						total = dados3.size();
+						for (Object[] content3 : dados3) {
+
+							inform_file = content[2].toString() + "_" + content3[1].toString() + "_PF";
+							String inform_file2 = "";
+
+							String OPNUM = (content[4] == null) ? "NULL" : content[4].toString();
+
+							if (estado.equals("M")) {
+								OPNUM = atualiza(id_origem, "PF", 0, url);
+								nome_ficheiro = "correcao" + data + inform_file + ".txt";
+								inform_file2 = content[2].toString() + "_correcao_PAUSA";
+
+								if (OPNUM == null)
+									OPNUM = (content[4] == null) ? "NULL" : content[4].toString();
+								criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
+										"P", data + inform_file2, OPNUM, content3[0].toString(), pausa, total,
+										ficheirosdownload, data, null, estado, true);
+								criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
+										estado, data + inform_file2, OPNUM, content3[0].toString(), false, total,
+										ficheirosdownload, data_file, null, estado, true);
+
+							} else {
+							}
+							inform_file2 = content[2].toString() + "_PAUSA";
+
+							nome_ficheiro = data + inform_file + ".txt";
+							if (estado.equals("A")) {
+								nome_ficheiro = "anulacao_" + nome_ficheiro;
+							}
+							criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
+									"P", data + inform_file2, OPNUM, content3[0].toString(), pausa, total,
+									ficheirosdownload, data_file, null, estado, true);
+							pausa = false;
+							criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
+									estado, data + inform_file2, OPNUM, content3[0].toString(), pausa, total,
+									ficheirosdownload, data_file, null, estado, true);
+
+							// se for COMP verifica se exitem etiquetas para
+							// o
+							// comp
+							// e cria
+							// ficheiro
+						}
+					} else {
+						Integer id_origem = Integer.parseInt(content[1].toString());
+						String data_query = "";
+						if (estado.equals("M"))
+							data_query = " and  (c.VERSAO_MODIF != (select VERSAO_MODIF from RP_OF_CAB where ID_OF_CAB = "
+									+ id_origem
+									+ ") or (c.QUANT_BOAS_M1 != c.QUANT_BOAS_M2 or c.QUANT_DEF_M1 != c.QUANT_DEF_M2 or c.NOVO = 1)) ";
+						Query query2 = entityManager.createNativeQuery(
+								"select OF_NUM_ORIGEM,a.ID_OF_CAB,c.ID_REF_ETIQUETA,c.OP_NUM,b.ID_OP_LIN,c.NOVO  from RP_OF_OP_CAB a inner join RP_OF_OP_LIN b on a.ID_OP_CAB = b.ID_OP_CAB inner join RP_OF_CAB d on  d.ID_OF_CAB = a.ID_OF_CAB inner join RP_OF_OP_ETIQUETA c on b.ID_OP_LIN = c.ID_OP_LIN  where a.ID_OF_CAB = "
+										+ Integer.parseInt(content[0].toString()) + data_query);
+
+						List<Object[]> dados2 = query2.getResultList();
+						Integer etiqueta_num = 1;
+						for (Object[] content2 : dados2) {
+							inform_file = content[2].toString() + "_C" + comp_num + "E" + etiqueta_num;
+							etiqueta_num++;
+							Integer etiqueta = Integer.parseInt(content2[2].toString());
+							Integer id_of_cab = Integer.parseInt(content2[1].toString());
+							String OPNUM = (content2[3] == null) ? "NULL" : content2[3].toString();
+							String novaet = (content2[5] != null) ? content2[5].toString() : "0";
+							if (novaet.equals("true")) {
+								novaet = "1";
+							}
+							if (estado.equals("M") && !novaet.equals("1")) {
+								OPNUM = atualiza(etiqueta, "C", 0, url);
+								nome_ficheiro = "correcao" + data + inform_file + ".txt";
+								if (OPNUM == null)
+									OPNUM = (content2[3] == null) ? "NULL" : content2[3].toString();
+								criarFicheiro(id_of_cab, 1, nome_ficheiro, "COMP", content2[0].toString(), id_origem,
+										etiqueta, estado, null, OPNUM, content2[4].toString(), false, 1,
+										ficheirosdownload, data_file, novaet, estado, true);
+							}
+
+							nome_ficheiro = data + inform_file + ".txt";
+							if (estado.equals("A")) {
+								nome_ficheiro = "anulacao_" + nome_ficheiro;
+							}
+							criarFicheiro(id_of_cab, 2, nome_ficheiro, "COMP", content2[0].toString(), id_origem,
+									etiqueta, estado, null, OPNUM, content2[4].toString(), false, 1, ficheirosdownload,
+									data_file, novaet, estado, true);
+						}
+						if (dados2.size() > 0)
+							comp_num++;
+					}
+
+				}
+			}
+
+		}
+
+		if (ficheirosdownload) {
+
+			final File file = new File("c:/sgiid/temp_files/" + data_file + ".zip");
+			ResponseBuilder response = Response.ok((Object) file);
+			response.header("Content-Disposition", "attachment; filename=ficheiros.zip");
+			Timer timer = new Timer();
+			timer.schedule(new TimerTask() {
+				@Override
+				public void run() {
+					file.delete();
+				}
+			}, 5000);
+			return response.build();
+
+		} else {
+			return null;
+		}
+
+	}
+
+	@POST
+	@Path("/getOFS")
+	@Produces("application/json")
+	public List<HashMap<String, String>> getOFS(final List<HashMap<String, String>> datas)
+			throws IOException, ParseException {
+
+		HashMap<String, String> firstMap = datas.get(0);
+
+		String datainicio = firstMap.get("datainicio");
+		String datafim = firstMap.get("datafim");
+		String url = getURL();
+		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
+		try {
+
+			Query query_of = entityManager.createNativeQuery(
+					"select a.ID_OF_CAB, a.OF_NUM,c.ID_UTZ_CRIA,a.OP_COD_ORIGEM,c.DATA_INI_M1,c.HORA_INI,c.NOME_UTZ_CRIA from RP_OF_CAB a "
+							+ "inner join RP_OF_OP_CAB b on  b.ID_OP_CAB in (select x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB =  a.ID_OF_CAB) "
+							+ "inner join RP_OF_OP_FUNC c on c.ID_OP_CAB in  (select x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = a.ID_OF_CAB) and b.ID_OP_CAB = c.ID_OP_CAB "
+							+ "where a.ID_UTZ_CRIA = c.ID_UTZ_CRIA and  "
+							+ "CAST((cast(DATA_INI_M2 as datetime) + cast(HORA_INI_M2 as datetime)) AS DATE) >= '"
+							+ datainicio
+							+ "' and CAST((cast(DATA_INI_M2 as datetime) + cast(HORA_INI_M2 as datetime)) AS DATE) <= '"
+							+ datafim + "' and ID_OF_CAB_ORIGEM is null AND DATA_FIM_M2 is not null ");
+
+			List<Object[]> dados_of = query_of.getResultList();
+
+			Boolean pausa = true;
+			for (Object[] content_of : dados_of) {
+
+				ConnectProgress connectionProgress = new ConnectProgress();
+				String op_num = null;
+
+				op_num = connectionProgress.verificaOF(content_of[2].toString(), content_of[4].toString(),
+						content_of[1].toString(), content_of[3].toString(), url, content_of[5].toString());
+
+				if (op_num == null || op_num.isEmpty()) {
+					HashMap<String, String> x = new HashMap<>();
+					x.put("RESCOD", content_of[2].toString());
+					x.put("DATDEB", content_of[4].toString());
+					x.put("OFNUM", content_of[1].toString());
+					x.put("OPECOD", content_of[3].toString());
+					x.put("HEUDEB", content_of[5].toString());
+					x.put("NOME", content_of[6].toString());
+					x.put("ID", content_of[0].toString());
+					list.add(x);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return list;
+
+	}
+
 	@GET
-	@Path("/ficheiro/{id}/{estado}/{ficheiros}")
+	@Path("/ficheiro/{id}/{estado}/{ficheiros}/{manual}")
 	@Produces("application/zip")
 	public Response getFicheiro(@PathParam("id") Integer id, @PathParam("estado") String estado,
-			@PathParam("ficheiros") Boolean ficheirosdownload) throws IOException, ParseException {
+			@PathParam("ficheiros") Boolean ficheirosdownload, @PathParam("manual") Boolean manual)
+			throws IOException, ParseException {
 
 		String data = new SimpleDateFormat("yyyyMMddHHmmss_").format(new Date());
 		String url = getURL();
@@ -1192,6 +1474,10 @@ public class SIIP {
 			Query query = entityManager.createNativeQuery(
 					"select ID_OF_CAB,ID_OF_CAB_ORIGEM,ID_UTZ_CRIA,OF_NUM,OP_NUM from RP_OF_CAB where ID_OF_CAB = " + id
 							+ " or ID_OF_CAB_ORIGEM = " + id);
+
+			if (estado.equals("C") && !ficheirosdownload && !manual) {
+				eventosAoConcluir(id);
+			}
 
 			List<Object[]> dados = query.getResultList();
 
@@ -1223,10 +1509,10 @@ public class SIIP {
 								OPNUM = (content[4] == null) ? "NULL" : content[4].toString();
 							criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
 									"P", data + inform_file2, OPNUM, content3[0].toString(), pausa, total,
-									ficheirosdownload, data, null, estado);
+									ficheirosdownload, data, null, estado, manual);
 							criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
 									estado, data + inform_file2, OPNUM, content3[0].toString(), false, total,
-									ficheirosdownload, data, null, estado);
+									ficheirosdownload, data, null, estado, manual);
 
 							/*
 							 * criarFicheiro(id_origem, 1, nome_ficheiro, "PF",
@@ -1258,11 +1544,11 @@ public class SIIP {
 						}
 						criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null, "P",
 								data + inform_file2, OPNUM, content3[0].toString(), pausa, total, ficheirosdownload,
-								data, null, estado);
+								data, null, estado, manual);
 						pausa = false;
 						criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null, estado,
 								data + inform_file2, OPNUM, content3[0].toString(), pausa, total, ficheirosdownload,
-								data, null, estado);
+								data, null, estado, manual);
 
 						// se for COMP verifica se exitem etiquetas para o comp
 						// e cria
@@ -1298,7 +1584,7 @@ public class SIIP {
 								OPNUM = (content2[3] == null) ? "NULL" : content2[3].toString();
 							criarFicheiro(id_of_cab, 1, nome_ficheiro, "COMP", content2[0].toString(), id_origem,
 									etiqueta, estado, null, OPNUM, content2[4].toString(), false, 1, ficheirosdownload,
-									data, novaet, estado);
+									data, novaet, estado, manual);
 						}
 
 						nome_ficheiro = data + inform_file + ".txt";
@@ -1307,7 +1593,7 @@ public class SIIP {
 						}
 						criarFicheiro(id_of_cab, 2, nome_ficheiro, "COMP", content2[0].toString(), id_origem, etiqueta,
 								estado, null, OPNUM, content2[4].toString(), false, 1, ficheirosdownload, data, novaet,
-								estado);
+								estado, manual);
 					}
 					if (dados2.size() > 0)
 						comp_num++;
@@ -1338,10 +1624,75 @@ public class SIIP {
 
 	}
 
+	public void eventosAoConcluir(Integer id) {
+		String referencia = "", descricao_referencia = "", perc_obj = "", perc_def = "", utilizador = "", of_num = "",
+				data_cria = "", etiquetas = "";
+		String[] keyValuePairs = null;
+
+		Query query = entityManager.createNativeQuery(
+				"select PERC_OBJETIV,  cast( (CAST(NULLIF(QUANT_DEF_TOTAL_M2,0)AS float) / CAST(( QUANT_BOAS_TOTAL_M2 +  QUANT_DEF_TOTAL_M2) AS float)) * 100  as numeric(36,2)), "
+						+ "REF_NUM,REF_DES,c.ID_UTZ_CRIA,c.NOME_UTZ_CRIA,(select OF_NUM from RP_OF_CAB where ID_OF_CAB = "
+						+ id + " ) as OF_NUM,"
+						+ "(select top 1 (cast(DATA_INI_M2 as datetime) + cast(HORA_INI_M2 as datetime)) FROM RP_OF_OP_FUNC where ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB = "
+						+ id + ") ) DATA" + ",c.ID_OF_CAB_ORIGEM,a.ID_OP_LIN from RP_OF_OP_LIN  a "
+						+ "left join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB left join RP_OF_CAB c on b.ID_OF_CAB = c.ID_OF_CAB "
+						+ "where  (c.ID_OF_CAB = " + id + " or c.ID_OF_CAB_ORIGEM = " + id
+						+ ") and  ISNULL(cast( (CAST(NULLIF(QUANT_DEF_TOTAL_M2,0)AS float) / CAST(( QUANT_BOAS_TOTAL_M2 +  QUANT_DEF_TOTAL_M2)AS float)) * 100  as numeric(36,2)),0) > ISNULL(PERC_OBJETIV,0) "
+						+ "and a.GESCOD in ('OFCF','OFCF2') and ISNULL(PERC_OBJETIV,0) != 0");
+
+		List<Object[]> dados = query.getResultList();
+
+		for (Object[] content : dados) {
+
+			referencia = content[2].toString();
+			descricao_referencia = content[3].toString();
+			perc_obj = content[0].toString() + " %";
+			perc_def = content[1].toString() + " %";
+			utilizador = content[4].toString() + " - " + content[5].toString();
+			of_num = content[6].toString();
+			data_cria = content[7].toString().substring(0, 19);
+
+			if (content[6] == null) {
+				String[] keyValuePairs1 = { "referencia::" + referencia,
+						"descricao_referencia::" + descricao_referencia, "perc_obj::" + perc_obj,
+						"perc_def::" + perc_def, "utilizador::" + utilizador, "of_num::" + of_num,
+						"data_cria::" + data_cria, "etiquetas::" + etiquetas };
+				keyValuePairs = keyValuePairs1;
+				verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos", "");
+			} else {
+				etiquetas = "<table  border='1'><tr><th><b>Nº Etiqueta</b></th><th><b>Lote</b></th><th><b>OF Origem</b></th><th><b>Data OF</b></th></tr>";
+
+				Query query_comp = entityManager.createNativeQuery(
+						"select REF_LOTE,REF_ETIQUETA,OF_NUM_ORIGEM,OFDATFR from RP_OF_OP_ETIQUETA where ID_OP_LIN ="
+								+ content[9]);
+
+				List<Object[]> dados_comp = query_comp.getResultList();
+
+				for (Object[] cont : dados_comp) {
+					etiquetas += "<tr><td style='padding: 0px 5px 0px 5px;'>" + cont[1] + "</td>"
+							+ "<td style='padding: 0px 5px 0px 5px;'>" + cont[0] + "</td>"
+							+ "<td style='padding: 0px 5px 0px 5px;'>" + cont[2] + "</td>"
+							+ "<td style='padding: 0px 5px 0px 5px;'>" + cont[3] + "</td></tr>";
+				}
+
+				etiquetas += "</table>";
+
+				String[] keyValuePairs2 = { "referencia::" + referencia,
+						"descricao_referencia::" + descricao_referencia, "perc_obj::" + perc_obj,
+						"perc_def::" + perc_def, "utilizador::" + utilizador, "of_num::" + of_num,
+						"data_cria::" + data_cria, "etiquetas::" + etiquetas };
+				keyValuePairs = keyValuePairs2;
+				verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos", "");
+
+			}
+		}
+
+	}
+
 	public void criarFicheiro(Integer id, Integer ficheiro, String nome_ficheiro, String tipo, String of,
 			Integer id_origem, Integer id_etiqueta, String estado, String nome_ficheiro2, String OP_NUM,
 			String ID_OP_LIN, Boolean cria_pausa, Integer total, Boolean ficheirosdownload, String nomezip,
-			String novaetiqueta, String estado2) throws IOException, ParseException {
+			String novaetiqueta, String estado2, Boolean manual) throws IOException, ParseException {
 
 		String DATA_INI, HORA_INI, DATA_FIM, HORA_FIM, SINAL, QUANT_BOAS_TOTAL, QUANT_BOAS, QUANT_DEF, TEMPO_PREP_TOTAL,
 				TIPO_PARAGEM, MOMENTO_PARAGEM, TEMPO_EXEC_TOTAL = "";
@@ -1355,6 +1706,7 @@ public class SIIP {
 		Boolean alteracoes = false;
 
 		if (ficheiro == 1) {
+
 			DATA_INI = "DATA_INI_M1";
 			HORA_INI = "HORA_INI_M1";
 			DATA_FIM = "DATA_FIM_M1";
@@ -1367,20 +1719,35 @@ public class SIIP {
 			TEMPO_EXEC_TOTAL = "TEMPO_EXEC_TOTAL_M1";
 			TIPO_PARAGEM = "TIPO_PARAGEM_M1";
 			MOMENTO_PARAGEM = "MOMENTO_PARAGEM_M1";
-		} else {
-			DATA_INI = "DATA_INI_M2";
-			HORA_INI = "HORA_INI_M2";
-			DATA_FIM = "DATA_FIM_M2";
-			HORA_FIM = "HORA_FIM_M2";
-			SINAL = "+";
-			QUANT_BOAS_TOTAL = "QUANT_BOAS_TOTAL_M2";
-			QUANT_BOAS = "QUANT_BOAS_M2";
-			QUANT_DEF = "QUANT_DEF_M2";
-			TEMPO_PREP_TOTAL = "TEMPO_PREP_TOTAL_M2";
-			TEMPO_EXEC_TOTAL = "TEMPO_EXEC_TOTAL_M2";
-			TIPO_PARAGEM = "TIPO_PARAGEM_M2";
-			MOMENTO_PARAGEM = "MOMENTO_PARAGEM_M2";
 
+		} else {
+			if (manual) {
+				DATA_INI = "DATA_INI";
+				HORA_INI = "HORA_INI";
+				DATA_FIM = "DATA_FIM";
+				HORA_FIM = "HORA_FIM";
+				SINAL = "+";
+				QUANT_BOAS_TOTAL = "QUANT_BOAS_TOTAL";
+				QUANT_BOAS = "QUANT_BOAS";
+				QUANT_DEF = "QUANT_DEF";
+				TEMPO_PREP_TOTAL = "TEMPO_PREP_TOTAL";
+				TEMPO_EXEC_TOTAL = "TEMPO_EXEC_TOTAL";
+				TIPO_PARAGEM = "TIPO_PARAGEM";
+				MOMENTO_PARAGEM = "MOMENTO_PARAGEM";
+			} else {
+				DATA_INI = "DATA_INI_M2";
+				HORA_INI = "HORA_INI_M2";
+				DATA_FIM = "DATA_FIM_M2";
+				HORA_FIM = "HORA_FIM_M2";
+				SINAL = "+";
+				QUANT_BOAS_TOTAL = "QUANT_BOAS_TOTAL_M2";
+				QUANT_BOAS = "QUANT_BOAS_M2";
+				QUANT_DEF = "QUANT_DEF_M2";
+				TEMPO_PREP_TOTAL = "TEMPO_PREP_TOTAL_M2";
+				TEMPO_EXEC_TOTAL = "TEMPO_EXEC_TOTAL_M2";
+				TIPO_PARAGEM = "TIPO_PARAGEM_M2";
+				MOMENTO_PARAGEM = "MOMENTO_PARAGEM_M2";
+			}
 		}
 
 		if (estado.equals("A") || estado2.equals("A")) {
@@ -1439,7 +1806,8 @@ public class SIIP {
 				String data_A = "";
 				// System.out.println(content[0]);
 				data_A += "01        ";// Société
-				data_A += content[5].toString().replaceAll("-", ""); // Date suivi
+				data_A += content[5].toString().replaceAll("-", ""); // Date
+																		// suivi
 				data_A += sequencia; // N° séquence
 
 				if (novaetiqueta.equals("1")) {
@@ -1525,12 +1893,14 @@ public class SIIP {
 				// Temps de préparation
 
 				String temp_pre = "000000000000000";
+				double number = 0;
 				if (content[9] != null) {
 					String[] parts = content[9].toString().split(":");
 
-					double number = Double.parseDouble(parts[0]) + (Double.parseDouble(parts[1]) / 60)
+					number = Double.parseDouble(parts[0]) + (Double.parseDouble(parts[1]) / 60)
 							+ (Double.parseDouble(parts[2]) / 3600);
 					number = number / total;
+					number = (number > 0) ? number : 0;
 					String parts_prep = String.format("%.4f", number).replace(",", "");
 					String size = temp_pre + parts_prep.replace("$", "");
 					temp_pre = (size).substring(size.length() - 15, size.length());
@@ -1551,12 +1921,14 @@ public class SIIP {
 
 				// Temps d'exécution
 				String temp_exec = "000000000000000";
+				double number2 = 0;
 				if (content[10] != null) {
 					String[] parts2 = content[10].toString().split(":");
 
-					double number2 = Double.parseDouble(parts2[0]) + (Double.parseDouble(parts2[1]) / 60)
+					number2 = Double.parseDouble(parts2[0]) + (Double.parseDouble(parts2[1]) / 60)
 							+ (Double.parseDouble(parts2[2]) / 3600);
 					number2 = number2 / total;
+					number2 = (number2 > 0) ? number2 : 0;
 					String parts_exec = String.format("%.4f", number2).replace(",", "");
 					String size = temp_exec + parts_exec.replace("$", "");
 					temp_exec = (size).substring(size.length() - 15, size.length());
@@ -1580,6 +1952,28 @@ public class SIIP {
 						StringBuffer buf = new StringBuffer(data_A);
 						buf.replace(70, 84, "              ");
 						buf.replace(47, 48, "1");
+
+						String temp_exec2 = "000000000000000";
+						String temp_pre2 = "000000000000000";
+						double tempprep = getTempos(DATA_INI, HORA_INI, DATA_FIM, HORA_FIM, MOMENTO_PARAGEM, id_origem,
+								"P");
+						double tempexec = getTempos(DATA_INI, HORA_INI, DATA_FIM, HORA_FIM, MOMENTO_PARAGEM, id_origem,
+								"E");
+
+						// tempprep = number - tempprep;
+
+						String parts_exec = String.format("%.4f", tempprep).replace(",", "");
+						String size = temp_exec2 + parts_exec.replace("$", "");
+						temp_exec2 = (size).substring(size.length() - 15, size.length());
+
+						// tempexec = number2 - tempexec;
+
+						String parts_prep = String.format("%.4f", tempexec).replace(",", "");
+						String size2 = temp_pre2 + parts_prep.replace("$", "");
+						temp_pre2 = (size2).substring(size2.length() - 15, size2.length());
+
+						buf.replace(121, 136, temp_exec2);
+						buf.replace(139, 154, temp_pre2);
 						data_maquina = buf.toString();
 						lider = false;
 					}
@@ -1613,7 +2007,7 @@ public class SIIP {
 			// PAUSA
 			// estado.equals("P") &&
 			if (cria_pausa) {
-
+				Boolean criou_PAUSA = false;
 				Query query2 = entityManager.createNativeQuery("select c." + DATA_INI + ",c." + HORA_INI + ",c."
 						+ DATA_FIM + ",c." + HORA_FIM + ", " + "cast((DATEDIFF(second,DATEADD(DAY, DATEDIFF(DAY, c."
 						+ HORA_INI + ", c." + DATA_INI + " ), CAST(c." + HORA_INI
@@ -1682,8 +2076,9 @@ public class SIIP {
 						data_pausa_p += linha3;
 					}
 
+					String linha_A_MAQUINA = "";
 					if (existe_maquina) {
-
+						// linha A MAQ e PESSOAS
 						BufferedReader bufReader = new BufferedReader(new StringReader(data_maquina));
 
 						String line = null;
@@ -1691,8 +2086,16 @@ public class SIIP {
 
 							StringBuffer buf6 = new StringBuffer(line);
 							buf6.replace(18, 27, seq);
+							buf6.replace(121, 136, "000000000000000");
+							buf6.replace(139, 154, "000000000000000");
 							String linha6 = buf6.toString();
-							data_pausa_p += linha6 + "\r\n";
+							if (buf6.substring(74, 84).trim().equals(content2[7].toString())
+									|| buf6.substring(74, 84).equals("          ")) {
+								data_pausa_p += linha6 + "\r\n";
+							}
+							if (buf6.lastIndexOf("MO") == -1) {
+								linha_A_MAQUINA = linha6 + "\r\n";
+							}
 						}
 
 					}
@@ -1702,7 +2105,59 @@ public class SIIP {
 						StringBuffer buf2 = new StringBuffer(data_maquina);
 						buf2.replace(18, 27, seq);
 						String linha2 = buf2.toString();
-						data_pausa_p += linha2.substring(0, 87) + data_pausa;
+						// data_pausa_p += linha2.substring(0, 87) + data_pausa;
+
+						if (!criou_PAUSA) {
+							/*
+							 * Integer totalprep = 0; Integer totalexecucao = 0;
+							 * 
+							 * Query querytotal = entityManager
+							 * .createNativeQuery("select  (select count(*) from RP_OF_OP_FUNC a "
+							 * +
+							 * "inner join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB "
+							 * +
+							 * "inner join RP_OF_PREP_LIN c on a.ID_OP_CAB = c.ID_OP_CAB "
+							 * + "where ID_OF_CAB = " + id + " and c." +
+							 * DATA_INI + " is not null and c." + DATA_FIM +
+							 * " is not null ) as totalprep, (select count(*) from RP_OF_OP_FUNC a "
+							 * +
+							 * "inner join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB "
+							 * +
+							 * "left join RP_OF_PREP_LIN c on a.ID_OP_CAB = c.ID_OP_CAB "
+							 * + "where ID_OF_CAB = " + id + " and " +
+							 * " ((cast(a." + DATA_FIM +
+							 * " as datetime) + cast(a." + HORA_FIM +
+							 * " as datetime)) > (cast(c." + DATA_FIM +
+							 * " as datetime) + cast(c." + HORA_FIM +
+							 * " as datetime))" +
+							 * "or c.HORA_INI_M2 is null)) as totalexecucao ");
+							 * 
+							 * List<Object[]> dadostotal =
+							 * querytotal.getResultList();
+							 * 
+							 * for (Object[] contenttotal : dadostotal) {
+							 * totalexecucao =
+							 * Integer.parseInt(contenttotal[1].toString());
+							 * totalprep =
+							 * Integer.parseInt(contenttotal[0].toString()); }
+							 */
+
+							// criar pausas maquina estado preparacao
+
+							// if (totalprep > 0)
+							CRIAPAUSASMAQUINA(DATA_INI, HORA_INI, DATA_FIM, HORA_FIM, MOMENTO_PARAGEM, TIPO_PARAGEM,
+									SINAL, linha2.substring(0, 87), linha_A_MAQUINA, path2, ficheirosdownload,
+									nome_ficheiro2, nomezip, id, "P");
+
+							// criar pausas maquina estado execucao
+							// if (totalexecucao > 0)
+							CRIAPAUSASMAQUINA(DATA_INI, HORA_INI, DATA_FIM, HORA_FIM, MOMENTO_PARAGEM, TIPO_PARAGEM,
+									SINAL, linha2.substring(0, 87), linha_A_MAQUINA, path2, ficheirosdownload,
+									nome_ficheiro2, nomezip, id, "E");
+
+							criou_PAUSA = true;
+						}
+
 					}
 
 					StringBuffer buf = new StringBuffer(linha_utz_inicio.get(content2[7].toString()));
@@ -1771,7 +2226,8 @@ public class SIIP {
 					String data_quantidades = "";
 
 					data_quantidades += "01        ";// Société
-					data_quantidades += content3[10].toString().replaceAll("-", "");; // Date suivi
+					data_quantidades += content3[10].toString().replaceAll("-", "");
+					; // Date suivi
 
 					data_quantidades += sequencia; // N° séquence
 
@@ -1999,7 +2455,8 @@ public class SIIP {
 					alteracoes = true;
 					String data_defeitos = "";
 					data_defeitos += "01        ";// Société
-					data_defeitos += content4[12].toString().replaceAll("-", ""); // Date suivi
+					data_defeitos += content4[12].toString().replaceAll("-", ""); // Date
+																					// suivi
 
 					data_defeitos += sequencia; // N° séquence
 
@@ -2247,6 +2704,327 @@ public class SIIP {
 
 			}
 		}
+	}
+
+	public void criar_ficheiro_PausaMAQUINA(Object[] content2, String SINAL, String linha_inicial,
+			String linha_A_MAQUINA, String path2, Boolean ficheirosdownload, String nome_ficheiro2, String nomezip,
+			Integer count, String estado) throws ParseException {
+
+		SimpleDateFormat f = new SimpleDateFormat("yyyyMMddHHmmss");
+		SimpleDateFormat p = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
+
+		String data_pausa = "";
+		String data_pausa_p = "";
+		String data_pausa_p2 = "";
+		data_pausa_p += linha_A_MAQUINA;
+		data_pausa += "B"; // Type d'élément B
+
+		// Date début
+		// Heure début
+		data_pausa += ((content2[0] != null) ? f.format(p.parse(content2[0].toString())) : "").toString();
+
+		// Date fin
+		// Heure fin
+		data_pausa += ((content2[1] != null) ? f.format(p.parse(content2[1].toString())) : "").toString();
+
+		data_pausa += (content2[3] + "    ").substring(0, 4);// Code
+																// section
+
+		data_pausa += "3"; // Origine arrêt prépa.
+
+		// Temps d'arrêt/prépa.
+
+		String temp_pre = "000000000000000";
+		if (content2[4] != null && content2[4].toString().equals("P")) {
+			String parts_prep = (((content2[2] != null) ? content2[2] : "").toString()).replace(".", "");
+			String size = temp_pre + parts_prep;
+			temp_pre = (size).substring(size.length() - 15, size.length());
+		}
+		data_pausa += temp_pre;
+		data_pausa += SINAL; // Signe
+		data_pausa += "3"; // Origine arrêt exécution
+
+		// Temps d'arrêt/exécution
+		String temp_exec = "000000000000000";
+		if (content2[4] != null && content2[4].toString().equals("E")) {
+			String parts_exec = ((content2[2] != null) ? content2[2] : "").toString().replace(".", "");
+			String size = temp_exec + parts_exec;
+			temp_exec = (size).substring(size.length() - 15, size.length());
+		}
+
+		data_pausa += temp_exec;
+		data_pausa += SINAL; // Signe
+		data_pausa += "                                       \r\n"; // Texte
+		// libre
+
+		data_pausa_p += linha_inicial + data_pausa;
+
+		BufferedReader bufReader = new BufferedReader(new StringReader(data_pausa_p));
+
+		String seq = sequencia();
+		String line = null;
+		try {
+			while ((line = bufReader.readLine()) != null) {
+
+				StringBuffer buf6 = new StringBuffer(line);
+				buf6.replace(18, 27, seq);
+				String linha6 = buf6.toString();
+				data_pausa_p2 += linha6 + "\r\n";
+
+			}
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+		try {
+			criar_ficheiro_Pausa(data_pausa_p2, path2 + "_MAQ_" + estado, count, ficheirosdownload,
+					nome_ficheiro2 + "_MAQ_" + estado, nomezip);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void CRIAPAUSASMAQUINA(String DATA_INI, String HORA_INI, String DATA_FIM, String HORA_FIM,
+			String MOMENTO_PARAGEM, String TIPO_PARAGEM, String SINAL, String linha_inicial, String linha_A_MAQUINA,
+			String path2, Boolean ficheirosdownload, String nome_ficheiro2, String nomezip, Integer ID_OF_CAB,
+			String ESTADO) {
+
+		Query query2 = entityManager.createNativeQuery("declare @parents table " + "(Data_inicio datetime, "
+				+ "Data_fim datetime, " + "ID int) " + "DECLARE @ID_UTZ_CRIA NVARCHAR(6) "
+				+ "DECLARE @ESTADO NVARCHAR(6) = '" + ESTADO + "' " + "DECLARE @Data_inicio datetime  "
+				+ "DECLARE @Data_fim datetime " + "DECLARE @Data_fim2 datetime " + "DECLARE @ID INT "
+				+ "DECLARE @ID2 INT " + "DECLARE @ID_RESULTADO INT " + "DECLARE @COUNT INT = 1 "
+				+ "DECLARE @COUNT1 INT = 0 " + "DECLARE @TOTAL INT = 0 " + "DECLARE @ID_OF_CAB INT = " + ID_OF_CAB + " "
+				+ "DECLARE @getid CURSOR " + "DECLARE @getid2 CURSOR " + "SET @getid = CURSOR FOR SELECT ID_PARA_LIN  "
+				+ "FROM  RP_OF_PARA_LIN  "
+				+ "where ID_OP_CAB in (select  ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB)  " + "and "
+				+ MOMENTO_PARAGEM + " = @ESTADO " + "and  (cast(" + DATA_INI + " as datetime) + cast(" + HORA_INI
+				+ " as datetime)) <> (cast(" + DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime)) "
+				+ "order by (cast(" + DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) " + "OPEN @getid "
+				+ "FETCH NEXT " + "FROM @getid INTO @ID " + "WHILE @@FETCH_STATUS = 0 " + "BEGIN  " + "SET @COUNT1= 0 "
+				+ "SELECT @Data_inicio =  (cast(" + DATA_INI + " as datetime) + cast(" + HORA_INI
+				+ " as datetime)),@ID_UTZ_CRIA = ID_UTZ_CRIA  " + ",@Data_fim =  (cast(" + DATA_FIM
+				+ " as datetime) + cast(" + HORA_FIM + " as datetime)) "
+				+ "FROM  RP_OF_PARA_LIN where ID_PARA_LIN = @ID " + "IF @ESTADO = 'E' " + "BEGIN "
+				+ "select @TOTAL = count(*) from RP_OF_OP_FUNC a "
+				+ "inner join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB "
+				+ "left join RP_OF_PREP_LIN c on a.ID_OP_CAB = c.ID_OP_CAB " + "where ID_OF_CAB = @ID_OF_CAB and  "
+				+ "((cast(a." + DATA_FIM + " as datetime) + cast(a." + HORA_FIM + " as datetime)) > (cast(c." + DATA_FIM
+				+ " as datetime) + cast(c." + HORA_FIM + " as datetime)) " + "or c." + HORA_INI
+				+ " is null) and ((cast(c." + DATA_FIM + " as datetime) + cast(c." + HORA_FIM
+				+ " as datetime)) <= @Data_inicio or ( " + "(cast(a." + DATA_INI + " as datetime) + cast(a." + HORA_INI
+				+ " as datetime)) <= @Data_inicio and c." + HORA_INI + " is null	)) " + "and(cast(a." + DATA_FIM
+				+ " as datetime) + cast(a." + HORA_FIM + " as datetime)) >= @Data_inicio  " + "END " + "ELSE "
+				+ "BEGIN " + "select @TOTAL =  count(*) from RP_OF_OP_FUNC a "
+				+ "inner join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB "
+				+ "inner join RP_OF_PREP_LIN c on a.ID_OP_CAB = c.ID_OP_CAB "
+				+ "where ID_OF_CAB = @ID_OF_CAB and c.DATA_INI is not null " + "and (cast(c." + DATA_FIM
+				+ " as datetime) + cast(c." + HORA_FIM + " as datetime)) > @Data_fim " + " and (cast(c." + DATA_INI
+				+ "  as datetime) + cast(c." + HORA_INI + " as datetime)) <= @Data_inicio " + "END "
+				+ "WHILE (@COUNT1  = 0) " + "BEGIN " + "IF EXISTS (SELECT * FROM RP_OF_PARA_LIN where  " + "(cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) < @Data_fim and " + "(cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI
+				+ " as datetime)) > @Data_inicio and  ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and ID_UTZ_CRIA <> @ID_UTZ_CRIA) AND   @COUNT <> @TOTAL "
+				+ "BEGIN " + "SET @getid2 = CURSOR FOR (SELECT ID_PARA_LIN FROM RP_OF_PARA_LIN where  " + "(cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) < @Data_fim and " + "(cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) > @Data_inicio  "
+				+ "and  ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and ID_UTZ_CRIA <> @ID_UTZ_CRIA) "
+				+ "order by (cast(" + DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) "
+				+ "OPEN @getid2 " + "FETCH NEXT " + "FROM @getid2 INTO @ID2 " + "WHILE @@FETCH_STATUS = 0 " + "BEGIN "
+				+ "SELECT TOP 1 @ID_RESULTADO=ID_PARA_LIN, @Data_inicio =  (cast(" + DATA_INI + " as datetime) + cast("
+				+ HORA_INI + " as datetime)), " + "@Data_fim =  (cast(" + DATA_FIM + " as datetime) + cast(" + HORA_FIM
+				+ " as datetime)), @ID_UTZ_CRIA = ID_UTZ_CRIA  " + "FROM  RP_OF_PARA_LIN  "
+				+ "where ID_PARA_LIN = @ID2 " + "IF @ESTADO = 'E' " + "BEGIN "
+				+ "select @TOTAL = count(*) from RP_OF_OP_FUNC a "
+				+ "inner join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB "
+				+ "left join RP_OF_PREP_LIN c on a.ID_OP_CAB = c.ID_OP_CAB " + "where ID_OF_CAB = @ID_OF_CAB and  "
+				+ "((cast(a." + DATA_FIM + " as datetime) + cast(a." + HORA_FIM + " as datetime)) > (cast(c." + DATA_FIM
+				+ " as datetime) + cast(c." + HORA_FIM + " as datetime)) " + "or c." + HORA_INI
+				+ " is null) and ((cast(c." + DATA_FIM + " as datetime) + cast(c." + HORA_FIM
+				+ " as datetime)) <= @Data_inicio or ( " + "(cast(a." + DATA_INI + " as datetime) + cast(a." + HORA_INI
+				+ " as datetime)) <= @Data_inicio and c." + HORA_INI + " is null	)) " + "and(cast(a." + DATA_FIM
+				+ " as datetime) + cast(a." + HORA_FIM + " as datetime)) >= @Data_inicio  " + "END " + "ELSE "
+				+ "BEGIN " + "select @TOTAL =  count(*) from RP_OF_OP_FUNC a "
+				+ "inner join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB "
+				+ "inner join RP_OF_PREP_LIN c on a.ID_OP_CAB = c.ID_OP_CAB "
+				+ "where ID_OF_CAB = @ID_OF_CAB and c.DATA_INI is not null " + "and (cast(c." + DATA_FIM
+				+ " as datetime) + cast(c." + HORA_FIM + " as datetime)) > @Data_fim " + " and (cast(c." + DATA_INI
+				+ "  as datetime) + cast(c." + HORA_INI + " as datetime)) <= @Data_inicio " + "END "
+				+ "SET @COUNT= @COUNT+1 " + "IF(@COUNT = @TOTAL) " + "BEGIN " + "SELECT TOP 1  @Data_fim = MIN((cast("
+				+ DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime))), "
+				+ "@Data_fim2 = (select MIN((cast(" + DATA_INI + " as datetime) + cast(" + HORA_INI
+				+ " as datetime)))  "
+				+ "from  RP_OF_OP_FUNC where ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and (cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) >= @Data_inicio and (cast(" + DATA_INI
+				+ " as datetime) + cast(" + HORA_INI + " as datetime)) <= @Data_fim) " + "FROM  RP_OF_PARA_LIN  "
+				+ "where ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and  (cast("
+				+ DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime)) <= @Data_fim " + "AND (cast("
+				+ DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime)) > @Data_inicio "
+				+ "IF(@ID_RESULTADO is null) SET @ID_RESULTADO=@ID "
+				+ "IF(@Data_fim2 is not null) SET @Data_fim=@Data_fim2 "
+				+ "insert into @parents (Data_inicio,Data_fim,ID) values (@Data_inicio,@Data_fim,@ID_RESULTADO)	 "
+				+ "set @COUNT = 1	 " + "IF(@Data_fim2 is not null) SET @COUNT = @TOTAL " + "END "
+				+ "IF not EXISTS (SELECT * FROM RP_OF_PARA_LIN where  +" + "(cast( " + DATA_INI
+				+ " as datetime) + cast(" + HORA_INI + " as datetime)) < @Data_fim and + (cast( " + DATA_INI
+				+ " as datetime) + cast(" + HORA_INI
+				+ " as datetime)) > @Data_inicio and  ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and ID_UTZ_CRIA <> @ID_UTZ_CRIA) AND   @COUNT <> @TOTAL "
+				+ "BEGIN SET @COUNT= 1 END " + "FETCH NEXT " + "FROM @getid2 INTO @ID2 " + "END " + "END " + "ELSE "
+				+ "BEGIN " + "IF(@COUNT = @TOTAL) " + "BEGIN " + "SELECT TOP 1  @Data_fim = MIN((cast(" + DATA_FIM
+				+ " as datetime) + cast(" + HORA_FIM + " as datetime))), " + "@Data_fim2 = (select MIN((cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)))  "
+				+ "from  RP_OF_OP_FUNC where ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and (cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) >= @Data_inicio and (cast(" + DATA_INI
+				+ " as datetime) + cast(" + HORA_INI + " as datetime)) <= @Data_fim) " + "FROM  RP_OF_PARA_LIN  "
+				+ "where ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and  (cast("
+				+ DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime)) <= @Data_fim " + "AND (cast("
+				+ DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime)) > @Data_inicio "
+				+ "IF(@ID_RESULTADO is null) SET @ID_RESULTADO=@ID "
+				+ "IF(@Data_fim2 is not null) SET @Data_fim=@Data_fim2 "
+				+ "insert into @parents (Data_inicio,Data_fim,ID) values (@Data_inicio,@Data_fim,@ID_RESULTADO)	 "
+				+ "set @COUNT = 1	 " + "END " + "SET @COUNT1= @COUNT1+1 " + "END " + "END " + "FETCH NEXT "
+				+ "FROM @getid INTO @ID " + "set @COUNT = 1	 "
+				+ "END select a.Data_inicio,a.Data_fim , cast((DATEDIFF(second,a.Data_inicio, a.Data_fim)/3600.00) as decimal(18,4)) as timediff, b.TIPO_PARAGEM_M2 ,b."
+				+ MOMENTO_PARAGEM + " from @parents a inner join RP_OF_PARA_LIN b on a.ID = b.ID_PARA_LIN");
+
+		List<Object[]> dados2 = query2.getResultList();
+
+		Integer count = 0;
+		for (Object[] content2 : dados2) {
+			count++;
+			try {
+				criar_ficheiro_PausaMAQUINA(content2, SINAL, linha_inicial, linha_A_MAQUINA, path2, ficheirosdownload,
+						nome_ficheiro2, nomezip, count, ESTADO);
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+	}
+
+	public double getTempos(String DATA_INI, String HORA_INI, String DATA_FIM, String HORA_FIM, String MOMENTO_PARAGEM,
+			Integer ID_OF_CAB, String ESTADO) {
+		double number = 0;
+		Query query2 = entityManager.createNativeQuery("declare @parents table " + "(Data_inicio datetime, "
+				+ "Data_fim datetime, " + "ID int) " + "DECLARE @ID_UTZ_CRIA NVARCHAR(6) "
+				+ "DECLARE @ESTADO NVARCHAR(6) = '" + ESTADO + "' " + "DECLARE @Data_inicio datetime  "
+				+ "DECLARE @Data_fim datetime " + "DECLARE @Data_fim2 datetime " + "DECLARE @ID INT "
+				+ "DECLARE @ID2 INT " + "DECLARE @ID_RESULTADO INT " + "DECLARE @COUNT INT = 1 "
+				+ "DECLARE @COUNT1 INT = 0 " + "DECLARE @TOTAL INT = 0 " + "DECLARE @ID_OF_CAB INT = " + ID_OF_CAB + " "
+				+ "DECLARE @getid CURSOR " + "DECLARE @getid2 CURSOR " + "SET @getid = CURSOR FOR SELECT ID_PARA_LIN  "
+				+ "FROM  RP_OF_PARA_LIN  "
+				+ "where ID_OP_CAB in (select  ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB)  " + "and "
+				+ MOMENTO_PARAGEM + " = @ESTADO " + "and  (cast(" + DATA_INI + " as datetime) + cast(" + HORA_INI
+				+ " as datetime)) <> (cast(" + DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime)) "
+				+ "order by (cast(" + DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) " + "OPEN @getid "
+				+ "FETCH NEXT " + "FROM @getid INTO @ID " + "WHILE @@FETCH_STATUS = 0 " + "BEGIN  " + "SET @COUNT1= 0 "
+				+ "SELECT @Data_inicio =  (cast(" + DATA_INI + " as datetime) + cast(" + HORA_INI
+				+ " as datetime)),@ID_UTZ_CRIA = ID_UTZ_CRIA  " + ",@Data_fim =  (cast(" + DATA_FIM
+				+ " as datetime) + cast(" + HORA_FIM + " as datetime)) "
+				+ "FROM  RP_OF_PARA_LIN where ID_PARA_LIN = @ID " + "IF @ESTADO = 'E' " + "BEGIN "
+				+ "select @TOTAL = count(*) from RP_OF_OP_FUNC a "
+				+ "inner join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB "
+				+ "left join RP_OF_PREP_LIN c on a.ID_OP_CAB = c.ID_OP_CAB " + "where ID_OF_CAB = @ID_OF_CAB and  "
+				+ "((cast(a." + DATA_FIM + " as datetime) + cast(a." + HORA_FIM + " as datetime)) > (cast(c." + DATA_FIM
+				+ " as datetime) + cast(c." + HORA_FIM + " as datetime)) " + "or c." + HORA_INI
+				+ " is null) and ((cast(c." + DATA_FIM + " as datetime) + cast(c." + HORA_FIM
+				+ " as datetime)) <= @Data_inicio or ( " + "(cast(a." + DATA_INI + " as datetime) + cast(a." + HORA_INI
+				+ " as datetime)) <= @Data_inicio and c." + HORA_INI + " is null	)) " + "and(cast(a." + DATA_FIM
+				+ " as datetime) + cast(a." + HORA_FIM + " as datetime)) >= @Data_inicio  " + "END " + "ELSE "
+				+ "BEGIN " + "select @TOTAL =  count(*) from RP_OF_OP_FUNC a "
+				+ "inner join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB "
+				+ "inner join RP_OF_PREP_LIN c on a.ID_OP_CAB = c.ID_OP_CAB "
+				+ "where ID_OF_CAB = @ID_OF_CAB and c.DATA_INI is not null " + "and (cast(c." + DATA_FIM
+				+ " as datetime) + cast(c." + HORA_FIM + " as datetime)) > @Data_fim " + " and (cast(c." + DATA_INI
+				+ "  as datetime) + cast(c." + HORA_INI + " as datetime)) <= @Data_inicio " + "END "
+				+ "WHILE (@COUNT1  = 0) " + "BEGIN " + "IF EXISTS (SELECT * FROM RP_OF_PARA_LIN where  " + "(cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) < @Data_fim and " + "(cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI
+				+ " as datetime)) > @Data_inicio and  ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and ID_UTZ_CRIA <> @ID_UTZ_CRIA) AND   @COUNT <> @TOTAL "
+				+ "BEGIN " + "SET @getid2 = CURSOR FOR (SELECT ID_PARA_LIN FROM RP_OF_PARA_LIN where  " + "(cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) < @Data_fim and " + "(cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) > @Data_inicio  "
+				+ "and  ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and ID_UTZ_CRIA <> @ID_UTZ_CRIA) "
+				+ "order by (cast(" + DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) "
+				+ "OPEN @getid2 " + "FETCH NEXT " + "FROM @getid2 INTO @ID2 " + "WHILE @@FETCH_STATUS = 0 " + "BEGIN "
+				+ "SELECT TOP 1 @ID_RESULTADO=ID_PARA_LIN, @Data_inicio =  (cast(" + DATA_INI + " as datetime) + cast("
+				+ HORA_INI + " as datetime)), " + "@Data_fim =  (cast(" + DATA_FIM + " as datetime) + cast(" + HORA_FIM
+				+ " as datetime)), @ID_UTZ_CRIA = ID_UTZ_CRIA  " + "FROM  RP_OF_PARA_LIN  "
+				+ "where ID_PARA_LIN = @ID2 " + "IF @ESTADO = 'E' " + "BEGIN "
+				+ "select @TOTAL = count(*) from RP_OF_OP_FUNC a "
+				+ "inner join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB "
+				+ "left join RP_OF_PREP_LIN c on a.ID_OP_CAB = c.ID_OP_CAB " + "where ID_OF_CAB = @ID_OF_CAB and  "
+				+ "((cast(a." + DATA_FIM + " as datetime) + cast(a." + HORA_FIM + " as datetime)) > (cast(c." + DATA_FIM
+				+ " as datetime) + cast(c." + HORA_FIM + " as datetime)) " + "or c." + HORA_INI
+				+ " is null) and ((cast(c." + DATA_FIM + " as datetime) + cast(c." + HORA_FIM
+				+ " as datetime)) <= @Data_inicio or ( " + "(cast(a." + DATA_INI + " as datetime) + cast(a." + HORA_INI
+				+ " as datetime)) <= @Data_inicio and c." + HORA_INI + " is null	)) " + "and(cast(a." + DATA_FIM
+				+ " as datetime) + cast(a." + HORA_FIM + " as datetime)) >= @Data_inicio  " + "END " + "ELSE "
+				+ "BEGIN " + "select @TOTAL =  count(*) from RP_OF_OP_FUNC a "
+				+ "inner join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB "
+				+ "inner join RP_OF_PREP_LIN c on a.ID_OP_CAB = c.ID_OP_CAB "
+				+ "where ID_OF_CAB = @ID_OF_CAB and c.DATA_INI is not null " + "and (cast(c." + DATA_FIM
+				+ " as datetime) + cast(c." + HORA_FIM + " as datetime)) > @Data_fim " + " and (cast(c." + DATA_INI
+				+ "  as datetime) + cast(c." + HORA_INI + " as datetime)) <= @Data_inicio " + "END "
+				+ "SET @COUNT= @COUNT+1 " + "IF(@COUNT = @TOTAL) " + "BEGIN " + "SELECT TOP 1  @Data_fim = MIN((cast("
+				+ DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime))), "
+				+ "@Data_fim2 = (select MIN((cast(" + DATA_INI + " as datetime) + cast(" + HORA_INI
+				+ " as datetime)))  "
+				+ "from  RP_OF_OP_FUNC where ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and (cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) >= @Data_inicio and (cast(" + DATA_INI
+				+ " as datetime) + cast(" + HORA_INI + " as datetime)) <= @Data_fim) " + "FROM  RP_OF_PARA_LIN  "
+				+ "where ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and  (cast("
+				+ DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime)) <= @Data_fim " + "AND (cast("
+				+ DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime)) > @Data_inicio "
+				+ "IF(@ID_RESULTADO is null) SET @ID_RESULTADO=@ID "
+				+ "IF(@Data_fim2 is not null) SET @Data_fim=@Data_fim2 "
+				+ "insert into @parents (Data_inicio,Data_fim,ID) values (@Data_inicio,@Data_fim,@ID_RESULTADO)	 "
+				+ "set @COUNT = 1	 " + "IF(@Data_fim2 is not null) SET @COUNT = @TOTAL " + "END "
+				+ "IF not EXISTS (SELECT * FROM RP_OF_PARA_LIN where  +" + "(cast( " + DATA_INI
+				+ " as datetime) + cast(" + HORA_INI + " as datetime)) < @Data_fim and + (cast( " + DATA_INI
+				+ " as datetime) + cast(" + HORA_INI
+				+ " as datetime)) > @Data_inicio and  ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and ID_UTZ_CRIA <> @ID_UTZ_CRIA) AND   @COUNT <> @TOTAL "
+				+ "BEGIN SET @COUNT= 1 END" + " FETCH NEXT " + "FROM @getid2 INTO @ID2 " + "END " + "END " + "ELSE "
+				+ "BEGIN " + "IF(@COUNT = @TOTAL) " + "BEGIN " + "SELECT TOP 1  @Data_fim = MIN((cast(" + DATA_FIM
+				+ " as datetime) + cast(" + HORA_FIM + " as datetime))), " + "@Data_fim2 = (select MIN((cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)))  "
+				+ "from  RP_OF_OP_FUNC where ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and (cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) >= @Data_inicio and (cast(" + DATA_INI
+				+ " as datetime) + cast(" + HORA_INI + " as datetime)) <= @Data_fim) " + "FROM  RP_OF_PARA_LIN  "
+				+ "where ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and  (cast("
+				+ DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime)) <= @Data_fim " + "AND (cast("
+				+ DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime)) > @Data_inicio "
+				+ "IF(@ID_RESULTADO is null) SET @ID_RESULTADO=@ID "
+				+ "IF(@Data_fim2 is not null) SET @Data_fim=@Data_fim2 "
+				+ "insert into @parents (Data_inicio,Data_fim,ID) values (@Data_inicio,@Data_fim,@ID_RESULTADO)	 "
+				+ "set @COUNT = 1	 " + "END " + "SET @COUNT1= @COUNT1+1 " + "END " + "END " + "FETCH NEXT "
+				+ "FROM @getid INTO @ID " + "set @COUNT = 1	 " + "END "
+				+ "IF @ESTADO = 'P' BEGIN select (cast((DATEDIFF(second, (cast(" + DATA_INI + " as datetime) + cast("
+				+ HORA_INI + " as datetime)),  (cast(" + DATA_FIM + " as datetime) + cast(" + HORA_FIM
+				+ " as datetime)))/3600.00) as decimal(18,4)) - "
+				+ "(select  COALESCE(SUM( cast((DATEDIFF(second,a.Data_inicio, a.Data_fim)/3600.00) as decimal(18,4))),0) from @parents a inner join RP_OF_PARA_LIN b on a.ID = b.ID_PARA_LIN ) ),'' as dfs "
+				+ "from RP_OF_PREP_LIN where ID_OP_CAB in (select TOP 1 ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) END ELSE BEGIN "
+				+ "select (cast((DATEDIFF(second, (cast(a." + DATA_INI + " as datetime) + cast(a." + HORA_INI
+				+ " as datetime)),  (cast(a." + DATA_FIM + " as datetime) + cast(a." + HORA_FIM
+				+ " as datetime)))/3600.00) as decimal(18,4)) - "
+				+ "( select COALESCE( SUM(  cast((DATEDIFF(second,a.Data_inicio, a.Data_fim)/3600.00) as decimal(18,4))),0) from @parents a inner join RP_OF_PARA_LIN b on a.ID = b.ID_PARA_LIN "
+				+ ") ) - COALESCE((cast((DATEDIFF(second, (cast(b." + DATA_INI + " as datetime) + cast(b." + HORA_INI
+				+ " as datetime)),  (cast(b." + DATA_FIM + " as datetime) + cast(b." + HORA_FIM
+				+ " as datetime)))/3600.00) as decimal(18,4))),0) "
+				+ ",'' as df from RP_OF_OP_FUNC a left join RP_OF_PREP_LIN b on  a.ID_OP_CAB = b.ID_OP_CAB where a.ID_OP_CAB in (select TOP 1 ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) END");
+
+		List<Object[]> dados2 = query2.getResultList();
+
+		Integer count = 0;
+		for (Object[] content2 : dados2) {
+			count++;
+			number = Double.parseDouble(content2[0].toString());
+		}
+		if (number < 0)
+			number = 0;
+		return number;
 	}
 
 	public void criar_ficheiro_Pausa(String data, String path2, Integer count, Boolean ficheirosdownload,

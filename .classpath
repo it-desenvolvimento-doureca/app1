@@ -37,5 +37,8 @@
 	<classpathentry kind="lib" path="C:/Users/it2/wildfly-10.0.0.Final/modules/system/layers/base/javax/persistence/api/main/hibernate-jpa-2.1-api-1.0.0.Final.jar"/>
 	<classpathentry kind="lib" path="src/main/webapp/WEB-INF/lib/openedge.jar"/>
 	<classpathentry kind="lib" path="src/main/webapp/WEB-INF/lib/sqljdbc42.jar"/>
+	<classpathentry kind="lib" path="src/main/webapp/WEB-INF/lib/jackson-annotations-2.9.7.jar"/>
+	<classpathentry kind="lib" path="src/main/webapp/WEB-INF/lib/jackson-core-2.9.7.jar"/>
+	<classpathentry kind="lib" path="src/main/webapp/WEB-INF/lib/jackson-databind-2.9.7.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

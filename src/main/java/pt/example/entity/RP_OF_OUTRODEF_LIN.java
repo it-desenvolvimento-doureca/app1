@@ -20,6 +20,7 @@ public class RP_OF_OUTRODEF_LIN {
 	private String RES_OUTRODEF;
 	private String OBS_OUTRODEF;
 	private Integer QUANT_OUTRODEF_M1;
+	private Integer ID_REF_ETIQUETA;
 
 	@Id
 	@Column(name = "ID_OUTROSDEF_LIN")
@@ -102,6 +103,15 @@ public class RP_OF_OUTRODEF_LIN {
 
 	public void setOBS_OUTRODEF(String oBS_OUTRODEF) {
 		OBS_OUTRODEF = oBS_OUTRODEF;
+	}
+
+	@Column(name = "ID_REF_ETIQUETA")
+	public Integer getID_REF_ETIQUETA() {
+		return ID_REF_ETIQUETA;
+	}
+
+	public void setID_REF_ETIQUETA(Integer iD_REF_ETIQUETA) {
+		ID_REF_ETIQUETA = iD_REF_ETIQUETA;
 	}
 
 }

@@ -94,6 +94,12 @@ public class RP_OF_DEF_LINDao extends GenericDaoJpaImpl<RP_OF_DEF_LIN, Integer>
 				.createQuery("DELETE FROM RP_OF_DEF_LIN a where a.ID_OP_LIN = :id and ID_REF_ETIQUETA = :etiqueta");
 		query.setParameter("id", id);
 		query.setParameter("etiqueta", etiqueta);
+
+		Query query2 = entityManager.createQuery(
+				"DELETE FROM RP_OF_OUTRODEF_LIN a where a.ID_OP_LIN = :id and ID_REF_ETIQUETA = :etiqueta");
+		query2.setParameter("id", id);
+		query2.setParameter("etiqueta", etiqueta);
+		query2.executeUpdate();
 		int utz = query.executeUpdate();
 		return utz;
 
@@ -119,7 +125,7 @@ public class RP_OF_DEF_LINDao extends GenericDaoJpaImpl<RP_OF_DEF_LIN, Integer>
 		// System.out.println(utz2.size());
 		if (utz2.size() > 0) {
 			data.setID_DEF_LIN(utz2.get(0).getID_DEF_LIN());
-			
+
 			if (data.getVERSAO_MODIF() != null) {
 				if (data.getVERSAO_MODIF() != utz2.get(0).getVERSAO_MODIF()) {
 					data.setQUANT_DEF_M1(utz2.get(0).getQUANT_DEF_M2());
@@ -144,7 +150,7 @@ public class RP_OF_DEF_LINDao extends GenericDaoJpaImpl<RP_OF_DEF_LIN, Integer>
 				data.setQUANT_DEF(0);
 				data.setQUANT_DEF_M1(0);
 			}
-			
+
 			this.create(data);
 			return RP_OF_DEF_LINDao.sum_defeitos(data);
 		}

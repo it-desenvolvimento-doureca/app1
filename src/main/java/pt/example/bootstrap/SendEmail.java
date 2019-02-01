@@ -1,10 +1,8 @@
 package pt.example.bootstrap;
 
+import java.io.FileInputStream;
 import java.util.Properties;
 
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.activation.FileDataSource;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
@@ -16,7 +14,6 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-
 // import com.mycompany.helper.* ;
 // import com.mycompany.dbi.*;
 
@@ -24,18 +21,35 @@ public class SendEmail {
 	public static void main(String[] args) {
 
 	}
+
+	private String username;
+	private String password;
 	
 	public void enviarEmail(String de,String para,String assunto,String mensagem,String nome_ficheiro){
 
-		final String username = "alertas.it.doureca@gmail.com";
-		final String password = "DourecA2@";
 
+		
+		String host = null, port = null;
+		
+		try {
+			Properties p = new Properties();
+			p.load(new FileInputStream("c:\\sgiid\\conf_email.ini"));
+			host = p.getProperty("host");
+			port = p.getProperty("port");
+			username = p.getProperty("username");
+			password = p.getProperty("password");
+			// p.list(System.out);
+
+		} catch (Exception e) {
+		}
+		
+		
 		Properties props = new Properties();	
 		
 		props.put("mail.smtp.auth", "true");
 		props.put("mail.smtp.starttls.enable", "true");
-		props.put("mail.smtp.host", "smtp.gmail.com");
-		props.put("mail.smtp.port", "587");
+		props.put("mail.smtp.host", host);
+		props.put("mail.smtp.port", port);
 
 		//587
 		//ssl off
@@ -80,6 +94,8 @@ public class SendEmail {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	
 	
 	
 }

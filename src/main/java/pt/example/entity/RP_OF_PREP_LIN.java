@@ -11,6 +11,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 @Entity
 @Table(name = "RP_OF_PREP_LIN")
 public class RP_OF_PREP_LIN {
@@ -48,6 +50,7 @@ public class RP_OF_PREP_LIN {
 	}
 
 	@Column(name = "DATA_INI")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", locale = "pt_PT", timezone = "Europe/Lisbon")
 	public Date getDATA_INI() {
 		return DATA_INI;
 	}
@@ -58,6 +61,7 @@ public class RP_OF_PREP_LIN {
 	}
 
 	@Column(name = "DATA_FIM")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", locale = "pt_PT", timezone = "Europe/Lisbon")
 	public Date getDATA_FIM() {
 		return DATA_FIM;
 	}
@@ -88,6 +92,7 @@ public class RP_OF_PREP_LIN {
 	}
 
 	@Column(name = "DATA_INI_M1")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", locale = "pt_PT", timezone = "Europe/Lisbon")
 	public Date getDATA_INI_M1() {
 		return DATA_INI_M1;
 	}
@@ -98,6 +103,7 @@ public class RP_OF_PREP_LIN {
 	}
 
 	@Column(name = "DATA_FIM_M1")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", locale = "pt_PT", timezone = "Europe/Lisbon")
 	public Date getDATA_FIM_M1() {
 		return DATA_FIM_M1;
 	}
@@ -108,6 +114,7 @@ public class RP_OF_PREP_LIN {
 	}
 
 	@Column(name = "DATA_INI_M2")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", locale = "pt_PT", timezone = "Europe/Lisbon")
 	public Date getDATA_INI_M2() {
 		return DATA_INI_M2;
 	}
@@ -118,6 +125,7 @@ public class RP_OF_PREP_LIN {
 	}
 
 	@Column(name = "DATA_FIM_M2")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", locale = "pt_PT", timezone = "Europe/Lisbon")
 	public Date getDATA_FIM_M2() {
 		return DATA_FIM_M2;
 	}

@@ -105,6 +105,18 @@ public class DemoRest {
 	}
 
 	@GET
+	@Path("/getOPTIPO/{OPECOD}")
+	@Produces("application/json")
+	public List<HashMap<String, String>> getOPTIPO(@PathParam("OPECOD") String OPECOD)
+			throws SQLException, ClassNotFoundException {
+
+		ConnectProgress connectionProgress = new ConnectProgress();
+
+		List<HashMap<String, String>> dados = connectionProgress.getOPTIPO(OPECOD, getURL());
+		return dados;
+	}
+
+	@GET
 	@Path("/allmaquina/{SECNUMENR}")
 	@Produces("application/json")
 	public List<HashMap<String, String>> Allmaquina(@PathParam("SECNUMENR") String SECCOD)
@@ -178,6 +190,17 @@ public class DemoRest {
 	}
 
 	@GET
+	@Path("/getSeccao")
+	@Produces("application/json")
+	public List<HashMap<String, String>> getSeccao() throws SQLException, ClassNotFoundException {
+
+		ConnectProgress connectionProgress = new ConnectProgress();
+
+		List<HashMap<String, String>> dados = connectionProgress.getSeccao(getURL());
+		return dados;
+	}
+
+	@GET
 	@Path("/getEtiqueta/{etiqueta}")
 	@Produces("application/json")
 	public List<HashMap<String, String>> getEtiqueta(@PathParam("etiqueta") String etiqueta)
@@ -225,6 +248,18 @@ public class DemoRest {
 	}
 
 	@GET
+	@Path("/getfilhosprimeiro/{OFANUMENR}")
+	@Produces("application/json")
+	public List<HashMap<String, String>> getfilhosprimeiro(@PathParam("OFANUMENR") String OFANUMENR)
+			throws SQLException, ClassNotFoundException {
+
+		ConnectProgress connectionProgress = new ConnectProgress();
+
+		List<HashMap<String, String>> dados = connectionProgress.getfilhosprimeiro(OFANUMENR, getURL());
+		return dados;
+	}
+
+	@GET
 	@Path("/defeitos/{fam}")
 	@Produces("application/json")
 	public List<HashMap<String, String>> getDefeitos(@PathParam("fam") String fam)
@@ -233,6 +268,18 @@ public class DemoRest {
 		ConnectProgress connectionProgress = new ConnectProgress();
 
 		List<HashMap<String, String>> dados = connectionProgress.getDefeitos(fam, getURL());
+		return dados;
+	}
+	
+	@POST
+	@Path("/defeitos2")
+	@Produces("application/json")
+	public List<HashMap<String, String>> getDefeitos2(final String fam)
+			throws SQLException, ClassNotFoundException {
+
+		ConnectProgress connectionProgress = new ConnectProgress();
+
+		List<HashMap<String, String>> dados = connectionProgress.getDefeitos2(fam, getURL());
 		return dados;
 	}
 
