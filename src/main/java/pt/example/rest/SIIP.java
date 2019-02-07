@@ -1416,13 +1416,14 @@ public class SIIP {
 		try {
 
 			Query query_of = entityManager.createNativeQuery(
-					"select a.ID_OF_CAB, a.OF_NUM,c.ID_UTZ_CRIA,a.OP_COD_ORIGEM,c.DATA_INI_M1,c.HORA_INI,c.NOME_UTZ_CRIA from RP_OF_CAB a "
+					"select a.ID_OF_CAB, a.OF_NUM,c.ID_UTZ_CRIA,a.OP_COD_ORIGEM,c.DATA_INI_M2,c.HORA_INI_M2,c.NOME_UTZ_CRIA,c.DATA_FIM_M2,c.HORA_FIM_M2 "
+							+ "from RP_OF_CAB a "
 							+ "inner join RP_OF_OP_CAB b on  b.ID_OP_CAB in (select x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB =  a.ID_OF_CAB) "
 							+ "inner join RP_OF_OP_FUNC c on c.ID_OP_CAB in  (select x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = a.ID_OF_CAB) and b.ID_OP_CAB = c.ID_OP_CAB "
 							+ "where a.ID_UTZ_CRIA = c.ID_UTZ_CRIA and  "
-							+ "CAST((cast(DATA_INI_M2 as datetime) + cast(HORA_INI_M2 as datetime)) AS DATE) >= '"
+							+ "CAST((cast(DATA_INI_M2 as datetime) + cast(HORA_INI_M2 as datetime)) AS datetime) >= '"
 							+ datainicio
-							+ "' and CAST((cast(DATA_INI_M2 as datetime) + cast(HORA_INI_M2 as datetime)) AS DATE) <= '"
+							+ "' and CAST((cast(DATA_INI_M2 as datetime) + cast(HORA_INI_M2 as datetime)) AS datetime) <= '"
 							+ datafim + "' and ID_OF_CAB_ORIGEM is null AND DATA_FIM_M2 is not null ");
 
 			List<Object[]> dados_of = query_of.getResultList();
@@ -1445,6 +1446,8 @@ public class SIIP {
 					x.put("HEUDEB", content_of[5].toString());
 					x.put("NOME", content_of[6].toString());
 					x.put("ID", content_of[0].toString());
+					x.put("DATAFIM", content_of[7].toString());
+					x.put("HORAFIM", content_of[8].toString());
 					list.add(x);
 				}
 			}
