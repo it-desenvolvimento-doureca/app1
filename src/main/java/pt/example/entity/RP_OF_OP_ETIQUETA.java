@@ -22,13 +22,13 @@ public class RP_OF_OP_ETIQUETA {
 	private String OF_NUM_ORIGEM;
 	private String OP_COD_ORIGEM;
 	private Integer QUANT_ETIQUETA;
-	private Integer QUANT_BOAS;
+	private Float QUANT_BOAS;
 	private Integer QUANT_DEF;
 	private String ID_UTZ_CRIA;
 	private String ID_UTZ_MODIF;
 	private Timestamp DATA_HORA_MODIF;
-	private Integer QUANT_BOAS_M1;
-	private Integer QUANT_BOAS_M2;
+	private Float QUANT_BOAS_M1;
+	private Float QUANT_BOAS_M2;
 	private Integer QUANT_DEF_M1;
 	private Integer QUANT_DEF_M2;
 	private Integer VERSAO_MODIF;
@@ -36,7 +36,9 @@ public class RP_OF_OP_ETIQUETA {
 	private String OP_COD_FAM;
 	private Boolean NOVO;
 	private Date OFDATFR;
-
+	private Boolean ATIVO;
+	private Boolean APAGADO;
+	
 	@Id
 	@Column(name = "ID_REF_ETIQUETA")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -80,7 +82,7 @@ public class RP_OF_OP_ETIQUETA {
 	}
 
 	@Column(name = "QUANT_BOAS")
-	public Integer getQUANT_BOAS() {
+	public Float getQUANT_BOAS() {
 		return QUANT_BOAS;
 	}
 
@@ -105,12 +107,12 @@ public class RP_OF_OP_ETIQUETA {
 	}
 
 	@Column(name = "QUANT_BOAS_M1")
-	public Integer getQUANT_BOAS_M1() {
+	public Float getQUANT_BOAS_M1() {
 		return QUANT_BOAS_M1;
 	}
 
 	@Column(name = "QUANT_BOAS_M2")
-	public Integer getQUANT_BOAS_M2() {
+	public Float getQUANT_BOAS_M2() {
 		return QUANT_BOAS_M2;
 	}
 
@@ -124,11 +126,11 @@ public class RP_OF_OP_ETIQUETA {
 		return QUANT_DEF_M2;
 	}
 
-	public void setQUANT_BOAS_M1(Integer qUANT_BOAS_M1) {
+	public void setQUANT_BOAS_M1(Float qUANT_BOAS_M1) {
 		QUANT_BOAS_M1 = qUANT_BOAS_M1;
 	}
 
-	public void setQUANT_BOAS_M2(Integer qUANT_BOAS_M2) {
+	public void setQUANT_BOAS_M2(Float qUANT_BOAS_M2) {
 		QUANT_BOAS_M2 = qUANT_BOAS_M2;
 	}
 
@@ -172,7 +174,7 @@ public class RP_OF_OP_ETIQUETA {
 		QUANT_ETIQUETA = qUANT_ETIQUETA;
 	}
 
-	public void setQUANT_BOAS(Integer qUANT_BOAS) {
+	public void setQUANT_BOAS(Float qUANT_BOAS) {
 		QUANT_BOAS = qUANT_BOAS;
 	}
 
@@ -235,6 +237,24 @@ public class RP_OF_OP_ETIQUETA {
 
 	public void setOFDATFR(Date oFDATFR) {
 		OFDATFR = oFDATFR;
+	}
+
+	@Column(name = "ATIVO")
+	public Boolean getATIVO() {
+		return ATIVO;
+	}
+
+	@Column(name = "APAGADO")
+	public Boolean getAPAGADO() {
+		return APAGADO;
+	}
+
+	public void setATIVO(Boolean aTIVO) {
+		ATIVO = aTIVO;
+	}
+
+	public void setAPAGADO(Boolean aPAGADO) {
+		APAGADO = aPAGADO;
 	}
 
 }

@@ -42,22 +42,23 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 			querydata = "";
 		}
 		String querydataw = "(select xa.ID_OF_CAB FROM RP_OF_CAB xa, RP_OF_OP_CAB xb,RP_OF_OP_FUNC xc where xa.ID_UTZ_CRIA = xc.ID_UTZ_CRIA and xc.ID_OP_CAB=xb.ID_OP_CAB and xa.ID_OF_CAB = xb.ID_OF_CAB and ID_OF_CAB_ORIGEM is null "
-				+ querydata+"  order by  xc.DATA_INI_M2 DESC,xc.HORA_INI_M2 DESC OFFSET  "+start+" ROWS  FETCH NEXT 25 ROWS ONLY ) ";
+				+ querydata + "  order by  xc.DATA_INI_M2 DESC,xc.HORA_INI_M2 DESC OFFSET  " + start
+				+ " ROWS  FETCH NEXT 25 ROWS ONLY ) ";
 		Query query = entityManager.createNativeQuery(
 				"SELECT CASE  WHEN  a.ID_OF_CAB_ORIGEM is not null THEN a.ID_OF_CAB_ORIGEM ELSE a.ID_OF_CAB END as idofacab, b.ID_OP_CAB,c.ID_OP_LIN,d.ID_OP_FUNC,"
 						+ "a.OF_NUM,a.OP_COD_ORIGEM,a.OP_DES,a.MAQ_NUM,a.MAQ_DES, d.ID_UTZ_CRIA,d.NOME_UTZ_CRIA,d.DATA_INI_M2,d.HORA_INI_M2,d.DATA_FIM_M2,d.HORA_FIM_M2,b.TEMPO_EXEC_TOTAL_M2,"
 						+ "c.REF_NUM,c.REF_DES,c.QUANT_OF,c.QUANT_BOAS_TOTAL_M2,c.QUANT_DEF_TOTAL_M2,c.PERC_DEF,c.PERC_OBJETIV,d.ESTADO,a.ID_UTZ_CRIA as idcria, "
 						+ "(select count(xx.ID_EVENTO) from GER_EVENTO xx where xx.ID_ORIGEM = a.ID_OF_CAB and xx.CAMPO_ORIGEM= 'ID_OF_CAB' and xx.ESTADO != 'A') as count_messages, "
 						+ "(select count(xx.ID_EVENTO) from GER_EVENTO xx where xx.ID_ORIGEM = a.ID_OF_CAB and xx.CAMPO_ORIGEM= 'ID_OF_CAB' and xx.ESTADO = 'L') as estados "
-						+ ",(select CAST((cast(xc.DATA_INI_M2 as datetime) + cast(xc.HORA_INI_M2 as datetime)) AS DATETIME) as dd FROM RP_OF_CAB xa, RP_OF_OP_CAB xb,RP_OF_OP_FUNC xc where xa.ID_UTZ_CRIA = xc.ID_UTZ_CRIA and xc.ID_OP_CAB=xb.ID_OP_CAB and xa.ID_OF_CAB = xb.ID_OF_CAB and ID_OF_CAB_ORIGEM is null and xa.ID_OF_CAB = (CASE WHEN  a.ID_OF_CAB_ORIGEM is not null THEN a.ID_OF_CAB_ORIGEM ELSE a.ID_OF_CAB END)) as dataorder "
+						+ ",(select CAST((cast(xc.DATA_INI_M2 as datetime) + cast(xc.HORA_INI_M2 as datetime)) AS DATETIME) as dd FROM RP_OF_CAB xa, RP_OF_OP_CAB xb,RP_OF_OP_FUNC xc where xa.ID_UTZ_CRIA = xc.ID_UTZ_CRIA and xc.ID_OP_CAB=xb.ID_OP_CAB and xa.ID_OF_CAB = xb.ID_OF_CAB and ID_OF_CAB_ORIGEM is null and xa.ID_OF_CAB = (CASE WHEN  a.ID_OF_CAB_ORIGEM is not null THEN a.ID_OF_CAB_ORIGEM ELSE a.ID_OF_CAB END)) as dataorder,a.OP_NUM "
 						+ "FROM RP_OF_CAB a LEFT JOIN RP_OF_OP_CAB b on a.ID_OF_CAB = b.ID_OF_CAB "
 						+ "LEFT JOIN RP_OF_OP_LIN c on b.ID_OP_CAB = c.ID_OP_CAB "
-						+ "LEFT JOIN RP_OF_OP_FUNC d on b.ID_OP_CAB = d.ID_OP_CAB "
-						+ "where a.ID_OF_CAB in "+querydataw+" "
-						+ "OR a.ID_OF_CAB_ORIGEM in "+querydataw+" "
+						+ "LEFT JOIN RP_OF_OP_FUNC d on b.ID_OP_CAB = d.ID_OP_CAB " + "where a.ID_OF_CAB in "
+						+ querydataw + " " + "OR a.ID_OF_CAB_ORIGEM in " + querydataw + " "
 						+ " ORDER BY dataorder DESC,idofacab desc,ID_OF_CAB_ORIGEM,b.ID_OP_CAB,d.DATA_INI_M2 ASC,d.HORA_INI_M2 ASC");
-		/*query.setFirstResult(start);
-		query.setMaxResults(26);*/
+		/*
+		 * query.setFirstResult(start); query.setMaxResults(26);
+		 */
 		List<RP_OF_CAB> utz = query.getResultList();
 		return utz;
 
@@ -129,6 +130,19 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 	}
 
 	public List<RP_OF_CAB> verifica(String of_num, String op_cod, String op_num, String user) {
+
+		Query query2 = entityManager.createNativeQuery("UPDATE RP_OF_CAB set ESTADO = 'C' "
+				+ "where 0 = ( select count(*) from RP_OF_CAB a "
+				+ "inner join RP_OF_OP_CAB b on a.ID_OF_CAB = b.ID_OF_CAB "
+				+ "inner join RP_OF_OP_FUNC c on b.ID_OP_CAB = c.ID_OP_CAB and a.ID_UTZ_CRIA = c.ID_UTZ_CRIA "
+				+ "where c.ESTADO NOT IN ('C','A','M','R') "
+				+ "and a.ID_OF_CAB = (Select a.ID_OF_CAB from RP_OF_CAB a where a.OF_NUM = '" + of_num
+				+ "' and a.OP_NUM = " + op_num + " " + "and a.OP_COD = '" + op_cod
+				+ "' and a.ESTADO NOT IN ('C','A','M','R'))) "
+				+ "and ID_OF_CAB = (Select a.ID_OF_CAB from RP_OF_CAB a where a.OF_NUM = '" + of_num + "' "
+				+ "and a.OP_NUM = " + op_num + " and a.OP_COD = '" + op_cod + "' and a.ESTADO NOT IN ('C','A','M','R'))");
+
+		query2.executeUpdate();
 
 		Query query = entityManager.createQuery("Select a,(select count(*) from RP_OF_OP_FUNC where ID_UTZ_CRIA ='"
 				+ user

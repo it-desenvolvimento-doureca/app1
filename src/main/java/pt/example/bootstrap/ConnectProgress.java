@@ -108,6 +108,36 @@ public class ConnectProgress {
 		return list;
 	}
 
+	public List<HashMap<String, String>> getofpai_filho(String ofnum, String url) throws SQLException {
+
+		String query = "select a.PROREF, (select f.proref from SDTPRC f where a.indnumcse = f.indnumenr ) PAI from SOFC a "
+				+ "inner join SOFA b on a.OFANUMENR = b.OFANUMENR " + "LEFT JOIN SDTPRA p ON p.proref= a.proref "
+				+ "where b.OFNUM= '" + ofnum + "'and  (p.PROTYPCOD != 'EMBA') ";
+
+		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
+
+		// Usa sempre assim que fecha os resources automaticamente
+		try (Connection connection = getConnection(url);
+				Statement stmt = connection.createStatement();
+				ResultSet rs = stmt.executeQuery(query)) {
+			while (rs.next()) {
+				HashMap<String, String> x = new HashMap<>();
+				x.put("PROREF", rs.getString("PROREF"));
+				x.put("PAI", rs.getString("PAI"));
+				list.add(x);
+			}
+			stmt.close();
+			rs.close();
+			connection.close();
+			// globalconnection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			globalconnection.close();
+		}
+		return list;
+	}
+
 	public List<HashMap<String, String>> getOP(String ofanumenr, String url) throws SQLException {
 
 		String query = "select OPECOD,OPENUM,OPEDES,SECNUMENR1 from SOFD where ofanumenr= '" + ofanumenr
@@ -405,9 +435,12 @@ public class ConnectProgress {
 
 	public List<HashMap<String, String>> getfilhos(String pai, String url) throws SQLException {
 
-		String query = "select b.PROREF,b.PRODES1,b.PRODES2,a.PROREFCST,b.PRDFAMCOD,c.ZPAVAL,b.GESCOD from SDTNCL a "
+		String query = "select b.PROREF,b.PRODES1,b.PRODES2,a.PROREFCST,b.PRDFAMCOD,c.ZPAVAL,b.GESCOD,b.PROQTEFMT,b.PROTYPCOD from SDTNCL a "
 				+ "inner join SDTPRA b on a.PROREFCST = b.PROREF  left join SDTZPA c on b.ZPANUM = c.ZPANUM and  c.zpacod='ALER' "
-				+ " where a.PROREFCSE ='" + pai + "' and  ( b.PROTYPCOD != 'EMBA' AND b.PROTYPCOD != 'COM')"; // AND b.PROTYPCOD != 'COM'
+				+ " where a.PROREFCSE ='" + pai + "' and  ( b.PROTYPCOD != 'EMBA' /*AND b.PROTYPCOD != 'COM'*/)"; // AND
+																													// b.PROTYPCOD
+																													// !=
+																													// 'COM'
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
@@ -425,6 +458,9 @@ public class ConnectProgress {
 				x.put("PRDFAMCOD", rs.getString("PRDFAMCOD"));
 				x.put("ZPAVAL", rs.getString("ZPAVAL"));
 				x.put("GESCOD", rs.getString("GESCOD"));
+				x.put("PROQTEFMT", rs.getString("PROQTEFMT"));
+				x.put("PROTYPCOD", rs.getString("PROTYPCOD"));
+
 				list.add(x);
 			}
 			stmt.close();
@@ -441,10 +477,13 @@ public class ConnectProgress {
 
 	public List<HashMap<String, String>> getfilhosprimeiro(String OFANUMENR, String url) throws SQLException {
 
-		String query = "select b.PROREF,b.PRODES1,b.PRODES2,b.PRDFAMCOD,c.ZPAVAL,b.GESCOD from SOFC  a "
+		String query = "select b.PROREF,b.PRODES1,b.PRODES2,b.PRDFAMCOD,c.ZPAVAL,b.GESCOD,b.PROQTEFMT,b.PROTYPCOD from SOFC  a "
 				+ "left join SDTPRA b on a.PROREF = b.PROREF "
 				+ "left join SDTZPA c on b.ZPANUM = c.ZPANUM and  c.zpacod='ALER' " + "where a.OFANUMENR = '"
-				+ OFANUMENR + "' and  (b.PROTYPCOD != 'EMBA' AND b.PROTYPCOD != 'COM')"; // AND b.PROTYPCOD != 'COM'
+				+ OFANUMENR + "' and  (b.PROTYPCOD != 'EMBA' /*AND b.PROTYPCOD != 'COM'*/)"; // AND
+																								// b.PROTYPCOD
+																								// !=
+																								// 'COM'
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
@@ -461,6 +500,41 @@ public class ConnectProgress {
 				x.put("PRDFAMCOD", rs.getString("PRDFAMCOD"));
 				x.put("ZPAVAL", rs.getString("ZPAVAL"));
 				x.put("GESCOD", rs.getString("GESCOD"));
+				x.put("PROQTEFMT", rs.getString("PROQTEFMT"));
+				x.put("PROTYPCOD", rs.getString("PROTYPCOD"));
+				list.add(x);
+			}
+			stmt.close();
+			rs.close();
+			connection.close();
+			globalconnection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			globalconnection.close();
+		}
+		return list;
+	}
+
+	public List<HashMap<String, String>> getOrigineComposant(String url, String PROREF, String OF) throws SQLException {
+
+		String query = "select a.PROREF,a.OFANUMENR,a.NCLRANG,a.INDNUMCSE,"
+				+ "(select f.proref from SDTPRC f where a.indnumcse = f.indnumenr ) PAI from SOFC a "
+				+ "inner join SOFA b on a.OFANUMENR = b.OFANUMENR " + "where b.OFNUM= '" + OF + "' and PROREF = '"
+				+ PROREF + "'";
+
+		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
+
+		// Usa sempre assim que fecha os resources automaticamente
+		try (Connection connection = getConnection(url);
+				Statement stmt = connection.createStatement();
+				ResultSet rs = stmt.executeQuery(query)) {
+
+			while (rs.next()) {
+				HashMap<String, String> x = new HashMap<>();
+				x.put("PROREF", rs.getString("PAI"));
+				x.put("INDNUMCSE", rs.getString("INDNUMCSE"));
+				x.put("NCLRANG", rs.getString("NCLRANG"));
 				list.add(x);
 			}
 			stmt.close();
@@ -503,7 +577,7 @@ public class ConnectProgress {
 		}
 		return list;
 	}
-	
+
 	public List<HashMap<String, String>> getDefeitos2(String fam, String url) throws SQLException {
 
 		String query = "select QUACOD,QUALIB from SPAQUA where  LEFT(QUACOD,2) in (" + fam + ") and QUATYP != '2'";
@@ -535,7 +609,7 @@ public class ConnectProgress {
 
 	public List<HashMap<String, String>> getRef(String OFANUMENR, String url) throws SQLException {
 
-		String query = "select a.PROREF, b.PRODES1,b.PRODES2,a.VA1REF, a.VA2REF,a.INDREF,a.OFBQTEINI,a.INDNUMENR,c.FAMCOD,d.ZPAVAL,b.PRDFAMCOD,b.GESCOD "
+		String query = "select a.PROREF, b.PRODES1,b.PRODES2,a.VA1REF, a.VA2REF,a.INDREF,a.OFBQTEINI,a.INDNUMENR,c.FAMCOD,d.ZPAVAL,b.PRDFAMCOD,b.GESCOD,b.PROQTEFMT,b.PROTYPCOD "
 				+ "from SOFB a " + "inner join SDTPRA b on a.PROREF = b.PROREF  "
 				+ "inner join SPAFAM c on b.PRDFAMCOD = c.FAMCOD  "
 				+ "left join (select * from SDTZPA f where f.ZPACOD='ALER') d on b.ZPANUM = d.ZPANUM "
@@ -563,6 +637,8 @@ public class ConnectProgress {
 				x.put("ZPAVAL", rs.getString("ZPAVAL"));
 				x.put("PRDFAMCOD", rs.getString("PRDFAMCOD"));
 				x.put("GESCOD", rs.getString("GESCOD"));
+				x.put("PROQTEFMT", rs.getString("PROQTEFMT"));
+				x.put("PROTYPCOD", rs.getString("PROTYPCOD"));
 				list.add(x);
 			}
 			stmt.close();
@@ -580,7 +656,7 @@ public class ConnectProgress {
 	public List<HashMap<String, String>> getOPtop1(String ofanumenr, String url) throws SQLException {
 
 		String query = "select * from SOFD a where ofanumenr= '" + ofanumenr
-				+ "' and OPECOD != '' order by a.OPENUM desc";
+				+ "' and OPECOD != '' and RETOUCHE != 1  order by a.OPENUM desc";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
@@ -609,6 +685,46 @@ public class ConnectProgress {
 		return list;
 	}
 
+	public List<HashMap<String, String>> consulta_Impressao(String PROREF, String url) throws SQLException {
+
+		String query = " SELECT A.proref Ref, L.DATCRE Data, E.etqnum NumEtiq, E.empcod Localizacao, 		"
+				+ "A.prodes1 DesRef, E.etqembqte Quant, L.lotref Lote, E.liecod Armazem " + "FROM  SETQDE AS E "
+				+ "left JOIN SDTPRA AS A ON E.proref = A.proref L"
+				+ "EFT JOIN STOLOT AS L ON E.indnumenr = L.indnumenr AND E.etqorilot1 = L.lotref 	"
+				+ "WHERE E.etqetat='1' AND E.etqsitsto='2' and E.proref='" + PROREF
+				+ "' 	ORDER BY L.DATCRE, E.etqnum";
+
+		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
+
+		// Usa sempre assim que fecha os resources automaticamente
+		try (Connection connection = getConnection(url);
+				Statement stmt = connection.createStatement();
+				ResultSet rs = stmt.executeQuery(query)) {
+			while (rs.next()) {
+				// parser das operações
+				HashMap<String, String> x = new HashMap<>();
+				x.put("REF", rs.getString("Ref"));
+				x.put("DESREF", rs.getString("DesRef"));
+				x.put("DATA", rs.getString("Data"));
+				x.put("NUMETIQ", rs.getString("NumEtiq"));
+				x.put("LOCAL", rs.getString("Localizacao"));
+				x.put("QUANT", rs.getString("Quant"));
+				x.put("LOTE", rs.getString("Lote"));
+				x.put("ARMAZEM", rs.getString("Armazem"));
+				list.add(x);
+			}
+			stmt.close();
+			rs.close();
+			// connection.close();
+			globalconnection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			globalconnection.close();
+		}
+		return list;
+	}
+
 	public List<HashMap<String, String>> getEtiqueta(String etiqueta, String url) throws SQLException {
 
 		/*
@@ -618,7 +734,7 @@ public class ConnectProgress {
 		 * "inner join SOFA b on b.ofnum = left(a.etqoridoc1,10) inner join SOFB c on b.ofanumenr = c.ofanumenr"
 		 * + " where a.etqnum = '" + etiqueta + "'";
 		 */
-		String query = "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,c.INDNUMENR,c.VA1REF,c.VA2REF,c.INDREF,c.PROREF,b.OFDATFR from SETQDE a "
+		String query = "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,c.INDNUMENR,c.VA1REF,c.VA2REF,c.INDREF,c.PROREF,b.OFDATFR,a.PROREF as PROREFCOMP from SETQDE a "
 				+ "LEFT join SOFB c on  c.ofbnumenr = a.orinumenr LEFT join SOFA b on b.ofanumenr = c.ofanumenr "
 				+ " where a.etqnum = '" + etiqueta + "'";
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
@@ -641,6 +757,77 @@ public class ConnectProgress {
 				x.put("INDREF", rs.getString("INDREF"));
 				x.put("PROREF", rs.getString("PROREF"));
 				x.put("OFDATFR", rs.getString("OFDATFR"));
+				x.put("PROREFCOMP", rs.getString("PROREFCOMP"));
+				list.add(x);
+			}
+			stmt.close();
+			rs.close();
+			connection.close();
+			// globalconnection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			globalconnection.close();
+		}
+		return list;
+	}
+
+	public List<HashMap<String, String>> getEtiquetacaixas(String etiqueta, String url) throws SQLException {
+
+		String query = "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,c.INDNUMENR,c.VA1REF,c.VA2REF,c.INDREF,c.PROREF,b.OFDATFR,a.PROREF as PROREFCOMP from SETQDE a "
+				+ "LEFT join SOFB c on  c.ofbnumenr = a.orinumenr LEFT join SOFA b on b.ofanumenr = c.ofanumenr "
+				+ " where a.etqnum = '" + etiqueta
+				+ "' and a.ETQEMBQTE < (SELECT top 1 vteembqte1 proref FROM SDTPRC WHERE proref=  a.PROREF)";
+		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
+
+		try (Connection connection = getConnection(url);
+				Statement stmt = connection.createStatement();
+				ResultSet rs = stmt.executeQuery(query)) {
+			while (rs.next()) {
+				// parser das operações
+				HashMap<String, String> x = new HashMap<>();
+				x.put("OFNUM", rs.getString("OFNUM"));
+				x.put("ofanumenr", rs.getString("ofanumenr"));
+				x.put("ofref", rs.getString("ofref"));
+				x.put("ETQEMBQTE", rs.getString("ETQEMBQTE"));
+				x.put("INDNUMENR", rs.getString("INDNUMENR"));
+				x.put("VA1REF", rs.getString("VA1REF"));
+				x.put("VA2REF", rs.getString("VA2REF"));
+				x.put("INDREF", rs.getString("INDREF"));
+				x.put("PROREF", rs.getString("PROREF"));
+				x.put("OFDATFR", rs.getString("OFDATFR"));
+				x.put("PROREFCOMP", rs.getString("PROREFCOMP"));
+				list.add(x);
+			}
+			stmt.close();
+			rs.close();
+			connection.close();
+			// globalconnection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			globalconnection.close();
+		}
+		return list;
+	}
+
+	public List<HashMap<String, String>> gama_embalagem(String proref, String ID_OF_CAB, String url)
+			throws SQLException {
+
+		String query = "SELECT vteembqte1 as QuantidadeCaixa, proref, ISNULL((select SUM(QUANT_ETIQUETA) from SGIID.dbo.RP_CAIXAS_INCOMPLETAS where ID_OF_CAB = "
+				+ ID_OF_CAB + " and PROREF = a.PROREF), 0 ) total_caixas " + "FROM SDTPRC a WHERE proref in (" + proref
+				+ ")";
+		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
+
+		try (Connection connection = getConnection(url);
+				Statement stmt = connection.createStatement();
+				ResultSet rs = stmt.executeQuery(query)) {
+			while (rs.next()) {
+				// parser das operações
+				HashMap<String, String> x = new HashMap<>();
+				x.put("QuantidadeCaixa", rs.getString("QuantidadeCaixa"));
+				x.put("proref", rs.getString("proref"));
+				x.put("total_caixas", rs.getString("total_caixas"));
 				list.add(x);
 			}
 			stmt.close();
@@ -824,13 +1011,29 @@ public class ConnectProgress {
 		return val;
 	}
 
-	public String verificaOF(String RESCOD, String DATDEB, String OFNUM, String OPECOD, String url, String HEUDEB)
-			throws SQLException {
+	public String verificaOF(String RESCOD, String DATDEB, String OFNUM, String OPECOD, String url, String HEUDEB,
+			String BOAS, String DEFEITOS, String PROREF) throws SQLException {
+
+		/*
+		 * String query = "SELECT SOFD.OPENUM FROM SCPSVA " +
+		 * "INNER JOIN SOFD ON SCPSVA.ofdnumenr = SOFD.ofdnumenr " +
+		 * "INNER JOIN SOFA ON SOFD.ofanumenr = SOFA.ofanumenr " +
+		 * "INNER JOIN SOFB ON SOFB.ofanumenr = SOFA.ofanumenr " +
+		 * "INNER JOIN SCPSVQ ON SCPSVQ.SVANUMENR = (CASE WHEN SCPSVA.SVANUMORI = 0 THEN SCPSVA.SVANUMENR ELSE SCPSVA.SVANUMORI END) "
+		 * + "WHERE SCPSVA.rescod = '" + RESCOD + "' AND SCPSVA.datdeb = '" +
+		 * DATDEB + "' AND SCPSVA.heudeb = '" + HEUDEB.substring(0, 8) +
+		 * "' AND SOFA.ofnum = '" + OFNUM + "' AND SOFD.opecod = '" + OPECOD +
+		 * "' " + "AND SCPSVQ.QTERB = " + BOAS + " AND SCPSVQ.QTERR = " +
+		 * DEFEITOS + " AND SOFB.PROREF = '" + PROREF + "'";
+		 */
 
 		String query = "SELECT SOFD.OPENUM FROM SCPSVA " + "INNER JOIN SOFD ON SCPSVA.ofdnumenr = SOFD.ofdnumenr "
-				+ "INNER JOIN SOFA ON SOFD.ofanumenr = SOFA.ofanumenr " + "WHERE SCPSVA.rescod = '" + RESCOD
+				+ "INNER JOIN SOFA ON SOFD.ofanumenr = SOFA.ofanumenr "
+				+ "INNER JOIN SOFB ON SOFB.ofanumenr = SOFA.ofanumenr " + "WHERE SCPSVA.rescod = '" + RESCOD
 				+ "' AND SCPSVA.datdeb = '" + DATDEB + "' AND SCPSVA.heudeb = '" + HEUDEB.substring(0, 8)
-				+ "' AND SOFA.ofnum = '" + OFNUM + "' AND SOFD.opecod = '" + OPECOD + "' ";
+				+ "' AND SOFA.ofnum = '" + OFNUM + "' AND SOFD.opecod = '" + OPECOD + "' " + "AND SOFB.PROREF = '"
+				+ PROREF + "'";
+
 		String val = null;
 		// System.out.println(query);
 		// Usa sempre assim que fecha os resources automaticamente

@@ -20,18 +20,20 @@ public class RP_OF_OP_LIN {
 	private String REF_VAR2;
 	private Integer REF_INDNUMENR;
 	private Integer QUANT_OF;
-	private Integer QUANT_BOAS_TOTAL;
+	private Float QUANT_BOAS_TOTAL;
 	private Integer QUANT_DEF_TOTAL;
 	private Float PERC_OBJETIV;
 	private Float PERC_DEF;
 	private String OBS_REF;
-	private Integer QUANT_BOAS_TOTAL_M1;
+	private Float QUANT_BOAS_TOTAL_M1;
 	private Integer QUANT_DEF_TOTAL_M1;
-	private Integer QUANT_BOAS_TOTAL_M2;
+	private Float QUANT_BOAS_TOTAL_M2;
 	private Integer QUANT_DEF_TOTAL_M2;
 	private Integer VERSAO_MODIF;
 	private String GESCOD;
-	
+	private Boolean PROQTEFMT;
+	private String TIPO_PECA;
+
 	@Id
 	@Column(name = "ID_OP_LIN")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -80,7 +82,7 @@ public class RP_OF_OP_LIN {
 	}
 
 	@Column(name = "QUANT_BOAS_TOTAL")
-	public Integer getQUANT_BOAS_TOTAL() {
+	public Float getQUANT_BOAS_TOTAL() {
 		return QUANT_BOAS_TOTAL;
 	}
 
@@ -100,7 +102,7 @@ public class RP_OF_OP_LIN {
 	}
 
 	@Column(name = "QUANT_BOAS_TOTAL_M1")
-	public Integer getQUANT_BOAS_TOTAL_M1() {
+	public Float getQUANT_BOAS_TOTAL_M1() {
 		return QUANT_BOAS_TOTAL_M1;
 	}
 
@@ -110,7 +112,7 @@ public class RP_OF_OP_LIN {
 	}
 
 	@Column(name = "QUANT_BOAS_TOTAL_M2")
-	public Integer getQUANT_BOAS_TOTAL_M2() {
+	public Float getQUANT_BOAS_TOTAL_M2() {
 		return QUANT_BOAS_TOTAL_M2;
 	}
 
@@ -119,7 +121,7 @@ public class RP_OF_OP_LIN {
 		return QUANT_DEF_TOTAL_M2;
 	}
 
-	public void setQUANT_BOAS_TOTAL_M1(Integer qUANT_BOAS_TOTAL_M1) {
+	public void setQUANT_BOAS_TOTAL_M1(Float qUANT_BOAS_TOTAL_M1) {
 		QUANT_BOAS_TOTAL_M1 = qUANT_BOAS_TOTAL_M1;
 	}
 
@@ -127,7 +129,7 @@ public class RP_OF_OP_LIN {
 		QUANT_DEF_TOTAL_M1 = qUANT_DEF_TOTAL_M1;
 	}
 
-	public void setQUANT_BOAS_TOTAL_M2(Integer qUANT_BOAS_TOTAL_M2) {
+	public void setQUANT_BOAS_TOTAL_M2(Float qUANT_BOAS_TOTAL_M2) {
 		QUANT_BOAS_TOTAL_M2 = qUANT_BOAS_TOTAL_M2;
 	}
 
@@ -171,7 +173,7 @@ public class RP_OF_OP_LIN {
 		QUANT_OF = qUANT_OF;
 	}
 
-	public void setQUANT_BOAS_TOTAL(Integer qUANT_BOAS_TOTAL) {
+	public void setQUANT_BOAS_TOTAL(Float qUANT_BOAS_TOTAL) {
 		QUANT_BOAS_TOTAL = qUANT_BOAS_TOTAL;
 	}
 
@@ -212,6 +214,24 @@ public class RP_OF_OP_LIN {
 
 	public void setGESCOD(String gESCOD) {
 		GESCOD = gESCOD;
+	}
+
+	@Column(name = "PROQTEFMT")
+	public Boolean getPROQTEFMT() {
+		return PROQTEFMT;
+	}
+
+	public void setPROQTEFMT(Boolean pROQTEFMT) {
+		PROQTEFMT = pROQTEFMT;
+	}
+
+	@Column(name = "TIPO_PECA")
+	public String getTIPO_PECA() {
+		return TIPO_PECA;
+	}
+
+	public void setTIPO_PECA(String tIPO_PECA) {
+		TIPO_PECA = tIPO_PECA;
 	}
 
 }
