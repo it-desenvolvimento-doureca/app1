@@ -240,6 +240,94 @@ public class ReportGenerator {
 		return fileName;
 
 	}
+	
+	@SuppressWarnings("deprecation")
+	public String relatorio(String format, String Name, Integer ID, String relatorio, String url2, String filepath,String subpasta,String CLIENTE,String DOCUMENTOS,String IDIOMA,List<HashMap<String, String>> dados)
+			throws JRException, SQLException {
+		HashMap hm = null;
+		String fileName = null;
+
+		// System.out.println("Start ....");
+		fileName = Name + "." + format;
+
+		String jrxmlFileName = "c:/" + filepath + "/relatorios/jasperfiles/"+subpasta+  relatorio + ".jrxml";
+		String jasperFileName = "c:/" + filepath + "/relatorios/jasperfiles/"+subpasta + relatorio + ".jasper";
+		String exportFileName = "c:/" + filepath + "/relatorios/" + fileName;
+
+		List<Bean> beans = new ArrayList<Bean>();
+		JRDataSource jrDataSource = new JRBeanCollectionDataSource(beans);
+
+		JasperCompileManager.compileReportToFile(jrxmlFileName, jasperFileName);
+
+		try {
+			Class.forName("net.sourceforge.jtds.jdbc.Driver");
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// String url =
+		// "jdbc:jtds:sqlserver://192.168.40.101/"+pasta.database+";instance=DOURECA;User=sa;Password=DourecA2@;";
+		// String url =
+		// "jdbc:jtds:sqlserver://192.168.40.126/SGIID;instance=DEVDOURECA;User=sa;Password=DourecA2@;";
+		String url = url2;
+		Connection conn = DriverManager.getConnection(url);
+
+		// Create parametros
+		hm = new HashMap();
+		if(subpasta.equals("financeira/")){
+			hm.put("DOCUMENTOS", DOCUMENTOS);
+			hm.put("ID_CLIENTE", CLIENTE);
+			hm.put("IDIOMA", IDIOMA);
+		}else if(subpasta.equals("producao/")){
+		
+			HashMap<String, String> firstMap = dados.get(0);			
+			String LINHA = firstMap.get("LINHA");
+			String DATA_INI = firstMap.get("DATA_INI");
+			String DATA_FIM = firstMap.get("DATA_FIM");
+			String PROREF = firstMap.get("PROREF");
+			String TIPO_AREA = firstMap.get("TIPO_AREA");
+			String HORA_INI = firstMap.get("HORA_INI");
+			String HORA_FIM = firstMap.get("HORA_FIM");
+			String CHECK1 = firstMap.get("CHECK1");
+			
+			hm.put("LINHA", LINHA);
+			hm.put("DATA_INI", DATA_INI);
+			hm.put("DATA_FIM", DATA_FIM);
+			hm.put("PROREF", PROREF);
+			hm.put("TIPO_AREA", TIPO_AREA);
+			hm.put("HORA_INI", HORA_INI);
+			hm.put("HORA_FIM", HORA_FIM);
+			hm.put("CHECK1", CHECK1);
+		}else{
+			hm.put("id", ID);
+		}
+		
+
+		// Generate jasper print
+		JasperPrint jprint = (JasperPrint) JasperFillManager.fillReport(jasperFileName, hm, conn);
+
+		// Export pdf file
+		if (format.equals("pdf")) {
+			JasperExportManager.exportReportToPdfFile(jprint, exportFileName);
+		} else if (format.equals("xlsx")) {
+
+			JRXlsxExporter exporter = new JRXlsxExporter();
+			exporter.setParameter(JRXlsExporterParameter.JASPER_PRINT, jprint);
+			exporter.setParameter(JRXlsExporterParameter.OUTPUT_FILE_NAME, exportFileName);
+			exporter.exportReport();
+		} else if (format.equals("docx")) {
+
+			Exporter exporter = new JRDocxExporter();
+			exporter.setExporterInput(new SimpleExporterInput(jprint));
+			exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(exportFileName));
+			exporter.exportReport();
+		}
+		conn.close();
+		// System.out.println("Done exporting reports to pdf");
+		deleteoldfiles(filepath);
+		return fileName;
+
+	}
 
 	public void deleteoldfiles(String filepath) {
 		File directory = new File("c:/" + filepath + "/relatorios/");

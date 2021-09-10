@@ -777,7 +777,7 @@ public class ConnectProgress {
 		String query = "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,c.INDNUMENR,c.VA1REF,c.VA2REF,c.INDREF,c.PROREF,b.OFDATFR,a.PROREF as PROREFCOMP from SETQDE a "
 				+ "LEFT join SOFB c on  c.ofbnumenr = a.orinumenr LEFT join SOFA b on b.ofanumenr = c.ofanumenr "
 				+ " where a.etqnum = '" + etiqueta
-				+ "' and a.ETQEMBQTE < (SELECT top 1 vteembqte1 proref FROM SDTPRC WHERE proref=  a.PROREF)";
+				+ "' and a.ETQEMBQTE < (SELECT top 1 vteembqte1 proref FROM SDTPRC WHERE proref=  a.PROREF)  AND a.etqetat='1' AND a.etqsitsto='2'";
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		try (Connection connection = getConnection(url);
@@ -810,6 +810,36 @@ public class ConnectProgress {
 		}
 		return list;
 	}
+	
+	public List<HashMap<String, String>> getEtiquetacaixaMatrix(String etiqueta, String url) throws SQLException {
+
+		String query = "EXEC GET_ETIQUETAS_CAIXA_MATRIX '" + etiqueta + "'";
+		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
+
+		try (Connection connection = getConnection(url);
+				Statement stmt = connection.createStatement();
+				ResultSet rs = stmt.executeQuery(query)) {
+			while (rs.next()) {
+				// parser das operações
+				HashMap<String, String> x = new HashMap<>();
+				x.put("ETQEMBQTE", rs.getString("ETQEMBQTE"));
+				x.put("PROREF", rs.getString("PROREF"));
+				x.put("ETQCLIREF", rs.getString("ETQCLIREF"));
+				
+				list.add(x);
+			}
+			stmt.close();
+			rs.close();
+			connection.close();
+			// globalconnection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			globalconnection.close();
+		}
+		return list;
+	}
+
 
 	public List<HashMap<String, String>> gama_embalagem(String proref, String ID_OF_CAB, String url)
 			throws SQLException {
@@ -828,6 +858,34 @@ public class ConnectProgress {
 				x.put("QuantidadeCaixa", rs.getString("QuantidadeCaixa"));
 				x.put("proref", rs.getString("proref"));
 				x.put("total_caixas", rs.getString("total_caixas"));
+				list.add(x);
+			}
+			stmt.close();
+			rs.close();
+			connection.close();
+			// globalconnection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			globalconnection.close();
+		}
+		return list;
+	}
+	
+	public List<HashMap<String, String>> valida_REFERENCIA_CONTROLO_ETIQUETAS(String proref , String url)
+			throws SQLException {
+
+		String query = "select proref,etqcliref from SILVER_BI.dbo.SETQDE where etqcliref ='"+proref+"')";
+		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
+
+		try (Connection connection = getConnection(url);
+				Statement stmt = connection.createStatement();
+				ResultSet rs = stmt.executeQuery(query)) {
+			while (rs.next()) {
+				// parser das operações
+				HashMap<String, String> x = new HashMap<>();
+				x.put("etqcliref", rs.getString("etqcliref"));
+				x.put("proref", rs.getString("proref"));
 				list.add(x);
 			}
 			stmt.close();

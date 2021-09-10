@@ -65,14 +65,14 @@ $(window).bind("scroll", function () {
 function scroll(rightt) {
 	if ($(".tabelacontrolo thead ").length) {
 		if ($('#tabelacontroloclone').length == 0) {
-			var target = $('.tabelacontrolo .ui-widget-header  ');
+			var target = $('.tabelacontrolo .p-datatable-scrollable-header ');
 			var target_children = target.children();
 
 			var clone = target.clone().prop('id', 'tabelacontroloclone');
 
-			$('.tabelacontrolo .ui-datatable-scrollable-view').append(clone);
+			$('.tabelacontrolo .p-datatable-scrollable-body').append(clone);
 			$('#tabelacontroloclone').hide();
-			$('#tabelacontroloclone .ui-sortable-column-icon').remove();
+			$('#tabelacontroloclone .p-sortable-column-icon').remove();
 
 		}
 
@@ -258,24 +258,24 @@ $(document).ready(function () {
 
 	$(document).ready(function () {
 		$(function () {
-
-			$('#particles').particleground({
-				minSpeedX: 0.1,
-				maxSpeedX: 0.7,
-				minSpeedY: 0.1,
-				maxSpeedY: 0.7,
-				directionX: 'center', // 'center', 'left' or 'right'. 'center' = dots bounce off edges
-				directionY: 'center', // 'center', 'up' or 'down'. 'center' = dots bounce off edges
-				density: 10000, // How many particles will be generated: one particle every n pixels
-				dotColor: '#6eacff',
-				lineColor: '#6eacff',
-				particleRadius: 7, // Dot size
-				lineWidth: 1,
-				curvedLines: true,
-				proximity: 100, // How close two dots need to be before they join
-				parallax: false
-			});
-
+			if ($("#particles").length > 0) {
+				$('#particles').particleground({
+					minSpeedX: 0.1,
+					maxSpeedX: 0.7,
+					minSpeedY: 0.1,
+					maxSpeedY: 0.7,
+					directionX: 'center', // 'center', 'left' or 'right'. 'center' = dots bounce off edges
+					directionY: 'center', // 'center', 'up' or 'down'. 'center' = dots bounce off edges
+					density: 10000, // How many particles will be generated: one particle every n pixels
+					dotColor: '#6eacff',
+					lineColor: '#6eacff',
+					particleRadius: 7, // Dot size
+					lineWidth: 1,
+					curvedLines: true,
+					proximity: 100, // How close two dots need to be before they join
+					parallax: false
+				});
+			}
 		});
 	});
 

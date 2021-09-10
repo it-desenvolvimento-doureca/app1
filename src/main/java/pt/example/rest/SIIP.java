@@ -52,7 +52,9 @@ import pt.example.bootstrap.ConnectProgress;
 import pt.example.bootstrap.Printer;
 import pt.example.bootstrap.ReportGenerator;
 import pt.example.bootstrap.SendEmail;
+import pt.example.dao.CONTROLO_ETIQUETASDao;
 import pt.example.dao.GER_EVENTODao;
+import pt.example.dao.GER_POSTOSDao;
 import pt.example.dao.RPCONFUTZPERFDao;
 import pt.example.dao.RPOFDao;
 import pt.example.dao.RP_CAIXAS_INCOMPLETASDao;
@@ -61,6 +63,9 @@ import pt.example.dao.RP_CONF_FAMILIA_COMPDao;
 import pt.example.dao.RP_CONF_FAMILIA_DEF_COMPRADASDao;
 import pt.example.dao.RP_CONF_OPDao;
 import pt.example.dao.RP_CONF_OP_NPREVDao;
+import pt.example.dao.RP_CONF_RELACAO_REF_ETIQUETASDao;
+import pt.example.dao.RP_GESTAO_ETIQUETAS_MATRIXDao;
+import pt.example.dao.RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIXDao;
 import pt.example.dao.RP_OF_DEF_LINDao;
 import pt.example.dao.RP_OF_LST_DEFDao;
 import pt.example.dao.RP_OF_OP_CABDao;
@@ -72,16 +77,21 @@ import pt.example.dao.RP_OF_PARA_LINDao;
 import pt.example.dao.RP_OF_PREP_LINDao;
 import pt.example.dao.ST_PEDIDOSDao;
 import pt.example.dao.VERSAO_APPDao;
+import pt.example.entity.CONTROLO_ETIQUETAS;
 import pt.example.entity.EMAIL;
 import pt.example.entity.GER_EVENTO;
 import pt.example.entity.GER_EVENTOS_CONF;
+import pt.example.entity.GER_POSTOS;
 import pt.example.entity.RP_CAIXAS_INCOMPLETAS;
 import pt.example.entity.RP_CONF_CHEF_SEC;
 import pt.example.entity.RP_CONF_FAMILIA_COMP;
 import pt.example.entity.RP_CONF_FAMILIA_DEF_COMPRADAS;
 import pt.example.entity.RP_CONF_OP;
 import pt.example.entity.RP_CONF_OP_NPREV;
+import pt.example.entity.RP_CONF_RELACAO_REF_ETIQUETAS;
 import pt.example.entity.RP_CONF_UTZ_PERF;
+import pt.example.entity.RP_GESTAO_ETIQUETAS_MATRIX;
+import pt.example.entity.RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX;
 import pt.example.entity.RP_OF_CAB;
 import pt.example.entity.RP_OF_DEF_LIN;
 import pt.example.entity.RP_OF_LST_DEF;
@@ -161,6 +171,21 @@ public class SIIP {
 
 	@Inject
 	private RP_CAIXAS_INCOMPLETASDao dao19;
+
+	@Inject
+	private CONTROLO_ETIQUETASDao dao20;
+
+	@Inject
+	private RP_GESTAO_ETIQUETAS_MATRIXDao dao21;
+
+	@Inject
+	private RP_CONF_RELACAO_REF_ETIQUETASDao dao22;
+
+	@Inject
+	private RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIXDao dao23;
+
+	@Inject
+	private GER_POSTOSDao dao24;
 
 	// RP_CONF_UTZ_PERF***************************************************************
 	@POST
@@ -2920,23 +2945,29 @@ public class SIIP {
 					// Lieu (entrée )
 					data_quantidades += "          ";
 					// + Emplacement ( entrée )
-					data_quantidades += "          ";
+					// data_quantidades += " ";
 					// Référence du lot ( entrée )
-					data_quantidades += "                                   ";
-					// N° d'étiquette ( entrée )
 					data_quantidades += "          ";
+					if (!tipo.equals("COMP")) {
+						data_quantidades += (of + "                                   ").substring(0, 35);
+					} else {
+						data_quantidades += (/* content3[2] + */"                                   ").substring(0, 35);
+					}
+					data_quantidades += "          ";
+					// N° d'étiquette ( entrée )
+					// data_quantidades += " ";
 					// +Texte libre
 					// String obs = (content3[19] != null) ?
 					// content3[19].toString() : "";
 					String obs = "";
+					obs += id_origem;
 					if (!tipo.equals("COMP") && ip_posto != null) {
-						obs += id_origem;
 						String nomeimpressora = "";
 						String ipimpressora = "";
 						Boolean imprime = true;
 
 						Query query_impressora = entityManager.createNativeQuery(
-								"select top 1  NOME_IMPRESSORA,IP_IMPRESSORA from GER_POSTOS b where IP_POSTO ='"
+								"select top 1  NOME_IMPRESSORA_SILVER,IP_IMPRESSORA from GER_POSTOS b where IP_POSTO ='"
 										+ ip_posto + "'");
 						List<Object[]> dados_impressora = query_impressora.getResultList();
 						for (Object[] content2 : dados_impressora) {
@@ -3592,18 +3623,23 @@ public class SIIP {
 
 	}
 
+	public static boolean isFileExists(File file) {
+		return file.exists() && !file.isDirectory();
+	}
+
 	public void criar_ficheiro(String data, String path, String path_error, Boolean error, String err) {
 		File file2 = new File(path);
-		if (file2.delete())
-			// if file doesnt exists, then create it
-
+		// if (file2.delete())
+		// if file doesnt exists, then create it
+		if (!isFileExists(file2)) {
 			try {
 				file2.createNewFile();
 			} catch (IOException e2) {
-				String[] keyValuePairs = { "texto_erro ::" + e2.getMessage() + " " + file2.getAbsolutePath() + "", };
+				String[] keyValuePairs = { "TEXTO_ERRO ::" + e2.getMessage() + " " + file2.getAbsolutePath() + "", };
 				verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "");
 				e2.printStackTrace();
 			}
+		}
 		BufferedWriter bw2 = null;
 		FileWriter fw2 = null;
 		// true = append file
@@ -3631,7 +3667,7 @@ public class SIIP {
 						bw2.close();
 					} catch (IOException e1) {
 						String[] keyValuePairs = {
-								"texto_erro ::" + e1.getMessage() + " " + file2.getAbsolutePath() + "", };
+								"TEXTO_ERRO ::" + e1.getMessage() + " " + file2.getAbsolutePath() + "", };
 						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "");
 						e1.printStackTrace();
 					}
@@ -3641,7 +3677,7 @@ public class SIIP {
 						fw2.close();
 					} catch (IOException e1) {
 						String[] keyValuePairs = {
-								"texto_erro ::" + e1.getMessage() + " " + file2.getAbsolutePath() + "", };
+								"TEXTO_ERRO ::" + e1.getMessage() + " " + file2.getAbsolutePath() + "", };
 						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "");
 						e1.printStackTrace();
 					}
@@ -3652,7 +3688,7 @@ public class SIIP {
 		if (error)
 
 		{
-			String[] keyValuePairs = { "texto_erro ::" + err + "", };
+			String[] keyValuePairs = { "TEXTO_ERRO ::" + err + "", };
 			verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", path_error);
 		}
 	}
@@ -4208,9 +4244,9 @@ public class SIIP {
 			String mensagem = borderTypes.getEMAIL_MENSAGEM();
 			String assunto = borderTypes.getEMAIL_ASSUNTO();
 			for (String pair : keyValuePairs) {
-				
+
 				String[] entry = pair.split("::");
-								
+
 				mensagem = mensagem.replace("{" + entry[0].trim() + "}", entry[1].trim());
 				assunto = assunto.replace("{" + entry[0].trim() + "}", (entry.length > 1) ? entry[1].trim() : "");
 			}
@@ -4249,7 +4285,7 @@ public class SIIP {
 			Integer ID_OF_CAB, String TIPO, String HEUDEB) {
 		entityManager.createNativeQuery("BEGIN IF NOT EXISTS  ( SELECT * FROM RP_AUX_OPNUM WHERE RESCOD = " + RESCOD
 				+ " /*and DATDEB = '" + DATDEB + "'*/ and PROREF = '" + PROREF + "' and OFNUM = '" + OFNUM
-				+ "' and OPECOD = " + OPECOD + " and ID_CAMPO = " + ID_OF_CAB + " and TIPO = '" + TIPO
+				+ "' and OPECOD = '" + OPECOD + "' and ID_CAMPO = " + ID_OF_CAB + " and TIPO = '" + TIPO
 				+ "' /*and HEUDEB = '" + HEUDEB + "'*/)"
 				+ "BEGIN INSERT INTO RP_AUX_OPNUM (RESCOD,DATDEB,PROREF,OFNUM,OPECOD,DATA_CRIACAO,DATA_MODIFICACAO,ID_CAMPO,ESTADO,TIPO,HEUDEB) VALUES ("
 				+ " '" + RESCOD + "','" + DATDEB + "','" + PROREF + "','" + OFNUM + "','" + OPECOD
@@ -4452,9 +4488,9 @@ public class SIIP {
 
 		data_etiq += "LAB_NAME=" + modelo_REPORT + "\r\n";
 		if (!ipimpressora.isEmpty() && ipimpressora != null) {
-			ipimpressora = ",->" + ipimpressora;
+			// ipimpressora = ",->" + ipimpressora;
 		}
-		data_etiq += "THT_NAME=" + nomeimpressora + ipimpressora + "\r\n";
+		data_etiq += "THT_NAME=" + nomeimpressora /* + ipimpressora */ + "\r\n";
 		data_etiq += "AF100;AF101;AF1;AF2;A2;AF3;A3;AF4;A4;AF5;A5;AF6;AF7;A7;AF8;AF9;AF10;AF11;AF24;AF12;AF16;A16;AF17;AF18;AF19;AF20;A20;AF21;A21;AF22;AF23;AF25;AF26;AF27;AF28;AF29;AF30;AF31;AF32;AF33;AF34;AF35;AF36;AF37;AF38;AF39;AF40;AF41;AF42;AF43;AF44;XF01;END;\r\n";
 		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 		Integer count = 0;
@@ -4535,7 +4571,8 @@ public class SIIP {
 
 		if (count > 0) {
 			if (!ficheirosdownload) {
-				criar_ficheiro(data_etiq, path2, path_error, false, "");
+				if (!path2.isEmpty())
+					criar_ficheiro(data_etiq, path2, path_error, false, "");
 			} else {
 
 				Map<String, String> env = new HashMap<>();
@@ -4553,6 +4590,340 @@ public class SIIP {
 			}
 		}
 
+	}
+
+	/************************************* CONTROLO_ETIQUETAS */
+	@POST
+	@Path("/createCONTROLO_ETIQUETAS")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public CONTROLO_ETIQUETAS insertCONTROLO_ETIQUETAS(final CONTROLO_ETIQUETAS data) {
+		return dao20.create(data);
+	}
+
+	@GET
+	@Path("/getCONTROLO_ETIQUETAS")
+	@Produces("application/json")
+	public List<CONTROLO_ETIQUETAS> getCONTROLO_ETIQUETAS() {
+		return dao20.getall();
+	}
+
+	@GET
+	@Path("/getCONTROLO_ETIQUETASVerificaSeExiste/{etiqueta}/{caixa}")
+	@Produces("application/json")
+	public List<CONTROLO_ETIQUETAS> getCONTROLO_ETIQUETASVerificaSeExiste(@PathParam("etiqueta") String etiqueta,
+			@PathParam("caixa") String caixa) {
+		return dao20.VerificaSeExiste(etiqueta, caixa);
+	}
+
+	@GET
+	@Path("/getCONTROLO_ETIQUETASbyid/{id}")
+	@Produces("application/json")
+	public List<CONTROLO_ETIQUETAS> getCONTROLO_ETIQUETASbyid(@PathParam("id") Integer id) {
+		return dao20.getbyid(id);
+	}
+
+	@GET
+	@Path("/getCONTROLO_ETIQUETASbyCAIXA/{caixa}")
+	@Produces("application/json")
+	public List<CONTROLO_ETIQUETAS> getCONTROLO_ETIQUETASbyCAIXA(@PathParam("caixa") String caixa) {
+		return dao20.getallbyCAIXA(caixa);
+	}
+
+	@DELETE
+	@Path("/deleteCONTROLO_ETIQUETAS/{id}")
+	public void deleteCONTROLO_ETIQUETAS(@PathParam("id") Integer id) {
+		CONTROLO_ETIQUETAS CONTROLO_ETIQUETAS = new CONTROLO_ETIQUETAS();
+		CONTROLO_ETIQUETAS.setID(id);
+		dao20.delete(CONTROLO_ETIQUETAS);
+	}
+
+	@PUT
+	@Path("/updateCONTROLO_ETIQUETAS")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public CONTROLO_ETIQUETAS updateCONTROLO_ETIQUETAS(final CONTROLO_ETIQUETAS CONTROLO_ETIQUETAS) {
+		CONTROLO_ETIQUETAS.setID(CONTROLO_ETIQUETAS.getID());
+		return dao20.update(CONTROLO_ETIQUETAS);
+	}
+
+	@PUT
+	@Path("/updateCONTROLO_ETIQUETASTODAS")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public int updateCONTROLO_ETIQUETASTODAS(final CONTROLO_ETIQUETAS CONTROLO_ETIQUETAS) {
+		int query_folder = entityManager
+				.createNativeQuery("  UPDATE [CONTROLO_ETIQUETAS] SET TOTAL = TOTAL + 1,ESTADO = 'D',UTZ_MODIF = '"
+						+ CONTROLO_ETIQUETAS.getUTZ_MODIF() + "',DATA_MODIF=GETDATE() " + " WHERE ETIQUETA = '"
+						+ CONTROLO_ETIQUETAS.getETIQUETA() + "' AND ETIQUETA_CAIXA = '"
+						+ CONTROLO_ETIQUETAS.getETIQUETA_CAIXA() + "' AND ESTADO != 'R'")
+				.executeUpdate();
+		entityManager.createNativeQuery("  UPDATE [CONTROLO_ETIQUETAS] SET TOTAL = TOTAL + 1, ESTADO = 'D' "
+				+ " WHERE ETIQUETA = '" + CONTROLO_ETIQUETAS.getETIQUETA() + "' AND ETIQUETA_CAIXA != '"
+				+ CONTROLO_ETIQUETAS.getETIQUETA_CAIXA() + "' AND ESTADO != 'R'").executeUpdate();
+		return query_folder;
+	}
+
+	@GET
+	@Path("/getCONTROLO_ETIQUETAS_ULTIMA_DUPLICADA")
+	@Produces("application/json")
+	public List getCONTROLO_ETIQUETAS_ULTIMA_DUPLICADA() {
+
+		List query_folder = entityManager
+				.createNativeQuery(
+						"select top 1 a.ID, a.ETIQUETA,a.TOTAL,a.DATA_CRIA,a.DATA_MODIF,a.ETIQUETA_CAIXA from CONTROLO_ETIQUETAS a WHERE TOTAL > 1   order by a.DATA_MODIF desc")
+				.getResultList();
+
+		return query_folder;
+	}
+
+	/************************************* RP_GESTAO_ETIQUETAS_MATRIX */
+	@POST
+	@Path("/createRP_GESTAO_ETIQUETAS_MATRIX")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public RP_GESTAO_ETIQUETAS_MATRIX insertRP_GESTAO_ETIQUETAS_MATRIX(final RP_GESTAO_ETIQUETAS_MATRIX data) {
+		return dao21.create(data);
+	}
+
+	@GET
+	@Path("/getRP_GESTAO_ETIQUETAS_MATRIX")
+	@Produces("application/json")
+	public List<RP_GESTAO_ETIQUETAS_MATRIX> getRP_GESTAO_ETIQUETAS_MATRIX() {
+		return dao21.getall();
+	}
+
+	@GET
+	@Path("/getRP_GESTAO_ETIQUETAS_MATRIXbyid/{id}")
+	@Produces("application/json")
+	public List<RP_GESTAO_ETIQUETAS_MATRIX> getRP_GESTAO_ETIQUETAS_MATRIXbyid(@PathParam("id") Integer id) {
+		return dao21.getbyid(id);
+	}
+
+	@POST
+	@Path("/getRP_GESTAO_ETIQUETAS_MATRIXbylote_referencia")
+	@Produces("application/json")
+	public List<RP_GESTAO_ETIQUETAS_MATRIX> getRP_GESTAO_ETIQUETAS_MATRIXbylote_referencia(
+			final List<HashMap<String, String>> data) {
+		HashMap<String, String> firstMap = data.get(0);
+
+		String LOTE = firstMap.get("LOTE");
+		String REF = firstMap.get("REF");
+
+		return dao21.getbylote_referencia(LOTE, REF);
+	}
+
+	@DELETE
+	@Path("/deleteRP_GESTAO_ETIQUETAS_MATRIX/{id}")
+	public void deleteRP_GESTAO_ETIQUETAS_MATRIX(@PathParam("id") Integer id) {
+		RP_GESTAO_ETIQUETAS_MATRIX RP_GESTAO_ETIQUETAS_MATRIX = new RP_GESTAO_ETIQUETAS_MATRIX();
+		RP_GESTAO_ETIQUETAS_MATRIX.setID(id);
+		dao21.delete(RP_GESTAO_ETIQUETAS_MATRIX);
+	}
+
+	@PUT
+	@Path("/updateRP_GESTAO_ETIQUETAS_MATRIX")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public RP_GESTAO_ETIQUETAS_MATRIX updateRP_GESTAO_ETIQUETAS_MATRIX(
+			final RP_GESTAO_ETIQUETAS_MATRIX RP_GESTAO_ETIQUETAS_MATRIX) {
+		RP_GESTAO_ETIQUETAS_MATRIX.setID(RP_GESTAO_ETIQUETAS_MATRIX.getID());
+		return dao21.update(RP_GESTAO_ETIQUETAS_MATRIX);
+	}
+
+	@GET
+	@Path("/getRP_GESTAO_ETIQUETAS_MATRIXatualizanumeroimpressoes/{id}/{estado}/{utz}/{chefe}")
+	@Produces("application/json")
+	public int getRP_GESTAO_ETIQUETAS_MATRIXatualizanumeroimpressoes(@PathParam("id") Integer id,
+			@PathParam("estado") String estado, @PathParam("utz") String utz, @PathParam("chefe") String chefe) {
+
+		int query_folder = entityManager.createNativeQuery("  UPDATE [RP_GESTAO_ETIQUETAS_MATRIX] SET ESTADO = '"
+				+ estado + "' , NUMERO_IMPRESSOES = NUMERO_IMPRESSOES + 1 WHERE ID = " + id).executeUpdate();
+		String idchefe = null;
+		if (!chefe.equals("SEMCHEFE"))
+			idchefe = chefe;
+		
+		atualizahistoricomatrix(id, estado, utz,idchefe);
+		return query_folder;
+	}
+
+	public void atualizahistoricomatrix(Integer id, String estado, String utz,String chefe) {
+		String descricao = "";
+		String insertidchefe = "";
+		if (estado.equals("I")) {
+			descricao = "Utilizador imprimiu etiqueta.";
+		} else if (estado.equals("R")) {
+			descricao = "Utilizador reimprimiu etiqueta.";
+		}
+		
+		if (chefe ==  null) {
+			insertidchefe = " null ";
+		} else if (estado.equals("R")) {
+			insertidchefe = " '"+chefe+"'";
+		}
+		
+		entityManager
+				.createNativeQuery(
+						"INSERT INTO [dbo].[RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX] ([ID_ETIQUETA_MATRIX] ,[DESCRICAO] ,[NUMERO_IMPRESSAO] ,[DATA_IMPRESSAO] ,[UTZ_IMPRESSAO],CHEFE) "
+								+ "SELECT [ID] as [ID_ETIQUETA_MATRIX] ,'" + descricao
+								+ "' as [DESCRICAO] ,[NUMERO_IMPRESSOES] ,GETDATE() as [DATA_IMPRESSAO] ,'" + utz
+								+ "' as [UTZ_IMPRESSAO],"+insertidchefe+" as CHEFE FROM [dbo].[RP_GESTAO_ETIQUETAS_MATRIX] WHERE  ID = " + id)
+				.executeUpdate();
+	}
+
+	/************************************* RP_CONF_RELACAO_REF_ETIQUETAS */
+	@POST
+	@Path("/createRP_CONF_RELACAO_REF_ETIQUETAS")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public RP_CONF_RELACAO_REF_ETIQUETAS insertRP_CONF_RELACAO_REF_ETIQUETAS(final RP_CONF_RELACAO_REF_ETIQUETAS data) {
+		return dao22.create(data);
+	}
+
+	@GET
+	@Path("/getRP_CONF_RELACAO_REF_ETIQUETAS")
+	@Produces("application/json")
+	public List<RP_CONF_RELACAO_REF_ETIQUETAS> getRP_CONF_RELACAO_REF_ETIQUETAS() {
+		return dao22.getall();
+	}
+
+	@GET
+	@Path("/getRP_CONF_RELACAO_REF_ETIQUETASbyid/{id}")
+	@Produces("application/json")
+	public List<RP_CONF_RELACAO_REF_ETIQUETAS> getRP_CONF_RELACAO_REF_ETIQUETASbyid(@PathParam("id") Integer id) {
+		return dao22.getbyid(id);
+	}
+
+	@DELETE
+	@Path("/deleteRP_CONF_RELACAO_REF_ETIQUETAS/{id}")
+	public void deleteRP_CONF_RELACAO_REF_ETIQUETAS(@PathParam("id") Integer id) {
+		RP_CONF_RELACAO_REF_ETIQUETAS RP_CONF_RELACAO_REF_ETIQUETAS = new RP_CONF_RELACAO_REF_ETIQUETAS();
+		RP_CONF_RELACAO_REF_ETIQUETAS.setID(id);
+		dao22.delete(RP_CONF_RELACAO_REF_ETIQUETAS);
+	}
+
+	@PUT
+	@Path("/updateRP_CONF_RELACAO_REF_ETIQUETAS")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public RP_CONF_RELACAO_REF_ETIQUETAS updateRP_CONF_RELACAO_REF_ETIQUETAS(
+			final RP_CONF_RELACAO_REF_ETIQUETAS RP_CONF_RELACAO_REF_ETIQUETAS) {
+		RP_CONF_RELACAO_REF_ETIQUETAS.setID(RP_CONF_RELACAO_REF_ETIQUETAS.getID());
+		return dao22.update(RP_CONF_RELACAO_REF_ETIQUETAS);
+	}
+
+	/************************************* RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX */
+	@POST
+	@Path("/createRP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX insertRP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX(
+			final RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX data) {
+		return dao23.create(data);
+	}
+
+	@GET
+	@Path("/getRP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX")
+	@Produces("application/json")
+	public List<RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX> getRP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX() {
+		return dao23.getall();
+	}
+
+	@GET
+	@Path("/getRP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIXbyid/{id}")
+	@Produces("application/json")
+	public List<RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX> getRP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIXbyid(
+			@PathParam("id") Integer id) {
+		return dao23.getbyid(id);
+	}
+
+	@DELETE
+	@Path("/deleteRP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX/{id}")
+	public void deleteRP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX(@PathParam("id") Integer id) {
+		RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX = new RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX();
+		RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX.setID(id);
+		dao23.delete(RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX);
+	}
+
+	@PUT
+	@Path("/updateRP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX updateRP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX(
+			final RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX) {
+		RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX.setID(RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX.getID());
+		return dao23.update(RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX);
+	}
+
+	/***** IMPRESSAO ETIQUETAS *****/
+	@GET
+	@Path("/getGER_POSTOSbyip/{ip}")
+	@Produces("application/json")
+	public List<GER_POSTOS> getGER_POSTOSbyip(@PathParam("ip") String ip) {
+		return dao24.getByIp(ip);
+	}
+
+	/* FICHEIRO ************************************/
+	@GET
+	@Path("/get/{format}/{filename}/{id}/{relatorio}/{subPASTA}")
+	// @Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	public Response getFile(@PathParam("format") String format, @PathParam("filename") String Name,
+			@PathParam("id") Integer ID, @PathParam("relatorio") String relatorio,
+			@PathParam("subPASTA") String subPASTA) {
+		String fileName = null;
+		String filepath = getFILEPATH();
+		String subPASTA_path = subPASTA + "/";
+
+		if (subPASTA.equals("nenhuma"))
+			subPASTA_path = "";
+
+		ReportGenerator report = new ReportGenerator();
+		try {
+			fileName = report.relatorio(format, Name, ID, relatorio, getURLJASPER(), filepath, subPASTA_path, null,
+					null, null, null);
+		} catch (JRException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if (fileName != null) {
+			File file = new File("/" + filepath + "/relatorios/" + fileName);
+			ResponseBuilder response = Response.ok((Object) file);
+			response.header("Content-Disposition", "attachment; filename=report." + format + "");
+			return response.build();
+		} else {
+			return null;
+		}
+
+	}
+
+	public String getURLJASPER() {
+		String url = "";
+		Query query_folder = entityManager.createNativeQuery("select top 1 * from GER_PARAMETROS a");
+
+		List<Object[]> dados_folder = query_folder.getResultList();
+
+		for (Object[] content : dados_folder) {
+			url = content[3].toString();
+		}
+
+		return url;
+	}
+
+	public String getFILEPATH() {
+		String filepath = "";
+		Query query_folder = entityManager
+				.createNativeQuery("select top 1 PASTA_JASPERREPORT,PASTA_FICHEIRO from GER_PARAMETROS a");
+
+		List<Object[]> dados_folder = query_folder.getResultList();
+
+		for (Object[] content : dados_folder) {
+			filepath = content[0].toString();
+		}
+
+		return filepath;
 	}
 
 }

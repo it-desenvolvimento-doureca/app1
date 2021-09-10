@@ -223,6 +223,21 @@ public class DemoRest {
 		List<HashMap<String, String>> dados = connectionProgress.getEtiquetacaixas(etiqueta, getURL());
 		return dados;
 	}
+	
+	@POST
+	@Path("/valida_REFERENCIA_CONTROLO_ETIQUETAS")
+	@Produces("application/json")
+	public List<HashMap<String, String>> valida_REFERENCIA_CONTROLO_ETIQUETAS(final List<HashMap<String, String>> data)
+			throws SQLException, ClassNotFoundException {
+		HashMap<String, String> firstMap = data.get(0);
+		String proref = firstMap.get("proref");
+		 
+
+		ConnectProgress connectionProgress = new ConnectProgress();
+
+		List<HashMap<String, String>> dados = connectionProgress.valida_REFERENCIA_CONTROLO_ETIQUETAS(proref, getURL());
+		return dados;
+	}
 
 	@POST
 	@Path("/gama_embalagem")
@@ -236,6 +251,20 @@ public class DemoRest {
 		ConnectProgress connectionProgress = new ConnectProgress();
 
 		List<HashMap<String, String>> dados = connectionProgress.gama_embalagem(proref, id_of_cab, getURL());
+		return dados;
+	}
+	
+	@POST
+	@Path("/getEtiquetacaixaMatrix")
+	@Produces("application/json")
+	public List<HashMap<String, String>> getEtiquetacaixaMatrix(final List<HashMap<String, String>> data)
+			throws SQLException, ClassNotFoundException {
+		HashMap<String, String> firstMap = data.get(0);
+		String etiqueta = firstMap.get("etiqueta"); 
+
+		ConnectProgress connectionProgress = new ConnectProgress();
+
+		List<HashMap<String, String>> dados = connectionProgress.getEtiquetacaixaMatrix(etiqueta, getURL());
 		return dados;
 	}
 

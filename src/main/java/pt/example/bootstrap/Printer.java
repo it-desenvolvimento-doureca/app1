@@ -28,31 +28,32 @@ public class Printer {
 
 	public static void main(String[] args) throws IOException, PrinterException {
 
-		//PDDocument document = PDDocument.load(new File("C:/sgiid_dev/relatorios/22012018143309.pdf"));
+		// PDDocument document = PDDocument.load(new
+		// File("C:/sgiid_dev/relatorios/22012018143309.pdf"));
 
-		//imprimir("11042018094628", "PDF");
-		//document.close();
+		// imprimir("11042018094628", "PDF");
+		// document.close();
 
 	}
 
-	public static Response imprimir(String documento, String impressora,String localizacao) {
+	public static Response imprimir(String documento, String impressora, String localizacao) {
 		PDDocument document = null;
 
-		File f = new File("C:/"+localizacao+"/relatorios/" + documento + ".pdf");
+		File f = new File("C:/" + localizacao + "/relatorios/" + documento + ".pdf");
 		if (!f.exists()) {
-			 return Response.status(404).entity("Ficheiro não existe").build();
+			return Response.status(404).entity("Ficheiro não existe").build();
 		}
 
 		try {
-			document = PDDocument.load(new File("C:/"+localizacao+"/relatorios/" + documento + ".pdf"));
+			document = PDDocument.load(new File("C:/" + localizacao + "/relatorios/" + documento + ".pdf"));
 		} catch (InvalidPasswordException e1) {
 			// TODO Auto-generated catch block
 			// e1.printStackTrace();
-			 return Response.status(404).entity("Ficheiro não existe").build();
+			return Response.status(404).entity("Ficheiro não existe").build();
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			// e1.printStackTrace();
-			 return Response.status(404).entity("Ficheiro não existe").build();
+			return Response.status(404).entity("Ficheiro não existe").build();
 		}
 
 		try {
@@ -71,9 +72,9 @@ public class Printer {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			// e.printStackTrace();
-			 return Response.status(404).entity("Erro ao imprimir").build();
+			return Response.status(404).entity("Erro ao imprimir").build();
 		}
-		 return Response.ok().entity("Impresso").build();
+		return Response.ok().entity("Impresso").build();
 	}
 
 	private static Response print(PDDocument document, String impressora) throws IOException, PrinterException {
@@ -101,32 +102,46 @@ public class Printer {
 
 		if (myService != null) {
 			PrinterJob job = PrinterJob.getPrinterJob();
-			job.setPrintService(myService);			
-			
-		    // override the page format
-		    Book book = new Book();
-		    // append all pages
-		    
-		    PageFormat pf0 = job.defaultPage();
-		    //PageFormat pf1 = (PageFormat) pf0.clone();
-		    //Paper p = pf0.getPaper();
-		    //p.setImageableArea(0, 0,pf0.getWidth(), pf0.getHeight());
-		    //pf1.setPaper(p);
-		    pf0.setOrientation(PageFormat.LANDSCAPE);
-		    PageFormat pf2 = job.validatePage(pf0);
-		   // System.out.println(pf2.getHeight()+ "-"+pf2.getWidth());
-		   // book.append(new PDFPrintable(document));
-		    //job.setPrintable(new PDFPrintable(document,Scaling.SCALE_TO_FIT,false),);
-		    book.append(new PDFPrintable(document,Scaling.ACTUAL_SIZE,false),pf2, document.getNumberOfPages());
-		    job.setPageable(book);
-			
+			job.setPrintService(myService);
+
+			// override the page format
+			Book book = new Book();
+			// append all pages
+
+			PageFormat pf0 = job.defaultPage();
+			PageFormat pf1 = (PageFormat) pf0.clone();
+			Paper p = pf0.getPaper();
+			p.setImageableArea(0, 0, pf0.getWidth(), pf0.getHeight());
+			pf1.setPaper(p);
+			PageFormat pf2 = job.validatePage(pf1);
+			// System.out.println(pf2.getHeight()+ "-"+pf2.getWidth());
+			// book.append(new PDFPrintable(document));
+			// job.setPrintable(new
+			// PDFPrintable(document,Scaling.SCALE_TO_FIT,false),);
+			book.append(new PDFPrintable(document, Scaling.ACTUAL_SIZE, false), pf2, document.getNumberOfPages());
+			job.setPageable(book);
+
+			/*
+			 * PageFormat pf0 = job.defaultPage(); //PageFormat pf1 =
+			 * (PageFormat) pf0.clone(); //Paper p = pf0.getPaper();
+			 * //p.setImageableArea(0, 0,pf0.getWidth(), pf0.getHeight());
+			 * //pf1.setPaper(p); pf0.setOrientation(PageFormat.LANDSCAPE);
+			 * PageFormat pf2 = job.validatePage(pf0); //
+			 * System.out.println(pf2.getHeight()+ "-"+pf2.getWidth()); //
+			 * book.append(new PDFPrintable(document)); //job.setPrintable(new
+			 * PDFPrintable(document,Scaling.SCALE_TO_FIT,false),);
+			 * book.append(new
+			 * PDFPrintable(document,Scaling.ACTUAL_SIZE,false),pf2,
+			 * document.getNumberOfPages()); job.setPageable(book);
+			 */
+
 			job.print();
 		} else {
-			//System.out.println("Não encontrou a impressora");
-			 return Response.status(404).entity("Impressora não existe ou não está disponível").build();
+			// System.out.println("Não encontrou a impressora");
+			return Response.status(404).entity("Impressora não existe ou não está disponível").build();
 		}
 		document.close();
-		 return Response.ok().entity("Impresso").build();
+		return Response.ok().entity("Impresso").build();
 
 	}
 
