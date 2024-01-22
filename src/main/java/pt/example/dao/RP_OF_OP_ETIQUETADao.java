@@ -56,16 +56,6 @@ public class RP_OF_OP_ETIQUETADao extends GenericDaoJpaImpl<RP_OF_OP_ETIQUETA, I
 
 	}
 
-	public List<RP_OF_OP_ETIQUETA> getbyid_oplindef(Integer id) {
-
-		Query query = entityManager.createNativeQuery(
-				"select (Select SUM(a.QUANT_DEF_M2) from RP_OF_DEF_LIN a  where a.ID_OP_LIN = " + id + ") as 'PF', "
-						+ "(Select SUM(a.QUANT_DEF_M2) from RP_OF_DEF_LIN a inner join RP_OF_OP_ETIQUETA b on a.ID_REF_ETIQUETA = b.ID_REF_ETIQUETA and a.ID_OP_LIN = b.ID_OP_LIN"
-						+ "  where b.ATIVO = 1 and a.ID_OP_LIN = " + id + ") as 'COMP'");
-		List<RP_OF_OP_ETIQUETA> data = query.getResultList();
-		return data;
-	}
-
 	public List<RP_OF_OP_ETIQUETA> getall() {
 
 		Query query = entityManager.createQuery("Select a from RP_OF_OP_ETIQUETA a ");

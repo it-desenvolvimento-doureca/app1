@@ -68,17 +68,6 @@ public class RP_OF_DEF_LINDao extends GenericDaoJpaImpl<RP_OF_DEF_LIN, Integer>
 
 	}
 
-	public List<RP_OF_DEF_LIN> getbyid_op_lindef(Integer id) {
-
-		Query query = entityManager.createNativeQuery(
-				" select (Select SUM(a.QUANT_DEF_M2) from RP_OF_DEF_LIN a  where a.ID_OP_LIN = " + id + ") as 'PF', "
-						+ "(Select SUM(a.QUANT_DEF_M2) from RP_OF_DEF_LIN a inner join RP_OF_OP_ETIQUETA b on a.ID_REF_ETIQUETA = b.ID_REF_ETIQUETA and a.ID_OP_LIN = b.ID_OP_LIN"
-						+ "  where b.ATIVO = 1 and a.ID_OP_LIN = " + id + ") as 'COMP'");
-		List<RP_OF_DEF_LIN> utz = query.getResultList();
-		return utz;
-
-	}
-
 	public List<RP_OF_DEF_LIN> getbyid_op_lin_id_etiqueta(Integer id, Integer id_etiq) {
 
 		Query query = entityManager.createQuery(
@@ -172,7 +161,7 @@ public class RP_OF_DEF_LINDao extends GenericDaoJpaImpl<RP_OF_DEF_LIN, Integer>
 		if( data.getID_REF_ETIQUETA() != null){
 			query2 = "( select sum(a.QUANT_DEF_M2) from RP_OF_DEF_LIN a,RP_OF_OP_ETIQUETA b  where a.ID_REF_ETIQUETA = b.ID_REF_ETIQUETA and a.ID_OP_LIN = b.ID_OP_LIN and b.ATIVO = 1  and a.ID_OP_LIN =  "+ data.getID_OP_LIN() + ")";
 		}
-		
+
 		Query query = RP_OF_DEF_LINDao.entityManager.createQuery(
 				"select a.ID_DEF_LIN, " + 
 						"(select sum(QUANT_DEF_M2) from RP_OF_DEF_LIN a where a.ID_OP_LIN = "+ data.getID_OP_LIN() + " and a.ID_REF_ETIQUETA =" + data.getID_REF_ETIQUETA()+ ") as total_ref, " 

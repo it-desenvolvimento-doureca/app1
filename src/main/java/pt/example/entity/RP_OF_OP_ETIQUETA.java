@@ -38,7 +38,7 @@ public class RP_OF_OP_ETIQUETA {
 	private Date OFDATFR;
 	private Boolean ATIVO;
 	private Boolean APAGADO;
-	
+
 	@Id
 	@Column(name = "ID_REF_ETIQUETA")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

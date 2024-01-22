@@ -34,18 +34,6 @@ public class DemoRest {
 	}
 
 	@GET
-	@Path("/getofpai_filho/{ofnum}")
-	@Produces("application/json")
-	public List<HashMap<String, String>> getofpai_filho(@PathParam("ofnum") String ofnum)
-			throws SQLException, ClassNotFoundException {
-
-		ConnectProgress connectionProgress = new ConnectProgress();
-
-		List<HashMap<String, String>> dados = connectionProgress.getofpai_filho(ofnum, getURL());
-		return dados;
-	}
-
-	@GET
 	@Path("/operacao/{ofanumenr}")
 	@Produces("application/json")
 	public List<HashMap<String, String>> operacao(@PathParam("ofanumenr") String ofanumenr)
@@ -213,62 +201,6 @@ public class DemoRest {
 	}
 
 	@GET
-	@Path("/getEtiquetacaixas/{etiqueta}")
-	@Produces("application/json")
-	public List<HashMap<String, String>> getEtiquetacaixas(@PathParam("etiqueta") String etiqueta)
-			throws SQLException, ClassNotFoundException {
-
-		ConnectProgress connectionProgress = new ConnectProgress();
-
-		List<HashMap<String, String>> dados = connectionProgress.getEtiquetacaixas(etiqueta, getURL());
-		return dados;
-	}
-	
-	@POST
-	@Path("/valida_REFERENCIA_CONTROLO_ETIQUETAS")
-	@Produces("application/json")
-	public List<HashMap<String, String>> valida_REFERENCIA_CONTROLO_ETIQUETAS(final List<HashMap<String, String>> data)
-			throws SQLException, ClassNotFoundException {
-		HashMap<String, String> firstMap = data.get(0);
-		String proref = firstMap.get("proref");
-		 
-
-		ConnectProgress connectionProgress = new ConnectProgress();
-
-		List<HashMap<String, String>> dados = connectionProgress.valida_REFERENCIA_CONTROLO_ETIQUETAS(proref, getURL());
-		return dados;
-	}
-
-	@POST
-	@Path("/gama_embalagem")
-	@Produces("application/json")
-	public List<HashMap<String, String>> gama_embalagem(final List<HashMap<String, String>> data)
-			throws SQLException, ClassNotFoundException {
-		HashMap<String, String> firstMap = data.get(0);
-		String proref = firstMap.get("proref");
-		String id_of_cab = firstMap.get("id_of_cab");
-
-		ConnectProgress connectionProgress = new ConnectProgress();
-
-		List<HashMap<String, String>> dados = connectionProgress.gama_embalagem(proref, id_of_cab, getURL());
-		return dados;
-	}
-	
-	@POST
-	@Path("/getEtiquetacaixaMatrix")
-	@Produces("application/json")
-	public List<HashMap<String, String>> getEtiquetacaixaMatrix(final List<HashMap<String, String>> data)
-			throws SQLException, ClassNotFoundException {
-		HashMap<String, String> firstMap = data.get(0);
-		String etiqueta = firstMap.get("etiqueta"); 
-
-		ConnectProgress connectionProgress = new ConnectProgress();
-
-		List<HashMap<String, String>> dados = connectionProgress.getEtiquetacaixaMatrix(etiqueta, getURL());
-		return dados;
-	}
-
-	@GET
 	@Path("/getEtiqueta/{etiqueta}")
 	@Produces("application/json")
 	public List<HashMap<String, String>> getEtiqueta(@PathParam("etiqueta") String etiqueta)
@@ -277,18 +209,6 @@ public class DemoRest {
 		ConnectProgress connectionProgress = new ConnectProgress();
 
 		List<HashMap<String, String>> dados = connectionProgress.getEtiqueta(etiqueta, getURL());
-		return dados;
-	}
-
-	@GET
-	@Path("/consulta_Impressao/{proref}")
-	@Produces("application/json")
-	public List<HashMap<String, String>> consulta_Impressao(@PathParam("proref") String proref)
-			throws SQLException, ClassNotFoundException {
-
-		ConnectProgress connectionProgress = new ConnectProgress();
-
-		List<HashMap<String, String>> dados = connectionProgress.consulta_Impressao(proref, getURL());
 		return dados;
 	}
 
@@ -350,11 +270,12 @@ public class DemoRest {
 		List<HashMap<String, String>> dados = connectionProgress.getDefeitos(fam, getURL());
 		return dados;
 	}
-
+	
 	@POST
 	@Path("/defeitos2")
 	@Produces("application/json")
-	public List<HashMap<String, String>> getDefeitos2(final String fam) throws SQLException, ClassNotFoundException {
+	public List<HashMap<String, String>> getDefeitos2(final String fam)
+			throws SQLException, ClassNotFoundException {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 

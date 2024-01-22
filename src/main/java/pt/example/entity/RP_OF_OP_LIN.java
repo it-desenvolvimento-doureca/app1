@@ -31,9 +31,7 @@ public class RP_OF_OP_LIN {
 	private Integer QUANT_DEF_TOTAL_M2;
 	private Integer VERSAO_MODIF;
 	private String GESCOD;
-	private Boolean PROQTEFMT;
-	private String TIPO_PECA;
-
+	
 	@Id
 	@Column(name = "ID_OP_LIN")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -214,24 +212,6 @@ public class RP_OF_OP_LIN {
 
 	public void setGESCOD(String gESCOD) {
 		GESCOD = gESCOD;
-	}
-
-	@Column(name = "PROQTEFMT")
-	public Boolean getPROQTEFMT() {
-		return PROQTEFMT;
-	}
-
-	public void setPROQTEFMT(Boolean pROQTEFMT) {
-		PROQTEFMT = pROQTEFMT;
-	}
-
-	@Column(name = "TIPO_PECA")
-	public String getTIPO_PECA() {
-		return TIPO_PECA;
-	}
-
-	public void setTIPO_PECA(String tIPO_PECA) {
-		TIPO_PECA = tIPO_PECA;
 	}
 
 }
