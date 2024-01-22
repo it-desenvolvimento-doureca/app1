@@ -65,14 +65,14 @@ $(window).bind("scroll", function () {
 function scroll(rightt) {
 	if ($(".tabelacontrolo thead ").length) {
 		if ($('#tabelacontroloclone').length == 0) {
-			var target = $('.tabelacontrolo .p-datatable-scrollable-header ');
+			var target = $('.tabelacontrolo .ui-widget-header  ');
 			var target_children = target.children();
 
 			var clone = target.clone().prop('id', 'tabelacontroloclone');
 
-			$('.tabelacontrolo .p-datatable-scrollable-body').append(clone);
+			$('.tabelacontrolo .ui-datatable-scrollable-view').append(clone);
 			$('#tabelacontroloclone').hide();
-			$('#tabelacontroloclone .p-sortable-column-icon').remove();
+			$('#tabelacontroloclone .ui-sortable-column-icon').remove();
 
 		}
 
@@ -258,83 +258,23 @@ $(document).ready(function () {
 
 	$(document).ready(function () {
 		$(function () {
-			if ($("#particles").length > 0) {
-				$('#particles').particleground({
-					minSpeedX: 0.1,
-					maxSpeedX: 0.7,
-					minSpeedY: 0.1,
-					maxSpeedY: 0.7,
-					directionX: 'center', // 'center', 'left' or 'right'. 'center' = dots bounce off edges
-					directionY: 'center', // 'center', 'up' or 'down'. 'center' = dots bounce off edges
-					density: 10000, // How many particles will be generated: one particle every n pixels
-					dotColor: '#6eacff',
-					lineColor: '#6eacff',
-					particleRadius: 7, // Dot size
-					lineWidth: 1,
-					curvedLines: true,
-					proximity: 100, // How close two dots need to be before they join
-					parallax: false
-				});
-			}
+
+			$('#particles').particleground({
+				minSpeedX: 0.1,
+				maxSpeedX: 0.7,
+				minSpeedY: 0.1,
+				maxSpeedY: 0.7,
+				directionX: 'center', // 'center', 'left' or 'right'. 'center' = dots bounce off edges
+				directionY: 'center', // 'center', 'up' or 'down'. 'center' = dots bounce off edges
+				density: 10000, // How many particles will be generated: one particle every n pixels
+				dotColor: '#6eacff',
+				lineColor: '#6eacff',
+				particleRadius: 7, // Dot size
+				lineWidth: 1,
+				curvedLines: true,
+				proximity: 100, // How close two dots need to be before they join
+				parallax: false
+			});
+
 		});
 	});
-
-
-
-
-
-
-//guardar ip nos cookies
-function getUserIP(onNewIP) { //  onNewIp - your listener function for new IPs
-	//compatibility for firefox and chrome
-	var myPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
-	var pc = new myPeerConnection({
-		iceServers: []
-	}),
-		noop = function () { },
-		localIPs = {},
-		ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/g,
-		key;
-
-	function iterateIP(ip) {
-		if (!localIPs[ip]) onNewIP(ip);
-		localIPs[ip] = true;
-	}
-
-	//create a bogus data channel
-	var uaString = window.navigator.userAgent;
-	var match = /\b(MSIE |Trident.*?rv:|Edge\/)(\d+)/.exec(uaString);
-
-	if (match) // If Internet Explorer, return version number
-	{
-		$('#browseridmens').show()
-	}
-	else  // If another browser, return 0
-	{
-		$('#browseridmens').hide()
-		pc.createDataChannel("");
-	}
-
-
-	// create offer and set local description
-	pc.createOffer(function (sdp) {
-		sdp.sdp.split('\n').forEach(function (line) {
-			if (line.indexOf('candidate') < 0) return;
-			line.match(ipRegex).forEach(iterateIP);
-		});
-
-		pc.setLocalDescription(sdp, noop, noop);
-	}, noop);
-
-	//listen for candidate events
-	pc.onicecandidate = function (ice) {
-		if (!ice || !ice.candidate || !ice.candidate.candidate || !ice.candidate.candidate.match(ipRegex)) return;
-		ice.candidate.candidate.match(ipRegex).forEach(iterateIP);
-	};
-}
-
-// Usage
-
-getUserIP(function (ip) {
-	document.cookie = "IP_CLIENT=" + ip;
-});

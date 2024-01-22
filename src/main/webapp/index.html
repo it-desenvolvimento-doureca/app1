@@ -1,5 +1,5 @@
 <!doctype html>
-<html id="page_html" style="font-size:16px;">
+<html id="page_html">
 
 <head>
   <meta charset="utf-8">
@@ -12,52 +12,40 @@
   <meta http-equiv="Expires" content="0" />
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <!-- <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet"> -->
-  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-  <script src="//cdnjs.cloudflare.com/ajax/libs/tether/1.4.4/js/tether.min.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script src="./assets/web-animations.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="assets/font-awesome.min.css" />
+  <link rel="stylesheet" type="text/css" href="assets/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="assets/primeng.min.css" />
+  <link rel="stylesheet" type="text/css" href="assets/theme.css" />
+  <script src="assets/web-animations.min.js"></script>
 
 
-<link rel="stylesheet" href="styles.9d0f3d23cd302c6ccc88.css"></head>
+<link href="styles.6b96a63cf07e070e2ede.bundle.css" rel="stylesheet"/></head>
 <a id="go-button">
-  <i class="pi pi-window-maximize" style="margin:4px 4px 0 0; font-size: 40px !important; color: black;"></i>
-</a>
-<a id="go-button2" style="display: none;">
-  <i class="pi pi-window-minimize" style="margin:4px 4px 0 0; font-size: 46px !important; color: black;"></i>
-</a>
+      <i class="icon-fullscreen" style="margin:4px 4px 0 0; font-size: 60px; color: black;"></i>
+    </a>
 
 <body id="element" onselectstart="return false">
-  <div class="col-md-12  mainpage" style="float:left; min-height: 80%;padding: 0; margin-left: 0rem !important;">
+  <div class="col-md-12 col-md-offset-12 mainpage" style="float:left; min-height: 80%;padding: 0;">
     <app-root>
       <div class="loading">
         <h1>A Carregar...</h1>
       </div>
     </app-root>
   </div>
-<script src="runtime-es2015.66c79b9d36e7169e27b0.js" type="module"></script><script src="runtime-es5.66c79b9d36e7169e27b0.js" nomodule defer></script><script src="polyfills-es5.909cb27ce1772a2cff4d.js" nomodule defer></script><script src="polyfills-es2015.d003691adc9b821059ec.js" type="module"></script><script src="scripts.893e42b5a3087def487d.js" defer></script><script src="main-es2015.891fd5e7f607063f9460.js" type="module"></script><script src="main-es5.891fd5e7f607063f9460.js" nomodule defer></script></body>
+<script type="text/javascript" src="inline.a34d682ea7996012dd7c.bundle.js"></script><script type="text/javascript" src="polyfills.a6095c137edf51c8fa6d.bundle.js"></script><script type="text/javascript" src="scripts.3efdb9c34fc639f04cc9.bundle.js"></script><script type="text/javascript" src="vendor.9e24912876d695608700.bundle.js"></script><script type="text/javascript" src="main.6c1216e4a9870735c0bd.bundle.js"></script></body>
 
 </html>
 
 
 <style type="text/css">
   #go-button {
-    right: 14px;
-    top: 3px;
+    right: 34px;
+    top: 20px;
     cursor: pointer;
     float: right;
     position: fixed;
     z-index: 99999;
   }
-
-  #go-button2 {
-    right: 4px;
-    top: 0;
-    cursor: pointer;
-    float: right;
-    position: fixed;
-    z-index: 99999;
-  }
-
   /* webkit requires explicit width, height = 100% of sceeen */
   /* webkit also takes margin into account in full screen also - so margin should be removed (otherwise black areas will be seen) */
 
@@ -74,11 +62,9 @@
   $(document).on('fullscreenchange webkitfullscreenchange mozfullscreenchange msfullscreenchange', function () {
     if (IsFullScreenCurrently()) {
       $('#go-button').hide();
-      $('#go-button2').show();
     }
     else {
       $('#go-button').show();
-      $('#go-button2').hide();
     }
   });
 
@@ -109,78 +95,23 @@
 
   /* Is currently in full screen or not */
   function IsFullScreenCurrently() {
-    //$('#go-button').hide();
+    $('#go-button').hide();
     return (document.fullscreen || document.webkitIsFullScreen || document.mozFullScreen);
   }
 
   $("#go-button").on('click', function () {
-    if (IsFullScreenCurrently()) {
+    if (IsFullScreenCurrently())
       GoOutFullscreen();
-      setCookie("fullScreen_auto", false)
-    } else {
+    else
       GoInFullscreen($("#element").get(0));
-      setCookie("fullScreen_auto", true)
-    }
   });
-
-  $("#go-button2").on('click', function () {
-
-    GoOutFullscreen();
-    setCookie("fullScreen_auto", false)
-
-  });
-
-  $("html").on('click', function () {
-    if (IsFullScreenCurrently()) {
-      // GoOutFullscreen();
-      //return false;
-    } else {
-
-      var cookie = getCookie("fullScreen_auto");
-
-      if (cookie != "") {
-        if (cookie == "true") GoInFullscreen($("#element").get(0));
-      } else {
-        /*var r = confirm("Ativar Ecrã Inteiro Automaticamente?");
-        if (r == true) {
-          setCookie("fullScreen_auto", true)
-          GoInFullscreen($("#element").get(0));
-        } else {
-          setCookie("fullScreen_auto", false)
-        }*/
-      }
-
-    }
-  });
-
-  function setCookie(cname, cvalue) {
-
-    document.cookie = cname + "=" + cvalue + ";path=/";
-
-  }
-
-  function getCookie(cname) {
-    var name = cname + "=";
-    var decodedCookie = decodeURIComponent(document.cookie);
-    var ca = decodedCookie.split(';');
-    for (var i = 0; i < ca.length; i++) {
-      var c = ca[i];
-      while (c.charAt(0) == ' ') {
-        c = c.substring(1);
-      }
-      if (c.indexOf(name) == 0) {
-        return c.substring(name.length, c.length);
-      }
-    }
-    return "";
-  }
 
 </script>
 
-<script type="text/javascript" language="javascript">
-  var versionUpdate = (new Date()).getTime();
-  var script = document.createElement("script");
-  script.type = "text/javascript";
-  script.src = "assets/demo.js?v=" + versionUpdate;
+<script type="text/javascript" language="javascript">  
+  var versionUpdate = (new Date()).getTime();  
+  var script = document.createElement("script");  
+  script.type = "text/javascript";  
+  script.src = "assets/demo.js?v=" + versionUpdate;  
   document.body.appendChild(script);  
-</script>
+</script>  

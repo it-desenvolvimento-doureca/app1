@@ -41,8 +41,8 @@
   }
   /* FONT AWESOME CORE
    * -------------------------- */
-  [class^="pi pi-"],
-  [class*=" pi pi-"] {
+  [class^="icon-"],
+  [class*=" icon-"] {
     font-family: FontAwesome;
     font-weight: normal;
     font-style: normal;
@@ -50,32 +50,32 @@
     -webkit-font-smoothing: antialiased;
     *margin-right: .3em;
   }
-  [class^="pi pi-"]:before,
-  [class*=" pi pi-"]:before {
+  [class^="icon-"]:before,
+  [class*=" icon-"]:before {
     text-decoration: inherit;
     display: inline-block;
     speak: none;
   }
   /* makes the font 33% larger relative to the icon container */
-  .pi pi-large:before {
+  .icon-large:before {
     vertical-align: -10%;
     font-size: 1.3333333333333333em;
   }
   /* makes sure icons active on rollover in links */
-  a [class^="pi pi-"],
-  a [class*=" pi pi-"] {
+  a [class^="icon-"],
+  a [class*=" icon-"] {
     display: inline;
   }
-  /* increased font size for pi pi-large */
-  [class^="pi pi-"].pi pi-fixed-width,
-  [class*=" pi pi-"].pi pi-fixed-width {
+  /* increased font size for icon-large */
+  [class^="icon-"].icon-fixed-width,
+  [class*=" icon-"].icon-fixed-width {
     display: inline-block;
     width: 1.1428571428571428em;
     text-align: right;
     padding-right: 0.2857142857142857em;
   }
-  [class^="pi pi-"].pi pi-fixed-width.pi pi-large,
-  [class*=" pi pi-"].pi pi-fixed-width.pi pi-large {
+  [class^="icon-"].icon-fixed-width.icon-large,
+  [class*=" icon-"].icon-fixed-width.icon-large {
     width: 1.4285714285714286em;
   }
   .icons-ul {
@@ -85,64 +85,64 @@
   .icons-ul > li {
     position: relative;
   }
-  .icons-ul .pi pi-li {
+  .icons-ul .icon-li {
     position: absolute;
     left: -2.142857142857143em;
     width: 2.142857142857143em;
     text-align: center;
     line-height: inherit;
   }
-  [class^="pi pi-"].hide,
-  [class*=" pi pi-"].hide {
+  [class^="icon-"].hide,
+  [class*=" icon-"].hide {
     display: none;
   }
-  .pi pi-muted {
+  .icon-muted {
     color: #eeeeee;
   }
-  .pi pi-light {
+  .icon-light {
     color: #ffffff;
   }
-  .pi pi-dark {
+  .icon-dark {
     color: #333333;
   }
-  .pi pi-border {
+  .icon-border {
     border: solid 1px #eeeeee;
     padding: .2em .25em .15em;
     -webkit-border-radius: 3px;
     -moz-border-radius: 3px;
     border-radius: 3px;
   }
-  .pi pi-2x {
+  .icon-2x {
     font-size: 2em;
   }
-  .pi pi-2x.pi pi-border {
+  .icon-2x.icon-border {
     border-width: 2px;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
     border-radius: 4px;
   }
-  .pi pi-3x {
+  .icon-3x {
     font-size: 3em;
   }
-  .pi pi-3x.pi pi-border {
+  .icon-3x.icon-border {
     border-width: 3px;
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
     border-radius: 5px;
   }
-  .pi pi-4x {
+  .icon-4x {
     font-size: 4em;
   }
-  .pi pi-4x.pi pi-border {
+  .icon-4x.icon-border {
     border-width: 4px;
     -webkit-border-radius: 6px;
     -moz-border-radius: 6px;
     border-radius: 6px;
   }
-  .pi pi-5x {
+  .icon-5x {
     font-size: 5em;
   }
-  .pi pi-5x.pi pi-border {
+  .icon-5x.icon-border {
     border-width: 5px;
     -webkit-border-radius: 7px;
     -moz-border-radius: 7px;
@@ -154,19 +154,19 @@
   .pull-left {
     float: left;
   }
-  [class^="pi pi-"].pull-left,
-  [class*=" pi pi-"].pull-left {
+  [class^="icon-"].pull-left,
+  [class*=" icon-"].pull-left {
     margin-right: .3em;
   }
-  [class^="pi pi-"].pull-right,
-  [class*=" pi pi-"].pull-right {
+  [class^="icon-"].pull-right,
+  [class*=" icon-"].pull-right {
     margin-left: .3em;
   }
   /* BOOTSTRAP SPECIFIC CLASSES
    * -------------------------- */
   /* Bootstrap 2.0 sprites.less reset */
-  [class^="pi pi-"],
-  [class*=" pi pi-"] {
+  [class^="icon-"],
+  [class*=" icon-"] {
     display: inline;
     width: auto;
     height: auto;
@@ -178,87 +178,87 @@
     margin-top: 0;
   }
   /* more sprites.less reset */
-  .pi pi-white,
-  .nav-pills > .active > a > [class^="pi pi-"],
-  .nav-pills > .active > a > [class*=" pi pi-"],
-  .nav-list > .active > a > [class^="pi pi-"],
-  .nav-list > .active > a > [class*=" pi pi-"],
-  .navbar-inverse .nav > .active > a > [class^="pi pi-"],
-  .navbar-inverse .nav > .active > a > [class*=" pi pi-"],
-  .dropdown-menu > li > a:hover > [class^="pi pi-"],
-  .dropdown-menu > li > a:hover > [class*=" pi pi-"],
-  .dropdown-menu > .active > a > [class^="pi pi-"],
-  .dropdown-menu > .active > a > [class*=" pi pi-"],
-  .dropdown-submenu:hover > a > [class^="pi pi-"],
-  .dropdown-submenu:hover > a > [class*=" pi pi-"] {
+  .icon-white,
+  .nav-pills > .active > a > [class^="icon-"],
+  .nav-pills > .active > a > [class*=" icon-"],
+  .nav-list > .active > a > [class^="icon-"],
+  .nav-list > .active > a > [class*=" icon-"],
+  .navbar-inverse .nav > .active > a > [class^="icon-"],
+  .navbar-inverse .nav > .active > a > [class*=" icon-"],
+  .dropdown-menu > li > a:hover > [class^="icon-"],
+  .dropdown-menu > li > a:hover > [class*=" icon-"],
+  .dropdown-menu > .active > a > [class^="icon-"],
+  .dropdown-menu > .active > a > [class*=" icon-"],
+  .dropdown-submenu:hover > a > [class^="icon-"],
+  .dropdown-submenu:hover > a > [class*=" icon-"] {
     background-image: none;
   }
   /* keeps Bootstrap styles with and without icons the same */
-  .btn [class^="pi pi-"].pi pi-large,
-  .nav [class^="pi pi-"].pi pi-large,
-  .btn [class*=" pi pi-"].pi pi-large,
-  .nav [class*=" pi pi-"].pi pi-large {
+  .btn [class^="icon-"].icon-large,
+  .nav [class^="icon-"].icon-large,
+  .btn [class*=" icon-"].icon-large,
+  .nav [class*=" icon-"].icon-large {
     line-height: .9em;
   }
-  .btn [class^="pi pi-"].pi pi-spin,
-  .nav [class^="pi pi-"].pi pi-spin,
-  .btn [class*=" pi pi-"].pi pi-spin,
-  .nav [class*=" pi pi-"].pi pi-spin {
+  .btn [class^="icon-"].icon-spin,
+  .nav [class^="icon-"].icon-spin,
+  .btn [class*=" icon-"].icon-spin,
+  .nav [class*=" icon-"].icon-spin {
     display: inline-block;
   }
-  .nav-tabs [class^="pi pi-"],
-  .nav-pills [class^="pi pi-"],
-  .nav-tabs [class*=" pi pi-"],
-  .nav-pills [class*=" pi pi-"],
-  .nav-tabs [class^="pi pi-"].pi pi-large,
-  .nav-pills [class^="pi pi-"].pi pi-large,
-  .nav-tabs [class*=" pi pi-"].pi pi-large,
-  .nav-pills [class*=" pi pi-"].pi pi-large {
+  .nav-tabs [class^="icon-"],
+  .nav-pills [class^="icon-"],
+  .nav-tabs [class*=" icon-"],
+  .nav-pills [class*=" icon-"],
+  .nav-tabs [class^="icon-"].icon-large,
+  .nav-pills [class^="icon-"].icon-large,
+  .nav-tabs [class*=" icon-"].icon-large,
+  .nav-pills [class*=" icon-"].icon-large {
     line-height: .9em;
   }
-  .btn [class^="pi pi-"].pull-left.pi pi-2x,
-  .btn [class*=" pi pi-"].pull-left.pi pi-2x,
-  .btn [class^="pi pi-"].pull-right.pi pi-2x,
-  .btn [class*=" pi pi-"].pull-right.pi pi-2x {
+  .btn [class^="icon-"].pull-left.icon-2x,
+  .btn [class*=" icon-"].pull-left.icon-2x,
+  .btn [class^="icon-"].pull-right.icon-2x,
+  .btn [class*=" icon-"].pull-right.icon-2x {
     margin-top: .18em;
   }
-  .btn [class^="pi pi-"].pi pi-spin.pi pi-large,
-  .btn [class*=" pi pi-"].pi pi-spin.pi pi-large {
+  .btn [class^="icon-"].icon-spin.icon-large,
+  .btn [class*=" icon-"].icon-spin.icon-large {
     line-height: .8em;
   }
-  .btn.btn-small [class^="pi pi-"].pull-left.pi pi-2x,
-  .btn.btn-small [class*=" pi pi-"].pull-left.pi pi-2x,
-  .btn.btn-small [class^="pi pi-"].pull-right.pi pi-2x,
-  .btn.btn-small [class*=" pi pi-"].pull-right.pi pi-2x {
+  .btn.btn-small [class^="icon-"].pull-left.icon-2x,
+  .btn.btn-small [class*=" icon-"].pull-left.icon-2x,
+  .btn.btn-small [class^="icon-"].pull-right.icon-2x,
+  .btn.btn-small [class*=" icon-"].pull-right.icon-2x {
     margin-top: .25em;
   }
-  .btn.btn-large [class^="pi pi-"],
-  .btn.btn-large [class*=" pi pi-"] {
+  .btn.btn-large [class^="icon-"],
+  .btn.btn-large [class*=" icon-"] {
     margin-top: 0;
   }
-  .btn.btn-large [class^="pi pi-"].pull-left.pi pi-2x,
-  .btn.btn-large [class*=" pi pi-"].pull-left.pi pi-2x,
-  .btn.btn-large [class^="pi pi-"].pull-right.pi pi-2x,
-  .btn.btn-large [class*=" pi pi-"].pull-right.pi pi-2x {
+  .btn.btn-large [class^="icon-"].pull-left.icon-2x,
+  .btn.btn-large [class*=" icon-"].pull-left.icon-2x,
+  .btn.btn-large [class^="icon-"].pull-right.icon-2x,
+  .btn.btn-large [class*=" icon-"].pull-right.icon-2x {
     margin-top: .05em;
   }
-  .btn.btn-large [class^="pi pi-"].pull-left.pi pi-2x,
-  .btn.btn-large [class*=" pi pi-"].pull-left.pi pi-2x {
+  .btn.btn-large [class^="icon-"].pull-left.icon-2x,
+  .btn.btn-large [class*=" icon-"].pull-left.icon-2x {
     margin-right: .2em;
   }
-  .btn.btn-large [class^="pi pi-"].pull-right.pi pi-2x,
-  .btn.btn-large [class*=" pi pi-"].pull-right.pi pi-2x {
+  .btn.btn-large [class^="icon-"].pull-right.icon-2x,
+  .btn.btn-large [class*=" icon-"].pull-right.icon-2x {
     margin-left: .2em;
   }
   /* Fixes alignment in nav lists */
-  .nav-list [class^="pi pi-"],
-  .nav-list [class*=" pi pi-"] {
+  .nav-list [class^="icon-"],
+  .nav-list [class*=" icon-"] {
     line-height: inherit;
   }
   /* EXTRAS
    * -------------------------- */
   /* Stacked and layered icon */
-  .pi pi-stack {
+  .icon-stack {
     position: relative;
     display: inline-block;
     width: 2em;
@@ -266,8 +266,8 @@
     line-height: 2em;
     vertical-align: -35%;
   }
-  .pi pi-stack [class^="pi pi-"],
-  .pi pi-stack [class*=" pi pi-"] {
+  .icon-stack [class^="icon-"],
+  .icon-stack [class*=" icon-"] {
     display: block;
     text-align: center;
     position: absolute;
@@ -277,12 +277,12 @@
     line-height: inherit;
     *line-height: 2em;
   }
-  .pi pi-stack .pi pi-stack-base {
+  .icon-stack .icon-stack-base {
     font-size: 2em;
     *line-height: 1em;
   }
   /* Animated rotating icon */
-  .pi pi-spin {
+  .icon-spin {
     display: inline-block;
     -moz-animation: spin 2s infinite linear;
     -o-animation: spin 2s infinite linear;
@@ -290,8 +290,8 @@
     animation: spin 2s infinite linear;
   }
   /* Prevent stack and spinners from being taken inline when inside a link */
-  a .pi pi-stack,
-  a .pi pi-spin {
+  a .icon-stack,
+  a .icon-spin {
     display: inline-block;
     text-decoration: none;
   }
@@ -336,7 +336,7 @@
     }
   }
   /* Icon rotations and mirroring */
-  .pi pi-rotate-90:before {
+  .icon-rotate-90:before {
     -webkit-transform: rotate(90deg);
     -moz-transform: rotate(90deg);
     -ms-transform: rotate(90deg);
@@ -344,7 +344,7 @@
     transform: rotate(90deg);
     filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
   }
-  .pi pi-rotate-180:before {
+  .icon-rotate-180:before {
     -webkit-transform: rotate(180deg);
     -moz-transform: rotate(180deg);
     -ms-transform: rotate(180deg);
@@ -352,7 +352,7 @@
     transform: rotate(180deg);
     filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2);
   }
-  .pi pi-rotate-270:before {
+  .icon-rotate-270:before {
     -webkit-transform: rotate(270deg);
     -moz-transform: rotate(270deg);
     -ms-transform: rotate(270deg);
@@ -360,14 +360,14 @@
     transform: rotate(270deg);
     filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
   }
-  .pi pi-flip-horizontal:before {
+  .icon-flip-horizontal:before {
     -webkit-transform: scale(-1, 1);
     -moz-transform: scale(-1, 1);
     -ms-transform: scale(-1, 1);
     -o-transform: scale(-1, 1);
     transform: scale(-1, 1);
   }
-  .pi pi-flip-vertical:before {
+  .icon-flip-vertical:before {
     -webkit-transform: scale(1, -1);
     -moz-transform: scale(1, -1);
     -ms-transform: scale(1, -1);
@@ -375,1112 +375,1112 @@
     transform: scale(1, -1);
   }
   /* ensure rotation occurs inside anchor tags */
-  a .pi pi-rotate-90:before,
-  a .pi pi-rotate-180:before,
-  a .pi pi-rotate-270:before,
-  a .pi pi-flip-horizontal:before,
-  a .pi pi-flip-vertical:before {
+  a .icon-rotate-90:before,
+  a .icon-rotate-180:before,
+  a .icon-rotate-270:before,
+  a .icon-flip-horizontal:before,
+  a .icon-flip-vertical:before {
     display: inline-block;
   }
   /* Font Awesome uses the Unicode Private Use Area (PUA) to ensure screen
      readers do not read off random characters that represent icons */
-  .pi pi-glass:before {
+  .icon-glass:before {
     content: "\f000";
   }
-  .pi pi-music:before {
+  .icon-music:before {
     content: "\f001";
   }
-  .pi pi-search:before {
+  .icon-search:before {
     content: "\f002";
   }
-  .pi pi-envelope-alt:before {
+  .icon-envelope-alt:before {
     content: "\f003";
   }
-  .pi pi-heart:before {
+  .icon-heart:before {
     content: "\f004";
   }
-  .pi pi-star:before {
+  .icon-star:before {
     content: "\f005";
   }
-  .pi pi-star-empty:before {
+  .icon-star-empty:before {
     content: "\f006";
   }
-  .pi pi-user:before {
+  .icon-user:before {
     content: "\f007";
   }
-  .pi pi-film:before {
+  .icon-film:before {
     content: "\f008";
   }
-  .pi pi-th-large:before {
+  .icon-th-large:before {
     content: "\f009";
   }
-  .pi pi-th:before {
+  .icon-th:before {
     content: "\f00a";
   }
-  .pi pi-th-list:before {
+  .icon-th-list:before {
     content: "\f00b";
   }
-  .pi pi-ok:before {
+  .icon-ok:before {
     content: "\f00c";
   }
-  .pi pi-remove:before {
+  .icon-remove:before {
     content: "\f00d";
   }
-  .pi pi-zoom-in:before {
+  .icon-zoom-in:before {
     content: "\f00e";
   }
-  .pi pi-zoom-out:before {
+  .icon-zoom-out:before {
     content: "\f010";
   }
-  .pi pi-power-off:before,
-  .pi pi-off:before {
+  .icon-power-off:before,
+  .icon-off:before {
     content: "\f011";
   }
-  .pi pi-signal:before {
+  .icon-signal:before {
     content: "\f012";
   }
-  .pi pi-gear:before,
-  .pi pi-cog:before {
+  .icon-gear:before,
+  .icon-cog:before {
     content: "\f013";
   }
-  .pi pi-trash:before {
+  .icon-trash:before {
     content: "\f014";
   }
-  .pi pi-home:before {
+  .icon-home:before {
     content: "\f015";
   }
-  .pi pi-file-alt:before {
+  .icon-file-alt:before {
     content: "\f016";
   }
-  .pi pi-time:before {
+  .icon-time:before {
     content: "\f017";
   }
-  .pi pi-road:before {
+  .icon-road:before {
     content: "\f018";
   }
-  .pi pi-download-alt:before {
+  .icon-download-alt:before {
     content: "\f019";
   }
-  .pi pi-download:before {
+  .icon-download:before {
     content: "\f01a";
   }
-  .pi pi-upload:before {
+  .icon-upload:before {
     content: "\f01b";
   }
-  .pi pi-inbox:before {
+  .icon-inbox:before {
     content: "\f01c";
   }
-  .pi pi-play-circle:before {
+  .icon-play-circle:before {
     content: "\f01d";
   }
-  .pi pi-rotate-right:before,
-  .pi pi-repeat:before {
+  .icon-rotate-right:before,
+  .icon-repeat:before {
     content: "\f01e";
   }
-  .pi pi-refresh:before {
+  .icon-refresh:before {
     content: "\f021";
   }
-  .pi pi-list-alt:before {
+  .icon-list-alt:before {
     content: "\f022";
   }
-  .pi pi-lock:before {
+  .icon-lock:before {
     content: "\f023";
   }
-  .pi pi-flag:before {
+  .icon-flag:before {
     content: "\f024";
   }
-  .pi pi-headphones:before {
+  .icon-headphones:before {
     content: "\f025";
   }
-  .pi pi-volume-off:before {
+  .icon-volume-off:before {
     content: "\f026";
   }
-  .pi pi-volume-down:before {
+  .icon-volume-down:before {
     content: "\f027";
   }
-  .pi pi-volume-up:before {
+  .icon-volume-up:before {
     content: "\f028";
   }
-  .pi pi-qrcode:before {
+  .icon-qrcode:before {
     content: "\f029";
   }
-  .pi pi-barcode:before {
+  .icon-barcode:before {
     content: "\f02a";
   }
-  .pi pi-tag:before {
+  .icon-tag:before {
     content: "\f02b";
   }
-  .pi pi-tags:before {
+  .icon-tags:before {
     content: "\f02c";
   }
-  .pi pi-book:before {
+  .icon-book:before {
     content: "\f02d";
   }
-  .pi pi-bookmark:before {
+  .icon-bookmark:before {
     content: "\f02e";
   }
-  .pi pi-print:before {
+  .icon-print:before {
     content: "\f02f";
   }
-  .pi pi-camera:before {
+  .icon-camera:before {
     content: "\f030";
   }
-  .pi pi-font:before {
+  .icon-font:before {
     content: "\f031";
   }
-  .pi pi-bold:before {
+  .icon-bold:before {
     content: "\f032";
   }
-  .pi pi-italic:before {
+  .icon-italic:before {
     content: "\f033";
   }
-  .pi pi-text-height:before {
+  .icon-text-height:before {
     content: "\f034";
   }
-  .pi pi-text-width:before {
+  .icon-text-width:before {
     content: "\f035";
   }
-  .pi pi-align-left:before {
+  .icon-align-left:before {
     content: "\f036";
   }
-  .pi pi-align-center:before {
+  .icon-align-center:before {
     content: "\f037";
   }
-  .pi pi-align-right:before {
+  .icon-align-right:before {
     content: "\f038";
   }
-  .pi pi-align-justify:before {
+  .icon-align-justify:before {
     content: "\f039";
   }
-  .pi pi-list:before {
+  .icon-list:before {
     content: "\f03a";
   }
-  .pi pi-indent-left:before {
+  .icon-indent-left:before {
     content: "\f03b";
   }
-  .pi pi-indent-right:before {
+  .icon-indent-right:before {
     content: "\f03c";
   }
-  .pi pi-facetime-video:before {
+  .icon-facetime-video:before {
     content: "\f03d";
   }
-  .pi pi-picture:before {
+  .icon-picture:before {
     content: "\f03e";
   }
-  .pi pi-pencil:before {
+  .icon-pencil:before {
     content: "\f040";
   }
-  .pi pi-map-marker:before {
+  .icon-map-marker:before {
     content: "\f041";
   }
-  .pi pi-adjust:before {
+  .icon-adjust:before {
     content: "\f042";
   }
-  .pi pi-tint:before {
+  .icon-tint:before {
     content: "\f043";
   }
-  .pi pi-edit:before {
+  .icon-edit:before {
     content: "\f044";
   }
-  .pi pi-share:before {
+  .icon-share:before {
     content: "\f045";
   }
-  .pi pi-check:before {
+  .icon-check:before {
     content: "\f046";
   }
-  .pi pi-move:before {
+  .icon-move:before {
     content: "\f047";
   }
-  .pi pi-step-backward:before {
+  .icon-step-backward:before {
     content: "\f048";
   }
-  .pi pi-fast-backward:before {
+  .icon-fast-backward:before {
     content: "\f049";
   }
-  .pi pi-backward:before {
+  .icon-backward:before {
     content: "\f04a";
   }
-  .pi pi-play:before {
+  .icon-play:before {
     content: "\f04b";
   }
-  .pi pi-pause:before {
+  .icon-pause:before {
     content: "\f04c";
   }
-  .pi pi-stop:before {
+  .icon-stop:before {
     content: "\f04d";
   }
-  .pi pi-forward:before {
+  .icon-forward:before {
     content: "\f04e";
   }
-  .pi pi-fast-forward:before {
+  .icon-fast-forward:before {
     content: "\f050";
   }
-  .pi pi-step-forward:before {
+  .icon-step-forward:before {
     content: "\f051";
   }
-  .pi pi-eject:before {
+  .icon-eject:before {
     content: "\f052";
   }
-  .pi pi-chevron-left:before {
+  .icon-chevron-left:before {
     content: "\f053";
   }
-  .pi pi-chevron-right:before {
+  .icon-chevron-right:before {
     content: "\f054";
   }
-  .pi pi-plus-sign:before {
+  .icon-plus-sign:before {
     content: "\f055";
   }
-  .pi pi-minus-sign:before {
+  .icon-minus-sign:before {
     content: "\f056";
   }
-  .pi pi-remove-sign:before {
+  .icon-remove-sign:before {
     content: "\f057";
   }
-  .pi pi-ok-sign:before {
+  .icon-ok-sign:before {
     content: "\f058";
   }
-  .pi pi-question-sign:before {
+  .icon-question-sign:before {
     content: "\f059";
   }
-  .pi pi-info-sign:before {
+  .icon-info-sign:before {
     content: "\f05a";
   }
-  .pi pi-screenshot:before {
+  .icon-screenshot:before {
     content: "\f05b";
   }
-  .pi pi-remove-circle:before {
+  .icon-remove-circle:before {
     content: "\f05c";
   }
-  .pi pi-ok-circle:before {
+  .icon-ok-circle:before {
     content: "\f05d";
   }
-  .pi pi-ban-circle:before {
+  .icon-ban-circle:before {
     content: "\f05e";
   }
-  .pi pi-arrow-left:before {
+  .icon-arrow-left:before {
     content: "\f060";
   }
-  .pi pi-arrow-right:before {
+  .icon-arrow-right:before {
     content: "\f061";
   }
-  .pi pi-arrow-up:before {
+  .icon-arrow-up:before {
     content: "\f062";
   }
-  .pi pi-arrow-down:before {
+  .icon-arrow-down:before {
     content: "\f063";
   }
-  .pi pi-mail-forward:before,
-  .pi pi-share-alt:before {
+  .icon-mail-forward:before,
+  .icon-share-alt:before {
     content: "\f064";
   }
-  .pi pi-resize-full:before {
+  .icon-resize-full:before {
     content: "\f065";
   }
-  .pi pi-resize-small:before {
+  .icon-resize-small:before {
     content: "\f066";
   }
-  .pi pi-plus:before {
+  .icon-plus:before {
     content: "\f067";
   }
-  .pi pi-minus:before {
+  .icon-minus:before {
     content: "\f068";
   }
-  .pi pi-asterisk:before {
+  .icon-asterisk:before {
     content: "\f069";
   }
-  .pi pi-exclamation-sign:before {
+  .icon-exclamation-sign:before {
     content: "\f06a";
   }
-  .pi pi-gift:before {
+  .icon-gift:before {
     content: "\f06b";
   }
-  .pi pi-leaf:before {
+  .icon-leaf:before {
     content: "\f06c";
   }
-  .pi pi-fire:before {
+  .icon-fire:before {
     content: "\f06d";
   }
-  .pi pi-eye-open:before {
+  .icon-eye-open:before {
     content: "\f06e";
   }
-  .pi pi-eye-close:before {
+  .icon-eye-close:before {
     content: "\f070";
   }
-  .pi pi-warning-sign:before {
+  .icon-warning-sign:before {
     content: "\f071";
   }
-  .pi pi-plane:before {
+  .icon-plane:before {
     content: "\f072";
   }
-  .pi pi-calendar:before {
+  .icon-calendar:before {
     content: "\f073";
   }
-  .pi pi-random:before {
+  .icon-random:before {
     content: "\f074";
   }
-  .pi pi-comment:before {
+  .icon-comment:before {
     content: "\f075";
   }
-  .pi pi-magnet:before {
+  .icon-magnet:before {
     content: "\f076";
   }
-  .pi pi-chevron-up:before {
+  .icon-chevron-up:before {
     content: "\f077";
   }
-  .pi pi-chevron-down:before {
+  .icon-chevron-down:before {
     content: "\f078";
   }
-  .pi pi-retweet:before {
+  .icon-retweet:before {
     content: "\f079";
   }
-  .pi pi-shopping-cart:before {
+  .icon-shopping-cart:before {
     content: "\f07a";
   }
-  .pi pi-folder-close:before {
+  .icon-folder-close:before {
     content: "\f07b";
   }
-  .pi pi-folder-open:before {
+  .icon-folder-open:before {
     content: "\f07c";
   }
-  .pi pi-resize-vertical:before {
+  .icon-resize-vertical:before {
     content: "\f07d";
   }
-  .pi pi-resize-horizontal:before {
+  .icon-resize-horizontal:before {
     content: "\f07e";
   }
-  .pi pi-bar-chart:before {
+  .icon-bar-chart:before {
     content: "\f080";
   }
-  .pi pi-twitter-sign:before {
+  .icon-twitter-sign:before {
     content: "\f081";
   }
-  .pi pi-facebook-sign:before {
+  .icon-facebook-sign:before {
     content: "\f082";
   }
-  .pi pi-camera-retro:before {
+  .icon-camera-retro:before {
     content: "\f083";
   }
-  .pi pi-key:before {
+  .icon-key:before {
     content: "\f084";
   }
-  .pi pi-gears:before,
-  .pi pi-cogs:before {
+  .icon-gears:before,
+  .icon-cogs:before {
     content: "\f085";
   }
-  .pi pi-comments:before {
+  .icon-comments:before {
     content: "\f086";
   }
-  .pi pi-thumbs-up-alt:before {
+  .icon-thumbs-up-alt:before {
     content: "\f087";
   }
-  .pi pi-thumbs-down-alt:before {
+  .icon-thumbs-down-alt:before {
     content: "\f088";
   }
-  .pi pi-star-half:before {
+  .icon-star-half:before {
     content: "\f089";
   }
-  .pi pi-heart-empty:before {
+  .icon-heart-empty:before {
     content: "\f08a";
   }
-  .pi pi-signout:before {
+  .icon-signout:before {
     content: "\f08b";
   }
-  .pi pi-linkedin-sign:before {
+  .icon-linkedin-sign:before {
     content: "\f08c";
   }
-  .pi pi-pushpin:before {
+  .icon-pushpin:before {
     content: "\f08d";
   }
-  .pi pi-external-link:before {
+  .icon-external-link:before {
     content: "\f08e";
   }
-  .pi pi-signin:before {
+  .icon-signin:before {
     content: "\f090";
   }
-  .pi pi-trophy:before {
+  .icon-trophy:before {
     content: "\f091";
   }
-  .pi pi-github-sign:before {
+  .icon-github-sign:before {
     content: "\f092";
   }
-  .pi pi-upload-alt:before {
+  .icon-upload-alt:before {
     content: "\f093";
   }
-  .pi pi-lemon:before {
+  .icon-lemon:before {
     content: "\f094";
   }
-  .pi pi-phone:before {
+  .icon-phone:before {
     content: "\f095";
   }
-  .pi pi-unchecked:before,
-  .pi pi-check-empty:before {
+  .icon-unchecked:before,
+  .icon-check-empty:before {
     content: "\f096";
   }
-  .pi pi-bookmark-empty:before {
+  .icon-bookmark-empty:before {
     content: "\f097";
   }
-  .pi pi-phone-sign:before {
+  .icon-phone-sign:before {
     content: "\f098";
   }
-  .pi pi-twitter:before {
+  .icon-twitter:before {
     content: "\f099";
   }
-  .pi pi-facebook:before {
+  .icon-facebook:before {
     content: "\f09a";
   }
-  .pi pi-github:before {
+  .icon-github:before {
     content: "\f09b";
   }
-  .pi pi-unlock:before {
+  .icon-unlock:before {
     content: "\f09c";
   }
-  .pi pi-credit-card:before {
+  .icon-credit-card:before {
     content: "\f09d";
   }
-  .pi pi-rss:before {
+  .icon-rss:before {
     content: "\f09e";
   }
-  .pi pi-hdd:before {
+  .icon-hdd:before {
     content: "\f0a0";
   }
-  .pi pi-bullhorn:before {
+  .icon-bullhorn:before {
     content: "\f0a1";
   }
-  .pi pi-bell:before {
+  .icon-bell:before {
     content: "\f0a2";
   }
-  .pi pi-certificate:before {
+  .icon-certificate:before {
     content: "\f0a3";
   }
-  .pi pi-hand-right:before {
+  .icon-hand-right:before {
     content: "\f0a4";
   }
-  .pi pi-hand-left:before {
+  .icon-hand-left:before {
     content: "\f0a5";
   }
-  .pi pi-hand-up:before {
+  .icon-hand-up:before {
     content: "\f0a6";
   }
-  .pi pi-hand-down:before {
+  .icon-hand-down:before {
     content: "\f0a7";
   }
-  .pi pi-circle-arrow-left:before {
+  .icon-circle-arrow-left:before {
     content: "\f0a8";
   }
-  .pi pi-circle-arrow-right:before {
+  .icon-circle-arrow-right:before {
     content: "\f0a9";
   }
-  .pi pi-circle-arrow-up:before {
+  .icon-circle-arrow-up:before {
     content: "\f0aa";
   }
-  .pi pi-circle-arrow-down:before {
+  .icon-circle-arrow-down:before {
     content: "\f0ab";
   }
-  .pi pi-globe:before {
+  .icon-globe:before {
     content: "\f0ac";
   }
-  .pi pi-wrench:before {
+  .icon-wrench:before {
     content: "\f0ad";
   }
-  .pi pi-tasks:before {
+  .icon-tasks:before {
     content: "\f0ae";
   }
-  .pi pi-filter:before {
+  .icon-filter:before {
     content: "\f0b0";
   }
-  .pi pi-briefcase:before {
+  .icon-briefcase:before {
     content: "\f0b1";
   }
-  .pi pi-fullscreen:before {
+  .icon-fullscreen:before {
     content: "\f0b2";
   }
-  .pi pi-group:before {
+  .icon-group:before {
     content: "\f0c0";
   }
-  .pi pi-link:before {
+  .icon-link:before {
     content: "\f0c1";
   }
-  .pi pi-cloud:before {
+  .icon-cloud:before {
     content: "\f0c2";
   }
-  .pi pi-beaker:before {
+  .icon-beaker:before {
     content: "\f0c3";
   }
-  .pi pi-cut:before {
+  .icon-cut:before {
     content: "\f0c4";
   }
-  .pi pi-copy:before {
+  .icon-copy:before {
     content: "\f0c5";
   }
-  .pi pi-paperclip:before,
-  .pi pi-paper-clip:before {
+  .icon-paperclip:before,
+  .icon-paper-clip:before {
     content: "\f0c6";
   }
-  .pi pi-save:before {
+  .icon-save:before {
     content: "\f0c7";
   }
-  .pi pi-sign-blank:before {
+  .icon-sign-blank:before {
     content: "\f0c8";
   }
-  .pi pi-reorder:before {
+  .icon-reorder:before {
     content: "\f0c9";
   }
-  .pi pi-list-ul:before {
+  .icon-list-ul:before {
     content: "\f0ca";
   }
-  .pi pi-list-ol:before {
+  .icon-list-ol:before {
     content: "\f0cb";
   }
-  .pi pi-strikethrough:before {
+  .icon-strikethrough:before {
     content: "\f0cc";
   }
-  .pi pi-underline:before {
+  .icon-underline:before {
     content: "\f0cd";
   }
-  .pi pi-table:before {
+  .icon-table:before {
     content: "\f0ce";
   }
-  .pi pi-magic:before {
+  .icon-magic:before {
     content: "\f0d0";
   }
-  .pi pi-truck:before {
+  .icon-truck:before {
     content: "\f0d1";
   }
-  .pi pi-pinterest:before {
+  .icon-pinterest:before {
     content: "\f0d2";
   }
-  .pi pi-pinterest-sign:before {
+  .icon-pinterest-sign:before {
     content: "\f0d3";
   }
-  .pi pi-google-plus-sign:before {
+  .icon-google-plus-sign:before {
     content: "\f0d4";
   }
-  .pi pi-google-plus:before {
+  .icon-google-plus:before {
     content: "\f0d5";
   }
-  .pi pi-money:before {
+  .icon-money:before {
     content: "\f0d6";
   }
-  .pi pi-caret-down:before {
+  .icon-caret-down:before {
     content: "\f0d7";
   }
-  .pi pi-caret-up:before {
+  .icon-caret-up:before {
     content: "\f0d8";
   }
-  .pi pi-caret-left:before {
+  .icon-caret-left:before {
     content: "\f0d9";
   }
-  .pi pi-caret-right:before {
+  .icon-caret-right:before {
     content: "\f0da";
   }
-  .pi pi-columns:before {
+  .icon-columns:before {
     content: "\f0db";
   }
-  .pi pi-sort:before {
+  .icon-sort:before {
     content: "\f0dc";
   }
-  .pi pi-sort-down:before {
+  .icon-sort-down:before {
     content: "\f0dd";
   }
-  .pi pi-sort-up:before {
+  .icon-sort-up:before {
     content: "\f0de";
   }
-  .pi pi-envelope:before {
+  .icon-envelope:before {
     content: "\f0e0";
   }
-  .pi pi-linkedin:before {
+  .icon-linkedin:before {
     content: "\f0e1";
   }
-  .pi pi-rotate-left:before,
-  .pi pi-undo:before {
+  .icon-rotate-left:before,
+  .icon-undo:before {
     content: "\f0e2";
   }
-  .pi pi-legal:before {
+  .icon-legal:before {
     content: "\f0e3";
   }
-  .pi pi-dashboard:before {
+  .icon-dashboard:before {
     content: "\f0e4";
   }
-  .pi pi-comment-alt:before {
+  .icon-comment-alt:before {
     content: "\f0e5";
   }
-  .pi pi-comments-alt:before {
+  .icon-comments-alt:before {
     content: "\f0e6";
   }
-  .pi pi-bolt:before {
+  .icon-bolt:before {
     content: "\f0e7";
   }
-  .pi pi-sitemap:before {
+  .icon-sitemap:before {
     content: "\f0e8";
   }
-  .pi pi-umbrella:before {
+  .icon-umbrella:before {
     content: "\f0e9";
   }
-  .pi pi-paste:before {
+  .icon-paste:before {
     content: "\f0ea";
   }
-  .pi pi-lightbulb:before {
+  .icon-lightbulb:before {
     content: "\f0eb";
   }
-  .pi pi-exchange:before {
+  .icon-exchange:before {
     content: "\f0ec";
   }
-  .pi pi-cloud-download:before {
+  .icon-cloud-download:before {
     content: "\f0ed";
   }
-  .pi pi-cloud-upload:before {
+  .icon-cloud-upload:before {
     content: "\f0ee";
   }
-  .pi pi-user-md:before {
+  .icon-user-md:before {
     content: "\f0f0";
   }
-  .pi pi-stethoscope:before {
+  .icon-stethoscope:before {
     content: "\f0f1";
   }
-  .pi pi-suitcase:before {
+  .icon-suitcase:before {
     content: "\f0f2";
   }
-  .pi pi-bell-alt:before {
+  .icon-bell-alt:before {
     content: "\f0f3";
   }
-  .pi pi-coffee:before {
+  .icon-coffee:before {
     content: "\f0f4";
   }
-  .pi pi-food:before {
+  .icon-food:before {
     content: "\f0f5";
   }
-  .pi pi-file-text-alt:before {
+  .icon-file-text-alt:before {
     content: "\f0f6";
   }
-  .pi pi-building:before {
+  .icon-building:before {
     content: "\f0f7";
   }
-  .pi pi-hospital:before {
+  .icon-hospital:before {
     content: "\f0f8";
   }
-  .pi pi-ambulance:before {
+  .icon-ambulance:before {
     content: "\f0f9";
   }
-  .pi pi-medkit:before {
+  .icon-medkit:before {
     content: "\f0fa";
   }
-  .pi pi-fighter-jet:before {
+  .icon-fighter-jet:before {
     content: "\f0fb";
   }
-  .pi pi-beer:before {
+  .icon-beer:before {
     content: "\f0fc";
   }
-  .pi pi-h-sign:before {
+  .icon-h-sign:before {
     content: "\f0fd";
   }
-  .pi pi-plus-sign-alt:before {
+  .icon-plus-sign-alt:before {
     content: "\f0fe";
   }
-  .pi pi-double-angle-left:before {
+  .icon-double-angle-left:before {
     content: "\f100";
   }
-  .pi pi-double-angle-right:before {
+  .icon-double-angle-right:before {
     content: "\f101";
   }
-  .pi pi-double-angle-up:before {
+  .icon-double-angle-up:before {
     content: "\f102";
   }
-  .pi pi-double-angle-down:before {
+  .icon-double-angle-down:before {
     content: "\f103";
   }
-  .pi pi-angle-left:before {
+  .icon-angle-left:before {
     content: "\f104";
   }
-  .pi pi-angle-right:before {
+  .icon-angle-right:before {
     content: "\f105";
   }
-  .pi pi-angle-up:before {
+  .icon-angle-up:before {
     content: "\f106";
   }
-  .pi pi-angle-down:before {
+  .icon-angle-down:before {
     content: "\f107";
   }
-  .pi pi-desktop:before {
+  .icon-desktop:before {
     content: "\f108";
   }
-  .pi pi-laptop:before {
+  .icon-laptop:before {
     content: "\f109";
   }
-  .pi pi-tablet:before {
+  .icon-tablet:before {
     content: "\f10a";
   }
-  .pi pi-mobile-phone:before {
+  .icon-mobile-phone:before {
     content: "\f10b";
   }
-  .pi pi-circle-blank:before {
+  .icon-circle-blank:before {
     content: "\f10c";
   }
-  .pi pi-quote-left:before {
+  .icon-quote-left:before {
     content: "\f10d";
   }
-  .pi pi-quote-right:before {
+  .icon-quote-right:before {
     content: "\f10e";
   }
-  .pi pi-spinner:before {
+  .icon-spinner:before {
     content: "\f110";
   }
-  .pi pi-circle:before {
+  .icon-circle:before {
     content: "\f111";
   }
-  .pi pi-mail-reply:before,
-  .pi pi-reply:before {
+  .icon-mail-reply:before,
+  .icon-reply:before {
     content: "\f112";
   }
-  .pi pi-github-alt:before {
+  .icon-github-alt:before {
     content: "\f113";
   }
-  .pi pi-folder-close-alt:before {
+  .icon-folder-close-alt:before {
     content: "\f114";
   }
-  .pi pi-folder-open-alt:before {
+  .icon-folder-open-alt:before {
     content: "\f115";
   }
-  .pi pi-expand-alt:before {
+  .icon-expand-alt:before {
     content: "\f116";
   }
-  .pi pi-collapse-alt:before {
+  .icon-collapse-alt:before {
     content: "\f117";
   }
-  .pi pi-smile:before {
+  .icon-smile:before {
     content: "\f118";
   }
-  .pi pi-frown:before {
+  .icon-frown:before {
     content: "\f119";
   }
-  .pi pi-meh:before {
+  .icon-meh:before {
     content: "\f11a";
   }
-  .pi pi-gamepad:before {
+  .icon-gamepad:before {
     content: "\f11b";
   }
-  .pi pi-keyboard:before {
+  .icon-keyboard:before {
     content: "\f11c";
   }
-  .pi pi-flag-alt:before {
+  .icon-flag-alt:before {
     content: "\f11d";
   }
-  .pi pi-flag-checkered:before {
+  .icon-flag-checkered:before {
     content: "\f11e";
   }
-  .pi pi-terminal:before {
+  .icon-terminal:before {
     content: "\f120";
   }
-  .pi pi-code:before {
+  .icon-code:before {
     content: "\f121";
   }
-  .pi pi-reply-all:before {
+  .icon-reply-all:before {
     content: "\f122";
   }
-  .pi pi-mail-reply-all:before {
+  .icon-mail-reply-all:before {
     content: "\f122";
   }
-  .pi pi-star-half-full:before,
-  .pi pi-star-half-empty:before {
+  .icon-star-half-full:before,
+  .icon-star-half-empty:before {
     content: "\f123";
   }
-  .pi pi-location-arrow:before {
+  .icon-location-arrow:before {
     content: "\f124";
   }
-  .pi pi-crop:before {
+  .icon-crop:before {
     content: "\f125";
   }
-  .pi pi-code-fork:before {
+  .icon-code-fork:before {
     content: "\f126";
   }
-  .pi pi-unlink:before {
+  .icon-unlink:before {
     content: "\f127";
   }
-  .pi pi-question:before {
+  .icon-question:before {
     content: "\f128";
   }
-  .pi pi-info:before {
+  .icon-info:before {
     content: "\f129";
   }
-  .pi pi-exclamation:before {
+  .icon-exclamation:before {
     content: "\f12a";
   }
-  .pi pi-superscript:before {
+  .icon-superscript:before {
     content: "\f12b";
   }
-  .pi pi-subscript:before {
+  .icon-subscript:before {
     content: "\f12c";
   }
-  .pi pi-eraser:before {
+  .icon-eraser:before {
     content: "\f12d";
   }
-  .pi pi-puzzle-piece:before {
+  .icon-puzzle-piece:before {
     content: "\f12e";
   }
-  .pi pi-microphone:before {
+  .icon-microphone:before {
     content: "\f130";
   }
-  .pi pi-microphone-off:before {
+  .icon-microphone-off:before {
     content: "\f131";
   }
-  .pi pi-shield:before {
+  .icon-shield:before {
     content: "\f132";
   }
-  .pi pi-calendar-empty:before {
+  .icon-calendar-empty:before {
     content: "\f133";
   }
-  .pi pi-fire-extinguisher:before {
+  .icon-fire-extinguisher:before {
     content: "\f134";
   }
-  .pi pi-rocket:before {
+  .icon-rocket:before {
     content: "\f135";
   }
-  .pi pi-maxcdn:before {
+  .icon-maxcdn:before {
     content: "\f136";
   }
-  .pi pi-chevron-sign-left:before {
+  .icon-chevron-sign-left:before {
     content: "\f137";
   }
-  .pi pi-chevron-sign-right:before {
+  .icon-chevron-sign-right:before {
     content: "\f138";
   }
-  .pi pi-chevron-sign-up:before {
+  .icon-chevron-sign-up:before {
     content: "\f139";
   }
-  .pi pi-chevron-sign-down:before {
+  .icon-chevron-sign-down:before {
     content: "\f13a";
   }
-  .pi pi-html5:before {
+  .icon-html5:before {
     content: "\f13b";
   }
-  .pi pi-css3:before {
+  .icon-css3:before {
     content: "\f13c";
   }
-  .pi pi-anchor:before {
+  .icon-anchor:before {
     content: "\f13d";
   }
-  .pi pi-unlock-alt:before {
+  .icon-unlock-alt:before {
     content: "\f13e";
   }
-  .pi pi-bullseye:before {
+  .icon-bullseye:before {
     content: "\f140";
   }
-  .pi pi-ellipsis-horizontal:before {
+  .icon-ellipsis-horizontal:before {
     content: "\f141";
   }
-  .pi pi-ellipsis-vertical:before {
+  .icon-ellipsis-vertical:before {
     content: "\f142";
   }
-  .pi pi-rss-sign:before {
+  .icon-rss-sign:before {
     content: "\f143";
   }
-  .pi pi-play-sign:before {
+  .icon-play-sign:before {
     content: "\f144";
   }
-  .pi pi-ticket:before {
+  .icon-ticket:before {
     content: "\f145";
   }
-  .pi pi-minus-sign-alt:before {
+  .icon-minus-sign-alt:before {
     content: "\f146";
   }
-  .pi pi-check-minus:before {
+  .icon-check-minus:before {
     content: "\f147";
   }
-  .pi pi-level-up:before {
+  .icon-level-up:before {
     content: "\f148";
   }
-  .pi pi-level-down:before {
+  .icon-level-down:before {
     content: "\f149";
   }
-  .pi pi-check-sign:before {
+  .icon-check-sign:before {
     content: "\f14a";
   }
-  .pi pi-edit-sign:before {
+  .icon-edit-sign:before {
     content: "\f14b";
   }
-  .pi pi-external-link-sign:before {
+  .icon-external-link-sign:before {
     content: "\f14c";
   }
-  .pi pi-share-sign:before {
+  .icon-share-sign:before {
     content: "\f14d";
   }
-  .pi pi-compass:before {
+  .icon-compass:before {
     content: "\f14e";
   }
-  .pi pi-collapse:before {
+  .icon-collapse:before {
     content: "\f150";
   }
-  .pi pi-collapse-top:before {
+  .icon-collapse-top:before {
     content: "\f151";
   }
-  .pi pi-expand:before {
+  .icon-expand:before {
     content: "\f152";
   }
-  .pi pi-euro:before,
-  .pi pi-eur:before {
+  .icon-euro:before,
+  .icon-eur:before {
     content: "\f153";
   }
-  .pi pi-gbp:before {
+  .icon-gbp:before {
     content: "\f154";
   }
-  .pi pi-dollar:before,
-  .pi pi-usd:before {
+  .icon-dollar:before,
+  .icon-usd:before {
     content: "\f155";
   }
-  .pi pi-rupee:before,
-  .pi pi-inr:before {
+  .icon-rupee:before,
+  .icon-inr:before {
     content: "\f156";
   }
-  .pi pi-yen:before,
-  .pi pi-jpy:before {
+  .icon-yen:before,
+  .icon-jpy:before {
     content: "\f157";
   }
-  .pi pi-renminbi:before,
-  .pi pi-cny:before {
+  .icon-renminbi:before,
+  .icon-cny:before {
     content: "\f158";
   }
-  .pi pi-won:before,
-  .pi pi-krw:before {
+  .icon-won:before,
+  .icon-krw:before {
     content: "\f159";
   }
-  .pi pi-bitcoin:before,
-  .pi pi-btc:before {
+  .icon-bitcoin:before,
+  .icon-btc:before {
     content: "\f15a";
   }
-  .pi pi-file:before {
+  .icon-file:before {
     content: "\f15b";
   }
-  .pi pi-file-text:before {
+  .icon-file-text:before {
     content: "\f15c";
   }
-  .pi pi-sort-by-alphabet:before {
+  .icon-sort-by-alphabet:before {
     content: "\f15d";
   }
-  .pi pi-sort-by-alphabet-alt:before {
+  .icon-sort-by-alphabet-alt:before {
     content: "\f15e";
   }
-  .pi pi-sort-by-attributes:before {
+  .icon-sort-by-attributes:before {
     content: "\f160";
   }
-  .pi pi-sort-by-attributes-alt:before {
+  .icon-sort-by-attributes-alt:before {
     content: "\f161";
   }
-  .pi pi-sort-by-order:before {
+  .icon-sort-by-order:before {
     content: "\f162";
   }
-  .pi pi-sort-by-order-alt:before {
+  .icon-sort-by-order-alt:before {
     content: "\f163";
   }
-  .pi pi-thumbs-up:before {
+  .icon-thumbs-up:before {
     content: "\f164";
   }
-  .pi pi-thumbs-down:before {
+  .icon-thumbs-down:before {
     content: "\f165";
   }
-  .pi pi-youtube-sign:before {
+  .icon-youtube-sign:before {
     content: "\f166";
   }
-  .pi pi-youtube:before {
+  .icon-youtube:before {
     content: "\f167";
   }
-  .pi pi-xing:before {
+  .icon-xing:before {
     content: "\f168";
   }
-  .pi pi-xing-sign:before {
+  .icon-xing-sign:before {
     content: "\f169";
   }
-  .pi pi-youtube-play:before {
+  .icon-youtube-play:before {
     content: "\f16a";
   }
-  .pi pi-dropbox:before {
+  .icon-dropbox:before {
     content: "\f16b";
   }
-  .pi pi-stackexchange:before {
+  .icon-stackexchange:before {
     content: "\f16c";
   }
-  .pi pi-instagram:before {
+  .icon-instagram:before {
     content: "\f16d";
   }
-  .pi pi-flickr:before {
+  .icon-flickr:before {
     content: "\f16e";
   }
-  .pi pi-adn:before {
+  .icon-adn:before {
     content: "\f170";
   }
-  .pi pi-bitbucket:before {
+  .icon-bitbucket:before {
     content: "\f171";
   }
-  .pi pi-bitbucket-sign:before {
+  .icon-bitbucket-sign:before {
     content: "\f172";
   }
-  .pi pi-tumblr:before {
+  .icon-tumblr:before {
     content: "\f173";
   }
-  .pi pi-tumblr-sign:before {
+  .icon-tumblr-sign:before {
     content: "\f174";
   }
-  .pi pi-long-arrow-down:before {
+  .icon-long-arrow-down:before {
     content: "\f175";
   }
-  .pi pi-long-arrow-up:before {
+  .icon-long-arrow-up:before {
     content: "\f176";
   }
-  .pi pi-long-arrow-left:before {
+  .icon-long-arrow-left:before {
     content: "\f177";
   }
-  .pi pi-long-arrow-right:before {
+  .icon-long-arrow-right:before {
     content: "\f178";
   }
-  .pi pi-apple:before {
+  .icon-apple:before {
     content: "\f179";
   }
-  .pi pi-windows:before {
+  .icon-windows:before {
     content: "\f17a";
   }
-  .pi pi-android:before {
+  .icon-android:before {
     content: "\f17b";
   }
-  .pi pi-linux:before {
+  .icon-linux:before {
     content: "\f17c";
   }
-  .pi pi-dribbble:before {
+  .icon-dribbble:before {
     content: "\f17d";
   }
-  .pi pi-skype:before {
+  .icon-skype:before {
     content: "\f17e";
   }
-  .pi pi-foursquare:before {
+  .icon-foursquare:before {
     content: "\f180";
   }
-  .pi pi-trello:before {
+  .icon-trello:before {
     content: "\f181";
   }
-  .pi pi-female:before {
+  .icon-female:before {
     content: "\f182";
   }
-  .pi pi-male:before {
+  .icon-male:before {
     content: "\f183";
   }
-  .pi pi-gittip:before {
+  .icon-gittip:before {
     content: "\f184";
   }
-  .pi pi-sun:before {
+  .icon-sun:before {
     content: "\f185";
   }
-  .pi pi-moon:before {
+  .icon-moon:before {
     content: "\f186";
   }
-  .pi pi-archive:before {
+  .icon-archive:before {
     content: "\f187";
   }
-  .pi pi-bug:before {
+  .icon-bug:before {
     content: "\f188";
   }
-  .pi pi-vk:before {
+  .icon-vk:before {
     content: "\f189";
   }
-  .pi pi-weibo:before {
+  .icon-weibo:before {
     content: "\f18a";
   }
-  .pi pi-renren:before {
+  .icon-renren:before {
     content: "\f18b";
   }
