@@ -2488,7 +2488,7 @@ public class SIIP {
 		}
 
 		if (!estado.equals("P"))
-			sequencia = sequencia();
+			sequencia = sequencia(id.toString());
 
 		try {
 
@@ -2780,7 +2780,7 @@ public class SIIP {
 					data_pausa += "                                       \r\n"; // Texte
 																					// libre
 
-					String seq = sequencia();
+					String seq = sequencia(id.toString());
 
 					StringBuffer buf3 = new StringBuffer(linha_utz.get(content2[7].toString()));
 					buf3.replace(18, 27, seq);
@@ -3517,7 +3517,7 @@ public class SIIP {
 		String sequencia = "000000000";
 		String data = "";
 
-		sequencia = sequencia();
+		sequencia = sequencia(id_of_cab.toString());
 		List<Object[]> dados = null;
 
 		Query query = entityManager.createNativeQuery("DECLARE @ID_OF_CAB int = " + id_of_cab + "; "
@@ -3948,7 +3948,7 @@ public class SIIP {
 
 	public void criar_ficheiro_PausaMAQUINA(Object[] content2, String SINAL, String linha_inicial,
 			String linha_A_MAQUINA, String path2, Boolean ficheirosdownload, String nome_ficheiro2, String nomezip,
-			Integer count, String estado, String path_error) throws ParseException {
+			Integer count, String estado, String path_error,String id) throws ParseException {
 
 		SimpleDateFormat f = new SimpleDateFormat("yyyyMMddHHmmss");
 		SimpleDateFormat p = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
@@ -4001,7 +4001,7 @@ public class SIIP {
 
 		BufferedReader bufReader = new BufferedReader(new StringReader(data_pausa_p));
 
-		String seq = sequencia();
+		String seq = sequencia(id);
 		String line = null;
 		try {
 			while ((line = bufReader.readLine()) != null) {
@@ -4140,7 +4140,7 @@ public class SIIP {
 			count++;
 			try {
 				criar_ficheiro_PausaMAQUINA(content2, SINAL, linha_inicial, linha_A_MAQUINA, path2, ficheirosdownload,
-						nome_ficheiro2, nomezip, count, ESTADO, path_error);
+						nome_ficheiro2, nomezip, count, ESTADO, path_error,ID_OF_CAB.toString());
 			} catch (ParseException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -4342,7 +4342,7 @@ public class SIIP {
 		}
 	}
 
-	public String sequencia() {
+	public String sequencia(String id) {
 		String sequencia = "000000000";
 		Query query_seq = entityManager.createNativeQuery(
 				"select top 1 NUMERO_SEQUENCIA,DATA_SEQUENCIA from GER_SEQUENCIA_FICHEIRO where DATA_SEQUENCIA = CONVERT (date, GETDATE())");
@@ -4352,13 +4352,14 @@ public class SIIP {
 			Integer val = 1;
 			for (Object[] contentseq : dados_seq) {
 				val = Integer.parseInt(contentseq[0].toString()) + 1;
-				sequencia = ("000000000" + val).substring(("000000000" + val).length() - 9,
-						("000000000" + val).length());
+				sequencia = ("000000000" + val + id).substring(("000000000" + val +id).length() - 9,
+						("000000000" + val +id).length());
 			}
 			entityManager.createNativeQuery("UPDATE GER_SEQUENCIA_FICHEIRO SET NUMERO_SEQUENCIA = " + val
 					+ " where DATA_SEQUENCIA = CONVERT (date, GETDATE())").executeUpdate();
-		} else {
-			sequencia = "000000001";
+		} else { 
+			sequencia = ("000000001" + id).substring(("000000001" + id).length() - 9,
+					("000000001" + id).length());
 			entityManager
 					.createNativeQuery(
 							"INSERT INTO GER_SEQUENCIA_FICHEIRO (DATA_SEQUENCIA,NUMERO_SEQUENCIA) VALUES (GETDATE(),1)")
