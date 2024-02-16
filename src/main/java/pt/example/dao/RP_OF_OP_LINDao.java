@@ -53,7 +53,7 @@ public class RP_OF_OP_LINDao extends GenericDaoJpaImpl<RP_OF_OP_LIN, Integer>
 
 		Query query = entityManager.createQuery(
 				"Select b,g from RP_OF_OP_CAB a,RP_OF_OP_LIN b, RP_OF_CAB g  where a.ID_OF_CAB = g.ID_OF_CAB and ( "
-				+ "a.ID_OF_CAB in (select c.ID_OF_CAB from  RP_OF_OP_CAB c where c.ID_OP_CAB = :id)  "
+				+ "g.ID_OF_CAB in (select c.ID_OF_CAB from  RP_OF_OP_CAB c where c.ID_OP_CAB = :id)  "
 				+ " or g.ID_OF_CAB_ORIGEM  in (select c.ID_OF_CAB from  RP_OF_OP_CAB c where c.ID_OP_CAB = :id)) "
 				+ "and b.ID_OP_CAB = a.ID_OP_CAB order by  g.ID_OF_CAB_ORIGEM");
 		query.setParameter("id", id);

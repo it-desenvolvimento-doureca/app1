@@ -824,13 +824,16 @@ public class ConnectProgress {
 		return val;
 	}
 
-	public String verificaOF(String RESCOD, String DATDEB, String OFNUM, String OPECOD, String url, String HEUDEB)
-			throws SQLException {
+	public String verificaOF(String RESCOD, String DATDEB, String OFNUM, String OPECOD, String url, String HEUDEB,
+			String BOAS, String DEFEITOS, String PROREF) throws SQLException {
 
 		String query = "SELECT SOFD.OPENUM FROM SCPSVA " + "INNER JOIN SOFD ON SCPSVA.ofdnumenr = SOFD.ofdnumenr "
-				+ "INNER JOIN SOFA ON SOFD.ofanumenr = SOFA.ofanumenr " + "WHERE SCPSVA.rescod = '" + RESCOD
+				+ "INNER JOIN SOFA ON SOFD.ofanumenr = SOFA.ofanumenr "
+				+ "INNER JOIN SOFB ON SOFB.ofanumenr = SOFA.ofanumenr " + "WHERE SCPSVA.rescod = '" + RESCOD
 				+ "' AND SCPSVA.datdeb = '" + DATDEB + "' AND SCPSVA.heudeb = '" + HEUDEB.substring(0, 8)
-				+ "' AND SOFA.ofnum = '" + OFNUM + "' AND SOFD.opecod = '" + OPECOD + "' ";
+				+ "' AND SOFA.ofnum = '" + OFNUM + "' AND SOFD.opecod = '" + OPECOD + "' " + "AND SOFB.PROREF = '"
+				+ PROREF + "'";
+
 		String val = null;
 		// System.out.println(query);
 		// Usa sempre assim que fecha os resources automaticamente
@@ -852,5 +855,4 @@ public class ConnectProgress {
 		}
 		return val;
 	}
-
 }
