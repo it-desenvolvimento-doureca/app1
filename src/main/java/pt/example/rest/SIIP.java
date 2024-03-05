@@ -1766,7 +1766,7 @@ public class SIIP {
 				keyValuePairs = keyValuePairs1;
 				verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos", "");
 			} else {
-				etiquetas = "<table  border='1'><tr><th><b>N� Etiqueta</b></th><th><b>Lote</b></th><th><b>OF Origem</b></th><th><b>Data OF</b></th></tr>";
+				etiquetas = "<table  border='1'><tr><th><b>Nº Etiqueta</b></th><th><b>Lote</b></th><th><b>OF Origem</b></th><th><b>Data OF</b></th></tr>";
 
 				Query query_comp = entityManager.createNativeQuery(
 						"select REF_LOTE,REF_ETIQUETA,OF_NUM_ORIGEM,OFDATFR from RP_OF_OP_ETIQUETA where ID_OP_LIN ="
@@ -2522,7 +2522,7 @@ public class SIIP {
 					// String obs = (content3[19] != null) ?
 					// content3[19].toString() : "";
 					String obs = "";
-					obs += id_origem;
+					//obs += id_origem;
 
 					data_quantidades += (obs + "                                         ").substring(0, 39);
 					// data_quantidades += (" ").substring(0, 54);
@@ -3452,7 +3452,8 @@ public class SIIP {
 
 		String value = firstMap.get("DADOS");
 		value = value.substring(1, value.length() - 1);
-		String[] keyValuePairs = value.split(";#;");
+		//String[] keyValuePairs = value.split(";#;");
+		String[] keyValuePairs = value.split(",");
 
 		Query query3 = entityManager.createQuery("Select a from GER_EVENTOS_CONF a where MODULO = "
 				+ firstMap.get("MODULO") + " and MOMENTO = '" + firstMap.get("MOMENTO") + "' " + "and PAGINA = '"

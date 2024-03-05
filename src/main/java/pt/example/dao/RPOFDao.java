@@ -135,10 +135,10 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 				+ "inner join RP_OF_OP_CAB b on a.ID_OF_CAB = b.ID_OF_CAB "
 				+ "inner join RP_OF_OP_FUNC c on b.ID_OP_CAB = c.ID_OP_CAB and a.ID_UTZ_CRIA = c.ID_UTZ_CRIA "
 				+ "where c.ESTADO NOT IN ('C','A','M','R') "
-				+ "and a.ID_OF_CAB = (Select a.ID_OF_CAB from RP_OF_CAB a where a.OF_NUM = '" + of_num
+				+ "and a.ID_OF_CAB in (Select a.ID_OF_CAB from RP_OF_CAB a where a.OF_NUM = '" + of_num
 				+ "' and a.OP_NUM = " + op_num + " " + "and a.OP_COD = '" + op_cod
 				+ "' and a.ESTADO NOT IN ('C','A','M','R'))) "
-				+ "and ID_OF_CAB = (Select a.ID_OF_CAB from RP_OF_CAB a where a.OF_NUM = '" + of_num + "' "
+				+ "and ID_OF_CAB in (Select a.ID_OF_CAB from RP_OF_CAB a where a.OF_NUM = '" + of_num + "' "
 				+ "and a.OP_NUM = " + op_num + " and a.OP_COD = '" + op_cod + "' and a.ESTADO NOT IN ('C','A','M','R'))");
 
 		query2.executeUpdate();
