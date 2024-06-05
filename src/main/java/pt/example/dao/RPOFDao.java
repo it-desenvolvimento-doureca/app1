@@ -36,9 +36,12 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 
 	}
 
-	public List<RP_OF_CAB> getall2(String data, Integer start) {
-		String querydata = "and xa.SEC_NUM in (" + data + ")";
-		if (data.equals("ADMIN")) {
+	public List<RP_OF_CAB> getall2(List<HashMap<String, String>> data, Integer start) {
+		HashMap<String, String> firstMap = data.get(0);
+		String SEC_NUM = firstMap.get("sec_num").toString();
+		
+		String querydata = "and xa.SEC_NUM in (" + SEC_NUM + ")";
+		if (SEC_NUM.equals("ADMIN")) {
 			querydata = "";
 		}
 		String querydataw = "(select xa.ID_OF_CAB FROM RP_OF_CAB xa, RP_OF_OP_CAB xb,RP_OF_OP_FUNC xc where xa.ID_UTZ_CRIA = xc.ID_UTZ_CRIA and xc.ID_OP_CAB=xb.ID_OP_CAB and xa.ID_OF_CAB = xb.ID_OF_CAB and ID_OF_CAB_ORIGEM is null "
@@ -186,14 +189,14 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 		// System.out.println(firstMap.get("ordenacao"));
 
 		date1 = (firstMap.get("date1") != null) ? datas(firstMap.get("date1")) : null; // Data
-																						// Início
+																						// Inï¿½cio
 																						// >=
 		date2 = (firstMap.get("date2") != null) ? datas(firstMap.get("date2")) : null;// Data
 																						// Fim
 																						// >=
 		date3 = (firstMap.get("date3") != null) ? datas(firstMap.get("date3")) : null;// <=
 																						// Data
-																						// Início
+																						// Inï¿½cio
 		date4 = (firstMap.get("date4") != null) ? datas(firstMap.get("date4")) : null;// <=
 																						// Data
 																						// Fim

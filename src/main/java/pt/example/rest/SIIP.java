@@ -347,7 +347,7 @@ public class SIIP {
 	@Path("/getRP_OF_CAB2/{start}")
 	@Consumes("*/*")
 	@Produces("application/json")
-	public List<RP_OF_CAB> listof2(final String data, @PathParam("start") Integer start) {
+	public List<RP_OF_CAB> listof2(final List<HashMap<String, String>> data, @PathParam("start") Integer start) {
 		return dao.getall2(data, start);
 	}
 
