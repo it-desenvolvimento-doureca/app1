@@ -2134,7 +2134,8 @@ public class SIIP {
 						+ "CASE when (c.MOMENTO_PARAGEM_M2 != c.MOMENTO_PARAGEM_M1 or c.TIPO_PARAGEM_M2 != c.TIPO_PARAGEM_M1 or c.DATA_INI_M2 != c.DATA_INI_M1 or c.HORA_INI_M1 != c.HORA_INI_M2 or c.DATA_FIM_M2 != c.DATA_FIM_M1 or c.HORA_FIM_M1 != c.HORA_FIM_M2 ) then 1 else 0 END as alterado, "
 						+ "CASE when (c.DATA_INI_M1 is null or c.HORA_INI_M1 is null or c.DATA_FIM_M1 is null or c.HORA_FIM_M1 is null ) then 1 else 0 END as novo "
 						+ "from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
-						+ "inner join RP_OF_PARA_LIN c on c.ID_OP_CAB = b.ID_OP_CAB " + "where a.ID_OF_CAB = " + id);
+						+ "inner join RP_OF_PARA_LIN c on c.ID_OP_CAB = b.ID_OP_CAB " + " where a.ID_OF_CAB = " + id
+						+ " and  c." + DATA_INI + " is not null and  c." + DATA_FIM + " is not null ");
 
 				List<Object[]> dados2 = query2.getResultList();
 
@@ -2522,7 +2523,7 @@ public class SIIP {
 					// String obs = (content3[19] != null) ?
 					// content3[19].toString() : "";
 					String obs = "";
-					//obs += id_origem;
+					// obs += id_origem;
 
 					data_quantidades += (obs + "                                         ").substring(0, 39);
 					// data_quantidades += (" ").substring(0, 54);
@@ -3004,7 +3005,7 @@ public class SIIP {
 
 	public void criar_ficheiro_PausaMAQUINA(Object[] content2, String SINAL, String linha_inicial,
 			String linha_A_MAQUINA, String path2, Boolean ficheirosdownload, String nome_ficheiro2, String nomezip,
-			Integer count, String estado, String path_error,String id) throws ParseException {
+			Integer count, String estado, String path_error, String id) throws ParseException {
 
 		SimpleDateFormat f = new SimpleDateFormat("yyyyMMddHHmmss");
 		SimpleDateFormat p = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
@@ -3196,7 +3197,7 @@ public class SIIP {
 			count++;
 			try {
 				criar_ficheiro_PausaMAQUINA(content2, SINAL, linha_inicial, linha_A_MAQUINA, path2, ficheirosdownload,
-						nome_ficheiro2, nomezip, count, ESTADO, path_error,ID_OF_CAB.toString());
+						nome_ficheiro2, nomezip, count, ESTADO, path_error, ID_OF_CAB.toString());
 			} catch (ParseException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -3452,7 +3453,7 @@ public class SIIP {
 
 		String value = firstMap.get("DADOS");
 		value = value.substring(1, value.length() - 1);
-		//String[] keyValuePairs = value.split(";#;");
+		// String[] keyValuePairs = value.split(";#;");
 		String[] keyValuePairs = value.split(",");
 
 		Query query3 = entityManager.createQuery("Select a from GER_EVENTOS_CONF a where MODULO = "

@@ -79,7 +79,7 @@ public class ConnectProgress {
 
 	public List<HashMap<String, String>> getOF(String ofnum, String url) throws SQLException {
 
-		String query = "select a.ofnum,a.ofanumenr,a.ofref,b.OFETAT from SOFA a "
+		String query = "select DISTINCT a.ofnum,a.ofanumenr,a.ofref,b.OFETAT from SOFA a "
 				+ " left join SOFB b on a.OFANUMENR = b.OFANUMENR where a.ofnum= '" + ofnum + "'";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
