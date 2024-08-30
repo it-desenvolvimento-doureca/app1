@@ -314,7 +314,7 @@ public class ConnectProgress {
 
 		String query = "select a.SECCOD, a.ssecod ,c.SECLIB,b.SSEDES,a.SECTYP from SDTSEC a "
 				+ "inner join SPASSE b on a.ssecod = b.ssecod " + "inner join SPASEC c on a.seccod = c.seccod "
-				+ "where a.SECNUMENR= '" + SECNUMENR + "'";
+				+ "where a.SECNUMENR= '" + SECNUMENR + "' order by a.ssecod ";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
@@ -347,7 +347,7 @@ public class ConnectProgress {
 	public List<HashMap<String, String>> getAllMaq(String SECCOD, String url) throws SQLException {
 
 		String query = "select b.ssecod,a.SSEDES from SPASSE a inner join SDTSEC b on a.ssecod = b.ssecod where b.SECCOD= '"
-				+ SECCOD + "'";
+				+ SECCOD + "' order by b.ssecod";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
