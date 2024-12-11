@@ -36,6 +36,7 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -44,6 +45,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
@@ -349,6 +351,53 @@ public class SIIP {
 	@Produces("application/json")
 	public List<RP_OF_CAB> listof2(final List<HashMap<String, String>> data, @PathParam("start") Integer start) {
 		return dao.getall2(data, start);
+	}
+	
+	@POST
+	@Path("/GET_PAINEL_CONTROLO/{start}")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public List<Object[]> GET_PAINEL_CONTROLO(final List<HashMap<String, String>> dados, @PathParam("start") Integer start) {
+
+		HashMap<String, String> firstMap = dados.get(0);
+		String SEC_NUM = firstMap.get("sec_num");
+		String DATE1 = firstMap.get("date1");
+		String DATE2 = firstMap.get("date2");
+		String DATE3 = firstMap.get("date3");
+		String DATE4 = firstMap.get("date4");
+		String TIME1 = firstMap.get("time1");
+		String TIME2 = firstMap.get("time2");
+		String TIME3 = firstMap.get("time3");
+		String TIME4 = firstMap.get("time4");
+		String ESTADO = firstMap.get("estado");
+		String TEMPO_PROD_MENOR = firstMap.get("tempo_prod_menor");
+		String TEMPO_PROD_MAIOR = firstMap.get("tempo_prod_maior");
+		String FUNC = firstMap.get("func");
+		String NUMERO_OF = firstMap.get("numero_of");
+		String OPERACAO = firstMap.get("operacao");
+		String MAQUINA = firstMap.get("maquina");
+		String DESIGN_REF = firstMap.get("design_ref");
+		String REF = firstMap.get("ref");
+		String ETIQUETA = firstMap.get("etiqueta");
+		String QTT = firstMap.get("qtt");
+		String QTTMENOR = firstMap.get("qttmenor");
+		String ORDENACAO = firstMap.get("ordenacao");
+
+		Query query_folder = entityManager.createNativeQuery(
+				"EXEC GET_PAINEL_CONTROLO_RP :SEC_NUM ,:DATE1,:DATE2,:DATE3,:DATE4,:TIME1 ,:TIME2 ,:TIME3 ,:TIME4 ,:ESTADO ,:TEMPO_PROD_MENOR ,:TEMPO_PROD_MAIOR ,:FUNC ,:NUMERO_OF ,:OPERACAO ,:MAQUINA ,:DESIGN_REF ,:REF ,:ETIQUETA ,:QTT ,:QTTMENOR ,:START,:ORDENACAO")
+				.setParameter("SEC_NUM", SEC_NUM).setParameter("DATE1", DATE1).setParameter("DATE2", DATE2)
+				.setParameter("DATE3", DATE3).setParameter("DATE4", DATE4).setParameter("TIME1", TIME1)
+				.setParameter("TIME2", TIME2).setParameter("TIME3", TIME3).setParameter("TIME4", TIME4)
+				.setParameter("ESTADO", ESTADO).setParameter("TEMPO_PROD_MENOR", TEMPO_PROD_MENOR)
+				.setParameter("TEMPO_PROD_MAIOR", TEMPO_PROD_MAIOR).setParameter("FUNC", FUNC)
+				.setParameter("NUMERO_OF", NUMERO_OF).setParameter("OPERACAO", OPERACAO)
+				.setParameter("MAQUINA", MAQUINA).setParameter("DESIGN_REF", DESIGN_REF).setParameter("REF", REF)
+				.setParameter("ETIQUETA", ETIQUETA).setParameter("QTT", QTT).setParameter("QTTMENOR", QTTMENOR)
+				.setParameter("START", start).setParameter("ORDENACAO", ORDENACAO);
+
+		List<Object[]> dados_folder = query_folder.getResultList();
+
+		return dados_folder;
 	}
 
 	@POST
@@ -1770,7 +1819,7 @@ public class SIIP {
 									+ id_origem
 									+ ") or (c.QUANT_BOAS_M1 != c.QUANT_BOAS_M2 or c.QUANT_DEF_M1 != c.QUANT_DEF_M2 or c.NOVO = 1 or c.APAGADO = 1)) ";
 						Query query2 = entityManager.createNativeQuery(
-								"select OF_NUM_ORIGEM,a.ID_OF_CAB,c.ID_REF_ETIQUETA,c.OP_NUM,b.ID_OP_LIN,c.NOVO,c.ATIVO,c.APAGADO  from RP_OF_OP_CAB a inner join RP_OF_OP_LIN b on a.ID_OP_CAB = b.ID_OP_CAB inner join RP_OF_CAB d on  d.ID_OF_CAB = a.ID_OF_CAB inner join RP_OF_OP_ETIQUETA c on b.ID_OP_LIN = c.ID_OP_LIN  where b.TIPO_PECA != 'COM' and a.ID_OF_CAB = "
+								"select OF_NUM_ORIGEM,a.ID_OF_CAB,c.ID_REF_ETIQUETA,c.OP_NUM,b.ID_OP_LIN,c.NOVO,c.ATIVO,c.APAGADO  from RP_OF_OP_CAB a inner join RP_OF_OP_LIN b on a.ID_OP_CAB = b.ID_OP_CAB inner join RP_OF_CAB d on  d.ID_OF_CAB = a.ID_OF_CAB inner join RP_OF_OP_ETIQUETA c on b.ID_OP_LIN = c.ID_OP_LIN  where b.TIPO_PECA not in ('COM','COMS') and a.ID_OF_CAB = "
 										+ Integer.parseInt(content[0].toString()) + data_query);
 
 						List<Object[]> dados2 = query2.getResultList();
@@ -2250,7 +2299,7 @@ public class SIIP {
 								+ id_origem
 								+ ") or (c.QUANT_BOAS_M1 != c.QUANT_BOAS_M2 or c.QUANT_DEF_M1 != c.QUANT_DEF_M2 or c.NOVO = 1 or c.APAGADO = 1)) ";
 					Query query2 = entityManager.createNativeQuery(
-							"select OF_NUM_ORIGEM,a.ID_OF_CAB,c.ID_REF_ETIQUETA,c.OP_NUM,b.ID_OP_LIN,c.NOVO,c.ATIVO,c.APAGADO   from RP_OF_OP_CAB a inner join RP_OF_OP_LIN b on a.ID_OP_CAB = b.ID_OP_CAB inner join RP_OF_CAB d on  d.ID_OF_CAB = a.ID_OF_CAB inner join RP_OF_OP_ETIQUETA c on b.ID_OP_LIN = c.ID_OP_LIN  where b.TIPO_PECA != 'COM' and a.ID_OF_CAB = "
+							"select OF_NUM_ORIGEM,a.ID_OF_CAB,c.ID_REF_ETIQUETA,c.OP_NUM,b.ID_OP_LIN,c.NOVO,c.ATIVO,c.APAGADO   from RP_OF_OP_CAB a inner join RP_OF_OP_LIN b on a.ID_OP_CAB = b.ID_OP_CAB inner join RP_OF_CAB d on  d.ID_OF_CAB = a.ID_OF_CAB inner join RP_OF_OP_ETIQUETA c on b.ID_OP_LIN = c.ID_OP_LIN  where b.TIPO_PECA not in ('COM','COMS') and a.ID_OF_CAB = "
 									+ Integer.parseInt(content[0].toString()) + data_query);
 
 					List<Object[]> dados2 = query2.getResultList();
@@ -2362,7 +2411,7 @@ public class SIIP {
 				keyValuePairs = keyValuePairs1;
 				verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos", "");
 			} else {
-				etiquetas = "<table  border='1'><tr><th><b>N� Etiqueta</b></th><th><b>Lote</b></th><th><b>OF Origem</b></th><th><b>Data OF</b></th></tr>";
+				etiquetas = "<table  border='1'><tr><th><b>Nº Etiqueta</b></th><th><b>Lote</b></th><th><b>OF Origem</b></th><th><b>Data OF</b></th></tr>";
 
 				Query query_comp = entityManager.createNativeQuery(
 						"select REF_LOTE,REF_ETIQUETA,OF_NUM_ORIGEM,OFDATFR from RP_OF_OP_ETIQUETA where ID_OP_LIN ="
@@ -2730,7 +2779,8 @@ public class SIIP {
 						+ "CASE when (c.MOMENTO_PARAGEM_M2 != c.MOMENTO_PARAGEM_M1 or c.TIPO_PARAGEM_M2 != c.TIPO_PARAGEM_M1 or c.DATA_INI_M2 != c.DATA_INI_M1 or c.HORA_INI_M1 != c.HORA_INI_M2 or c.DATA_FIM_M2 != c.DATA_FIM_M1 or c.HORA_FIM_M1 != c.HORA_FIM_M2 ) then 1 else 1 END as alterado, "
 						+ "CASE when (c.DATA_INI_M1 is null or c.HORA_INI_M1 is null or c.DATA_FIM_M1 is null or c.HORA_FIM_M1 is null ) then 1 else 0 END as novo "
 						+ "from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
-						+ "inner join RP_OF_PARA_LIN c on c.ID_OP_CAB = b.ID_OP_CAB " + "where a.ID_OF_CAB = " + id);
+						+ "inner join RP_OF_PARA_LIN c on c.ID_OP_CAB = b.ID_OP_CAB " + "where a.ID_OF_CAB = " + id
+						+ " and  c." + DATA_INI + " is not null and  c." + DATA_FIM + " is not null ");
 
 				List<Object[]> dados2 = query2.getResultList();
 
@@ -4641,7 +4691,7 @@ public class SIIP {
 						+ "inner join SILVER.dbo.SDTPRA g on h.PROREF = g.PROREF) e on e.ETQNUM = RIGHT(CONCAT('000', c.REF_ETIQUETA) ,10) "
 						+ "where   a.ID_OF_CAB in (select ID_OF_CAB from RP_OF_CAB where ID_OF_CAB_ORIGEM = " + ID
 						+ ") "
-						+ "and b.TIPO_PECA != 'COM' AND  (c.QUANT_ETIQUETA - (c.QUANT_BOAS_M2 +   c.QUANT_DEF_M2)) > 0");
+						+ "and b.TIPO_PECA not in ('COM','COMS') AND  (c.QUANT_ETIQUETA - (c.QUANT_BOAS_M2 +   c.QUANT_DEF_M2)) > 0");
 
 		List<Object[]> dados_etiqeutas = query_etiquetas.getResultList();
 
@@ -4650,7 +4700,7 @@ public class SIIP {
 		for (Object[] content : dados_folder) {
 			path2 = content[1].toString() + nome_ficheiro;
 			path_error = content[5].toString() + nome_ficheiro;
-			nomeimpressora = content[2].toString();
+			if (content[2] != null) nomeimpressora = content[2].toString();
 			if (content[3] != null) {
 				ipimpressora = content[3].toString();
 			}
@@ -5096,5 +5146,14 @@ public class SIIP {
 
 		return filepath;
 	}
+	
+	@GET
+	@Path("/getIP")
+	@Produces("application/xlm")
+	public String getData(@Context HttpServletRequest request) {
+		String ip = request.getRemoteAddr();
+		return ip;
+	}
+
 
 }

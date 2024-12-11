@@ -79,7 +79,7 @@ public class ConnectProgress {
 
 	public List<HashMap<String, String>> getOF(String ofnum, String url) throws SQLException {
 
-		String query = "select a.ofnum,a.ofanumenr,a.ofref,b.OFETAT from SOFA a "
+		String query = "select DISTINCT a.ofnum,a.ofanumenr,a.ofref,b.OFETAT from SOFA a "
 				+ " left join SOFB b on a.OFANUMENR = b.OFANUMENR where a.ofnum= '" + ofnum + "'";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
@@ -150,7 +150,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("OPECOD", rs.getString("OPECOD"));
 				x.put("OPENUM", rs.getString("OPENUM"));
@@ -181,7 +181,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("OPECOD", rs.getString("OPECOD"));
 				x.put("OPEDES", rs.getString("OPEDES"));
@@ -221,7 +221,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("OPECOD", rs.getString("OPECOD"));
 				x.put("OPEDES", rs.getString("OPEDES"));
@@ -260,7 +260,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("FAMCOD", rs.getString("FAMCOD"));
 				x.put("FAMLIB", rs.getString("FAMLIB"));
@@ -289,7 +289,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("ARRCOD", rs.getString("ARRCOD"));
 				x.put("arrlib", rs.getString("arrlib"));
@@ -319,7 +319,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("SECTYP", rs.getString("SECTYP"));
 				x.put("OPECOD", rs.getString("OPECOD"));
@@ -344,7 +344,7 @@ public class ConnectProgress {
 
 		String query = "select a.SECCOD, a.ssecod ,c.SECLIB,b.SSEDES,a.SECTYP from SDTSEC a "
 				+ "inner join SPASSE b on a.ssecod = b.ssecod " + "inner join SPASEC c on a.seccod = c.seccod "
-				+ "where a.SECNUMENR= '" + SECNUMENR + "'";
+				+ "where a.SECNUMENR= '" + SECNUMENR + "'  order by a.ssecod";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
@@ -353,7 +353,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("SECCOD", rs.getString("SECCOD"));
 				x.put("ssecod", rs.getString("ssecod"));
@@ -377,7 +377,7 @@ public class ConnectProgress {
 	public List<HashMap<String, String>> getAllMaq(String SECCOD, String url) throws SQLException {
 
 		String query = "select b.ssecod,a.SSEDES from SPASSE a inner join SDTSEC b on a.ssecod = b.ssecod where b.SECCOD= '"
-				+ SECCOD + "'";
+				+ SECCOD + "' order by b.ssecod";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
@@ -386,7 +386,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("ssecod", rs.getString("ssecod"));
 				x.put("SSEDES", rs.getString("SSEDES"));
@@ -415,7 +415,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("fam", rs.getString("fam"));
 				// x.put("SSEDES", rs.getString("SSEDES"));
@@ -449,7 +449,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("PROREF", rs.getString("PROREF"));
 				x.put("PRODES1", rs.getString("PRODES1"));
@@ -480,7 +480,7 @@ public class ConnectProgress {
 		String query = "select b.PROREF,b.PRODES1,b.PRODES2,b.PRDFAMCOD,c.ZPAVAL,b.GESCOD,b.PROQTEFMT,b.PROTYPCOD from SOFC  a "
 				+ "left join SDTPRA b on a.PROREF = b.PROREF "
 				+ "left join SDTZPA c on b.ZPANUM = c.ZPANUM and  c.zpacod='ALER' " + "where a.OFANUMENR = '"
-				+ OFANUMENR + "' and  (b.PROTYPCOD != 'EMBA' /*AND b.PROTYPCOD != 'COM'*/)"; // AND
+				+ OFANUMENR + "' and  (a.NCLACTCST = 0 AND b.PROTYPCOD not like 'EMB%' /*AND b.PROTYPCOD != 'COM'*/)"; // AND
 																								// b.PROTYPCOD
 																								// !=
 																								// 'COM'
@@ -492,7 +492,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("PROREF", rs.getString("PROREF"));
 				x.put("PRODES1", rs.getString("PRODES1"));
@@ -560,7 +560,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("QUACOD", rs.getString("QUACOD"));
 				x.put("QUALIB", rs.getString("QUALIB"));
@@ -589,7 +589,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("QUACOD", rs.getString("QUACOD"));
 				x.put("QUALIB", rs.getString("QUALIB"));
@@ -623,7 +623,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("PROREF", rs.getString("PROREF"));
 				x.put("PRODES1", rs.getString("PRODES1"));
@@ -665,7 +665,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("OPECOD", rs.getString("OPECOD"));
 				x.put("OPENUM", rs.getString("OPENUM"));
@@ -701,7 +701,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("REF", rs.getString("Ref"));
 				x.put("DESREF", rs.getString("DesRef"));
@@ -745,7 +745,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("OFNUM", rs.getString("OFNUM"));
 				x.put("ofanumenr", rs.getString("ofanumenr"));
@@ -784,7 +784,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("OFNUM", rs.getString("OFNUM"));
 				x.put("ofanumenr", rs.getString("ofanumenr"));
@@ -820,7 +820,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("ETQEMBQTE", rs.getString("ETQEMBQTE"));
 				x.put("PROREF", rs.getString("PROREF"));
@@ -853,7 +853,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("QuantidadeCaixa", rs.getString("QuantidadeCaixa"));
 				x.put("proref", rs.getString("proref"));
@@ -882,7 +882,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("etqcliref", rs.getString("etqcliref"));
 				x.put("proref", rs.getString("proref"));
@@ -911,7 +911,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("RESCOD", rs.getString("RESCOD"));
 				x.put("RESDES", rs.getString("RESDES"));
@@ -941,7 +941,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("RESCOD", rs.getString("RESCOD"));
 				x.put("RESDES", rs.getString("RESDES"));
@@ -971,7 +971,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("SECCOD", rs.getString("SECCOD"));
 				x.put("SECLIB", rs.getString("SECLIB"));
@@ -1001,7 +1001,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				HashMap<String, String> x = new HashMap<>();
 				x.put("SECCOD", rs.getString("SECCOD"));
 				x.put("SECLIB", rs.getString("SECLIB"));
@@ -1054,7 +1054,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				val = rs.getString("OPENUM");
 			}
 			stmt.close();
@@ -1099,7 +1099,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das operações
+				// parser das operaï¿½ï¿½es
 				val = rs.getString("OPENUM");
 			}
 			stmt.close();
