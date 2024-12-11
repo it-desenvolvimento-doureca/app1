@@ -1740,7 +1740,7 @@ public class SIIP {
 						+ "REF_NUM,REF_DES,c.ID_UTZ_CRIA,c.NOME_UTZ_CRIA,(select OF_NUM from RP_OF_CAB where ID_OF_CAB = "
 						+ id + " ) as OF_NUM,"
 						+ "(select top 1 (cast(DATA_INI_M2 as datetime) + cast(HORA_INI_M2 as datetime)) FROM RP_OF_OP_FUNC where ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB = "
-						+ id + ") ) DATA" + ",c.ID_OF_CAB_ORIGEM,a.ID_OP_LIN from RP_OF_OP_LIN  a "
+						+ id + ") ) DATA" + ",c.ID_OF_CAB_ORIGEM,a.ID_OP_LIN,(select top 1 LOCAL from RH_FUNCIONARIOS x where x.COD_FUNCIONARIO = c.ID_UTZ_CRIA) LOCAL from RP_OF_OP_LIN  a "
 						+ "left join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB left join RP_OF_CAB c on b.ID_OF_CAB = c.ID_OF_CAB "
 						+ "where  (c.ID_OF_CAB = " + id + " or c.ID_OF_CAB_ORIGEM = " + id
 						+ ") and  ISNULL(cast( (CAST(NULLIF(QUANT_DEF_TOTAL_M2,0)AS float) / CAST(( QUANT_BOAS_TOTAL_M2 +  QUANT_DEF_TOTAL_M2)AS float)) * 100  as numeric(36,2)),0) > ISNULL(PERC_OBJETIV,0) "
@@ -1764,7 +1764,11 @@ public class SIIP {
 						"perc_def::" + perc_def, "utilizador::" + utilizador, "of_num::" + of_num,
 						"data_cria::" + data_cria, "etiquetas::" + etiquetas };
 				keyValuePairs = keyValuePairs1;
-				verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos", "");
+				if(content[10] != null && content[10].toString().equals("COSSOURADO")) {
+					verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos - São Bento", "");
+				}else {
+					verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos - Formariz", "");
+				}
 			} else {
 				etiquetas = "<table  border='1'><tr><th><b>Nº Etiqueta</b></th><th><b>Lote</b></th><th><b>OF Origem</b></th><th><b>Data OF</b></th></tr>";
 
@@ -1788,7 +1792,12 @@ public class SIIP {
 						"perc_def::" + perc_def, "utilizador::" + utilizador, "of_num::" + of_num,
 						"data_cria::" + data_cria, "etiquetas::" + etiquetas };
 				keyValuePairs = keyValuePairs2;
-				verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos", "");
+				
+				if(content[10] != null && content[10].toString().equals("COSSOURADO")) {
+					verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos - São Bento", "");
+				}else {
+					verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos - Formariz", "");
+				}
 
 			}
 		}
