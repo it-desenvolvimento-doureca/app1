@@ -2376,7 +2376,8 @@ public class SIIP {
 						+ "REF_NUM,REF_DES,c.ID_UTZ_CRIA,c.NOME_UTZ_CRIA,(select OF_NUM from RP_OF_CAB where ID_OF_CAB = "
 						+ id + " ) as OF_NUM,"
 						+ "(select top 1 (cast(DATA_INI_M2 as datetime) + cast(HORA_INI_M2 as datetime)) FROM RP_OF_OP_FUNC where ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB = "
-						+ id + ") ) DATA" + ",c.ID_OF_CAB_ORIGEM,a.ID_OP_LIN,(select top 1 LOCAL from RH_FUNCIONARIOS x where x.COD_FUNCIONARIO = c.ID_UTZ_CRIA) LOCAL from RP_OF_OP_LIN  a "
+						+ id + ") ) DATA"
+						+ ",c.ID_OF_CAB_ORIGEM,a.ID_OP_LIN,(select STRING_AGG(g.EMAIL_PARA,',') from GER_EVENTOS_DESTINATARIOS g where g.ID_EVENTO = 27 and g.TYPOF = a.GESCOD ) EMAIL_PARA  from RP_OF_OP_LIN  a "
 						+ "left join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB left join RP_OF_CAB c on b.ID_OF_CAB = c.ID_OF_CAB "
 						+ "where  (c.ID_OF_CAB = " + id + " or c.ID_OF_CAB_ORIGEM = " + id
 						+ ") and  ISNULL(cast( (CAST(NULLIF(QUANT_DEF_TOTAL_M2,0)AS float) / CAST(( QUANT_BOAS_TOTAL_M2 +  QUANT_DEF_TOTAL_M2)AS float)) * 100  as numeric(36,2)),0) > ISNULL(PERC_OBJETIV,0) "
@@ -2394,18 +2395,20 @@ public class SIIP {
 			of_num = content[6].toString();
 			data_cria = content[7].toString().substring(0, 19);
 
+			String email_para = null;
+			if (content[10] != null) {
+				email_para = content[10].toString();
+			}
+
 			if (content[6] == null) {
 				String[] keyValuePairs1 = { "referencia::" + referencia,
 						"descricao_referencia::" + descricao_referencia, "perc_obj::" + perc_obj,
 						"perc_def::" + perc_def, "utilizador::" + utilizador, "of_num::" + of_num,
 						"data_cria::" + data_cria, "etiquetas::" + etiquetas };
 				keyValuePairs = keyValuePairs1;
-				
-				if(content[10] != null && content[10].toString().equals("COSSOURADO")) {
-					verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos - São Bento", "");
-				}else {
-					verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos - Formariz", "");
-				}
+
+				verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos", "",email_para);
+
 			} else {
 				etiquetas = "<table  border='1'><tr><th><b>Nº Etiqueta</b></th><th><b>Lote</b></th><th><b>OF Origem</b></th><th><b>Data OF</b></th></tr>";
 
@@ -2429,12 +2432,8 @@ public class SIIP {
 						"perc_def::" + perc_def, "utilizador::" + utilizador, "of_num::" + of_num,
 						"data_cria::" + data_cria, "etiquetas::" + etiquetas };
 				keyValuePairs = keyValuePairs2;
-				
-				if(content[10] != null && content[10].toString().equals("COSSOURADO")) {
-					verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos - São Bento", "");
-				}else {
-					verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos - Formariz", "");
-				}
+
+				verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos", "",email_para);
 
 			}
 		}
@@ -3439,7 +3438,7 @@ public class SIIP {
 						// TODO Auto-generated catch block
 						String[] keyValuePairs = {
 								"TEXTO_ERRO ::" + e2.getMessage() + " " + file.getAbsolutePath() + "", };
-						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "");
+						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "",null);
 						criarfileerro(estado, patherro, data, alteracoes);
 						e2.printStackTrace();
 						return;
@@ -3468,7 +3467,7 @@ public class SIIP {
 						String[] keyValuePairs = {
 								"TEXTO_ERRO ::" + e2.getMessage() + " " + file.getAbsolutePath() + "", };
 						if (file.getAbsolutePath() != null)
-							verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "");
+							verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "",null);
 						criarfileerro(estado, patherro, data, alteracoes);
 						e2.printStackTrace();
 						return;
@@ -3507,7 +3506,7 @@ public class SIIP {
 
 		} catch (IOException e) {
 			String[] keyValuePairs = { "TEXTO_ERRO ::" + e.getMessage() + "", };
-			verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "");
+			verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "",null);
 			criarfileerro(estado, patherro, data, alteracoes);
 			e.printStackTrace();
 			return;
@@ -3524,7 +3523,7 @@ public class SIIP {
 
 			} catch (IOException ex) {
 				String[] keyValuePairs = { "TEXTO_ERRO ::" + ex.getMessage() + "", };
-				verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "");
+				verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "",null);
 				criarfileerro(estado, patherro, data, alteracoes);
 				ex.printStackTrace();
 				return;
@@ -3846,7 +3845,7 @@ public class SIIP {
 				file2.createNewFile();
 			} catch (IOException e2) {
 				String[] keyValuePairs = { "TEXTO_ERRO ::" + e2.getMessage() + " " + file2.getAbsolutePath() + "", };
-				verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "");
+				verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "",null);
 				e2.printStackTrace();
 			}
 		}
@@ -3878,7 +3877,7 @@ public class SIIP {
 					} catch (IOException e1) {
 						String[] keyValuePairs = {
 								"TEXTO_ERRO ::" + e1.getMessage() + " " + file2.getAbsolutePath() + "", };
-						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "");
+						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "",null);
 						e1.printStackTrace();
 					}
 				}
@@ -3888,7 +3887,7 @@ public class SIIP {
 					} catch (IOException e1) {
 						String[] keyValuePairs = {
 								"TEXTO_ERRO ::" + e1.getMessage() + " " + file2.getAbsolutePath() + "", };
-						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "");
+						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "",null);
 						e1.printStackTrace();
 					}
 				}
@@ -3899,7 +3898,7 @@ public class SIIP {
 
 		{
 			String[] keyValuePairs = { "TEXTO_ERRO ::" + err + "", };
-			verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", path_error);
+			verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", path_error,null);
 		}
 	}
 
@@ -4325,7 +4324,7 @@ public class SIIP {
 				// TODO Auto-generated catch block
 				String[] keyValuePairs = { "TEXTO_ERRO ::" + e2.getMessage() + " " + file2.getAbsolutePath() + "", };
 				if (file2.getAbsolutePath() != null)
-					verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "");
+					verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "",null);
 				criar_ficheiro_Pausa(data, path_error, count, false, nomeficheiro, nomezip, path_error);
 				e2.printStackTrace();
 				return;
@@ -4558,7 +4557,7 @@ public class SIIP {
 		return baos.toByteArray();
 	}
 
-	public void verficaEventos(String[] keyValuePairs, String momento, String fgilepath) {
+	public void verficaEventos(String[] keyValuePairs, String momento, String fgilepath, String para) {
 
 		List<String> x = new ArrayList<>();
 
@@ -4573,7 +4572,11 @@ public class SIIP {
 			// email.setASSUNTO(borderTypes.getEMAIL_ASSUNTO());
 			email.setDE("alertas.it.doureca@gmail.com");
 
-			email.setPARA(borderTypes.getEMAIL_PARA());
+			String s1 = null;
+			String s2 = "tiago.perseira@xpertgo.pt";
+			String email_para = concatenateWithComma(s1, s2);
+
+			email.setPARA(email_para);
 			String mensagem = borderTypes.getEMAIL_MENSAGEM();
 			String assunto = borderTypes.getEMAIL_ASSUNTO();
 
@@ -4587,6 +4590,19 @@ public class SIIP {
 			sendemail(email);
 
 		}
+	}
+
+	public static String concatenateWithComma(String... strings) {
+		StringBuilder sb = new StringBuilder();
+		for (String str : strings) {
+			if (str != null) {
+				if (sb.length() > 0) {
+					sb.append(",");
+				}
+				sb.append(str);
+			}
+		}
+		return sb.toString();
 	}
 
 	@GET
