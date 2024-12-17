@@ -2381,7 +2381,7 @@ public class SIIP {
 						+ "left join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB left join RP_OF_CAB c on b.ID_OF_CAB = c.ID_OF_CAB "
 						+ "where  (c.ID_OF_CAB = " + id + " or c.ID_OF_CAB_ORIGEM = " + id
 						+ ") and  ISNULL(cast( (CAST(NULLIF(QUANT_DEF_TOTAL_M2,0)AS float) / CAST(( QUANT_BOAS_TOTAL_M2 +  QUANT_DEF_TOTAL_M2)AS float)) * 100  as numeric(36,2)),0) > ISNULL(PERC_OBJETIV,0) "
-						+ "and a.GESCOD in ('OFCF','OFCF2') and ISNULL(PERC_OBJETIV,0) != 0");
+						+ "and a.GESCOD in (select g.TYPOF from GER_EVENTOS_DESTINATARIOS g where g.ID_EVENTO = 27 ) and ISNULL(PERC_OBJETIV,0) != 0");
 
 		List<Object[]> dados = query.getResultList();
 
@@ -4572,8 +4572,8 @@ public class SIIP {
 			// email.setASSUNTO(borderTypes.getEMAIL_ASSUNTO());
 			email.setDE("alertas.it.doureca@gmail.com");
 
-			String s1 = null;
-			String s2 = "tiago.perseira@xpertgo.pt";
+			String s1 = para;
+			String s2 = borderTypes.getEMAIL_PARA();
 			String email_para = concatenateWithComma(s1, s2);
 
 			email.setPARA(email_para);
