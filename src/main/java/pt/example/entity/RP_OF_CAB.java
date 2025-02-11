@@ -37,6 +37,8 @@ public class RP_OF_CAB {
 	private String OP_PREVISTA;
 	private Integer VERSAO_MODIF;
 	private String ESTADO_INICIAL;
+	private String IP_POSTO;
+	private String IP_POSTO_FINAL;
 
 	@Id
 	@Column(name = "ID_OF_CAB")
@@ -254,6 +256,24 @@ public class RP_OF_CAB {
 
 	public void setESTADO_INICIAL(String eSTADO_INICIAL) {
 		ESTADO_INICIAL = eSTADO_INICIAL;
+	}
+
+	@Column(name = "IP_POSTO")
+	public String getIP_POSTO() {
+		return IP_POSTO;
+	}
+
+	public void setIP_POSTO(String iP_POSTO) {
+		IP_POSTO = iP_POSTO;
+	}
+	
+	@Column(name = "IP_POSTO_FINAL")
+	public String getIP_POSTO_FINAL() {
+		return IP_POSTO_FINAL;
+	}
+
+	public void setIP_POSTO_FINAL(String iP_POSTO_FINAL) {
+		IP_POSTO_FINAL = iP_POSTO_FINAL;
 	}
 
 }

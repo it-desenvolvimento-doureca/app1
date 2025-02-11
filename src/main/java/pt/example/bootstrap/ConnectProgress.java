@@ -774,7 +774,7 @@ public class ConnectProgress {
 
 	public List<HashMap<String, String>> getEtiquetacaixas(String etiqueta, String url) throws SQLException {
 
-		String query = "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,c.INDNUMENR,c.VA1REF,c.VA2REF,c.INDREF,c.PROREF,b.OFDATFR,a.PROREF as PROREFCOMP from SETQDE a "
+		String query = "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,c.INDNUMENR,c.VA1REF,c.VA2REF,c.INDREF,c.PROREF,b.OFDATFR,a.PROREF as PROREFCOMP,a.UNICOD from SETQDE a "
 				+ "LEFT join SOFB c on  c.ofbnumenr = a.orinumenr LEFT join SOFA b on b.ofanumenr = c.ofanumenr "
 				+ " where a.etqnum = '" + etiqueta
 				+ "' and a.ETQEMBQTE < (SELECT top 1 vteembqte1 proref FROM SDTPRC WHERE proref=  a.PROREF)  AND a.etqetat='1' AND a.etqsitsto='2'";
@@ -797,6 +797,7 @@ public class ConnectProgress {
 				x.put("PROREF", rs.getString("PROREF"));
 				x.put("OFDATFR", rs.getString("OFDATFR"));
 				x.put("PROREFCOMP", rs.getString("PROREFCOMP"));
+				x.put("UNICOD", rs.getString("UNICOD"));
 				list.add(x);
 			}
 			stmt.close();
