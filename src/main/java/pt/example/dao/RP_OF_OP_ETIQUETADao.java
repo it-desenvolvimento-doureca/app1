@@ -55,7 +55,43 @@ public class RP_OF_OP_ETIQUETADao extends GenericDaoJpaImpl<RP_OF_OP_ETIQUETA, I
 		return data;
 
 	}
+	
 
+	public List<RP_OF_OP_ETIQUETA> getbyid_oplin2(Integer id) {
+
+		Query query = entityManager
+				.createNativeQuery(" SELECT a.ID_REF_ETIQUETA,a.REF_ETIQUETA,a.QUANT_ETIQUETA,a.OF_NUM_ORIGEM,a.QUANT_DEF_M2,a.QUANT_BOAS_M2,a.NOVO,a.REF_LOTE,ultMatrix.ETIQUETA AS ultMatrix,ultMatrix.DATA_CRIA AS ultDataMatrix,ultMatrix.ESTADO AS ultEstadoMatrix,ultMatrix.ID AS ultIdMatrix, GETDATE() AS DataAtual "
+						+ "FROM RP_OF_OP_ETIQUETA a "
+						+ "OUTER APPLY (SELECT TOP 1 x.ETIQUETA ,x.DATA_CRIA,x.ESTADO,x.ID FROM RP_OF_OP_ETIQUETA_MATRIX x WHERE x.ID_REF_ETIQ = a.ID_REF_ETIQUETA ORDER BY x.DATA_CRIA DESC ) ultMatrix "
+						+ "WHERE a.ID_OP_LIN = :id AND a.ATIVO = 1");
+		query.setParameter("id", id);
+		List<RP_OF_OP_ETIQUETA> data = query.getResultList();
+		return data;
+
+	}
+	
+	public List<Object[]> getbyEtiquetasMatrix(Integer id) {
+
+		Query query = entityManager
+				.createNativeQuery("SELECT  ID,ETIQUETA,ID_OF_CAB,ID_OP_LIN,ID_REF_ETIQ,IP_POSTO,ID_MAQUINA,PROGRAMA,ESTADO,DATA_CRIA "
+						+ "from RP_OF_OP_ETIQUETA_MATRIX a where a.ID_REF_ETIQ = :id  order by DATA_CRIA desc");
+		query.setParameter("id", id);
+		List<Object[]> data = query.getResultList();
+		return data;
+
+	}
+
+	public List<Object[]> getEtiquetaMatrix(String etiqueta) {
+
+		Query query = entityManager
+				.createNativeQuery("SELECT  ID,ETIQUETA,ID_OF_CAB,ID_OP_LIN,ID_REF_ETIQ,IP_POSTO,ID_MAQUINA,PROGRAMA,ESTADO,DATA_CRIA "
+						+ "from RP_OF_OP_ETIQUETA_MATRIX a where a.ETIQUETA = :etiqueta  order by DATA_CRIA desc");
+		query.setParameter("etiqueta", etiqueta);
+		List<Object[]> data = query.getResultList();
+		return data;
+
+	}
+	
 	public List<RP_OF_OP_ETIQUETA> getbyid_oplindef(Integer id) {
 
 		Query query = entityManager.createNativeQuery(

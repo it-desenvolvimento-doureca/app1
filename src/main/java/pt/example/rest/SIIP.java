@@ -380,12 +380,13 @@ public class SIIP {
 		String DESIGN_REF = firstMap.get("design_ref");
 		String REF = firstMap.get("ref");
 		String ETIQUETA = firstMap.get("etiqueta");
+		String ETIQUETA_MATRIX = firstMap.get("etiquetaMatrix");
 		String QTT = firstMap.get("qtt");
 		String QTTMENOR = firstMap.get("qttmenor");
 		String ORDENACAO = firstMap.get("ordenacao");
 
 		Query query_folder = entityManager.createNativeQuery(
-				"EXEC GET_PAINEL_CONTROLO_RP :SEC_NUM ,:DATE1,:DATE2,:DATE3,:DATE4,:TIME1 ,:TIME2 ,:TIME3 ,:TIME4 ,:ESTADO ,:TEMPO_PROD_MENOR ,:TEMPO_PROD_MAIOR ,:FUNC ,:NUMERO_OF ,:OPERACAO ,:MAQUINA ,:DESIGN_REF ,:REF ,:ETIQUETA ,:QTT ,:QTTMENOR ,:START,:ORDENACAO")
+				"EXEC GET_PAINEL_CONTROLO_RP :SEC_NUM ,:DATE1,:DATE2,:DATE3,:DATE4,:TIME1 ,:TIME2 ,:TIME3 ,:TIME4 ,:ESTADO ,:TEMPO_PROD_MENOR ,:TEMPO_PROD_MAIOR ,:FUNC ,:NUMERO_OF ,:OPERACAO ,:MAQUINA ,:DESIGN_REF ,:REF ,:ETIQUETA ,:QTT ,:QTTMENOR ,:START,:ORDENACAO,:ETIQUETA_MATRIX")
 				.setParameter("SEC_NUM", SEC_NUM).setParameter("DATE1", DATE1).setParameter("DATE2", DATE2)
 				.setParameter("DATE3", DATE3).setParameter("DATE4", DATE4).setParameter("TIME1", TIME1)
 				.setParameter("TIME2", TIME2).setParameter("TIME3", TIME3).setParameter("TIME4", TIME4)
@@ -394,7 +395,8 @@ public class SIIP {
 				.setParameter("NUMERO_OF", NUMERO_OF).setParameter("OPERACAO", OPERACAO)
 				.setParameter("MAQUINA", MAQUINA).setParameter("DESIGN_REF", DESIGN_REF).setParameter("REF", REF)
 				.setParameter("ETIQUETA", ETIQUETA).setParameter("QTT", QTT).setParameter("QTTMENOR", QTTMENOR)
-				.setParameter("START", start).setParameter("ORDENACAO", ORDENACAO);
+				.setParameter("ETIQUETA_MATRIX", ETIQUETA_MATRIX).setParameter("START", start)
+				.setParameter("ORDENACAO", ORDENACAO);
 
 		List<Object[]> dados_folder = query_folder.getResultList();
 
@@ -450,6 +452,21 @@ public class SIIP {
 						+ "inner join RP_OF_OP_ETIQUETA d on d.ID_OP_LIN = c.ID_OP_LIN " + "where a.ID_OF_CAB_ORIGEM = "
 						+ of_num)
 				.getResultList();
+		return dados;
+	}
+
+	@GET
+	@Path("/verificaPecasMatrix/{id_of_cab}")
+	@Produces("application/json")
+	public List<Object[]> verificaPecasMatrix(@PathParam("id_of_cab") Integer id_of_cab) {
+		@SuppressWarnings("unchecked")
+		List<Object[]> dados = entityManager.createNativeQuery(
+				"select c.REF_NUM, (c.QUANT_BOAS_TOTAL_M2 + c.QUANT_DEF_TOTAL_M2) as QUANT, total from RP_OF_CAB a  "
+						+ "left join RP_OF_OP_CAB b on a.ID_OF_CAB = b.ID_OF_CAB "
+						+ "left join RP_OF_OP_LIN c on b.ID_OP_CAB = c.ID_OP_CAB "
+						+ "left join (select count(*) total,ID_OF_CAB from RP_OF_OP_ETIQUETA_MATRIX a group by ID_OF_CAB ) d on a.ID_OF_CAB = d.ID_OF_CAB "
+						+ " where a.ID_OF_CAB = :id_of_cab ")
+				.setParameter("id_of_cab", id_of_cab).getResultList();
 		return dados;
 	}
 
@@ -1189,6 +1206,27 @@ public class SIIP {
 	}
 
 	@GET
+	@Path("/getRP_OF_OP_ETIQUETAbyid_op_lin2/{id}")
+	@Produces("application/json")
+	public List<RP_OF_OP_ETIQUETA> getRP_OF_OP_ETIQUETAbyid_op_lin2(@PathParam("id") Integer id) {
+		return dao13.getbyid_oplin2(id);
+	}
+
+	@GET
+	@Path("/getRP_OF_OP_ETIQUETAbyEtiquetasMatrix/{id}")
+	@Produces("application/json")
+	public List<Object[]> getRP_OF_OP_ETIQUETAbyEtiquetasMatrix(@PathParam("id") Integer id) {
+		return dao13.getbyEtiquetasMatrix(id);
+	}
+
+	@GET
+	@Path("/getEtiquetaMatrix/{etiqueta}")
+	@Produces("application/json")
+	public List<Object[]> getEtiquetaMatrix(@PathParam("etiqueta") String etiqueta) {
+		return dao13.getEtiquetaMatrix(etiqueta);
+	}
+
+	@GET
 	@Path("/getRP_OF_OP_ETIQUETAbyid_op_lindef/{id}")
 	@Produces("application/json")
 	public List<RP_OF_OP_ETIQUETA> getRP_OF_OP_ETIQUETAbyid_op_lindef(@PathParam("id") Integer id) {
@@ -1607,7 +1645,7 @@ public class SIIP {
 					atualiza(id_origem, "PF", null, url);
 				}
 			} else {
-				Integer id_origem = Integer.parseInt(content[1].toString());
+				//Integer id_origem = Integer.parseInt(content[1].toString());
 
 				Query query2 = entityManager.createNativeQuery(
 						"select OF_NUM_ORIGEM,a.ID_OF_CAB,c.ID_REF_ETIQUETA,c.OP_NUM,b.ID_OP_LIN  from RP_OF_OP_CAB a inner join RP_OF_OP_LIN b on a.ID_OP_CAB = b.ID_OP_CAB inner join RP_OF_CAB d on  d.ID_OF_CAB = a.ID_OF_CAB inner join RP_OF_OP_ETIQUETA c on b.ID_OP_LIN = c.ID_OP_LIN  where a.ID_OF_CAB = "
@@ -2187,6 +2225,24 @@ public class SIIP {
 
 	}
 
+	@GET
+	@Path("/validaPostoMatrix/{id}")
+	@Produces("application/json")
+	public List<Object[]> validaPostoMatrix(@PathParam("id") Integer id) {
+
+		Query query_matrix = entityManager
+				.createNativeQuery("select a.ID_OF_CAB,a.OF_NUM,TIPO_POSTO,ID_MAQUINA from RP_OF_CAB a "
+						+ "inner join DOC_DIC_POSTOS b on a.IP_POSTO = b.IP_POSTO "
+						+ "inner join PR_DIC_MAQUINAS_MATRIX c on b.ID_MAQUINA = b.ID_MAQUINA "
+						+ "where a.ID_OF_CAB = :id and b.TIPO_POSTO = 'ETIQUETAS_MATRIX' "
+						+ "and a.MAQ_NUM = c.MAQUINA_SILVER")
+				.setParameter("id", id);
+
+		List<Object[]> dados_matrix = query_matrix.getResultList();
+
+		return dados_matrix;
+	}
+
 	@POST
 	@Path("/ficheiro/{id}/{estado}/{ficheiros}/{manual}")
 	@Produces("application/zip")
@@ -2342,7 +2398,7 @@ public class SIIP {
 		}
 
 		if (estado.equals("C"))
-			ficheiroimprimiretiqueta(ip_posto, id, ficheirosdownload, data);
+			ficheiroimprimiretiqueta(ip_posto, id, ficheirosdownload, data, manual);
 
 		criarFicheiroConsumo(id, ficheirosdownload, data);
 
@@ -2407,7 +2463,7 @@ public class SIIP {
 						"data_cria::" + data_cria, "etiquetas::" + etiquetas };
 				keyValuePairs = keyValuePairs1;
 
-				verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos", "",email_para);
+				verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos", "", email_para);
 
 			} else {
 				etiquetas = "<table  border='1'><tr><th><b>Nº Etiqueta</b></th><th><b>Lote</b></th><th><b>OF Origem</b></th><th><b>Data OF</b></th></tr>";
@@ -2433,7 +2489,7 @@ public class SIIP {
 						"data_cria::" + data_cria, "etiquetas::" + etiquetas };
 				keyValuePairs = keyValuePairs2;
 
-				verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos", "",email_para);
+				verficaEventos(keyValuePairs, "Ao Concluir Trabalho - Alerta Objetivos", "", email_para);
 
 			}
 		}
@@ -2444,6 +2500,20 @@ public class SIIP {
 			Integer id_origem, Integer id_etiqueta, String estado, String nome_ficheiro2, String OP_NUM,
 			String ID_OP_LIN, Boolean cria_pausa, Integer total, Boolean ficheirosdownload, String nomezip,
 			String novaetiqueta, String estado2, Boolean manual, String ip_posto) throws IOException, ParseException {
+
+		if (tipo == "COMP") {
+			Query query_matrix = entityManager.createNativeQuery("select a.ID_OF_CAB,a.OF_NUM from RP_OF_CAB a "
+					+ "inner join DOC_DIC_POSTOS b on a.IP_POSTO = b.IP_POSTO "
+					+ "inner join PR_DIC_MAQUINAS_MATRIX c on b.ID_MAQUINA = b.ID_MAQUINA "
+					+ "where a.ID_OF_CAB = :id and b.TIPO_POSTO = 'ETIQUETAS_MATRIX' "
+					+ "and a.MAQ_NUM = c.MAQUINA_SILVER").setParameter("id", id_origem);
+
+			List<Object[]> dados_matrix = query_matrix.getResultList();
+
+			if (dados_matrix.size() > 0) {
+				return;
+			}
+		}
 
 		String DATA_INI, HORA_INI, DATA_FIM, HORA_FIM, SINAL, QUANT_BOAS_TOTAL, QUANT_BOAS, QUANT_DEF, TEMPO_PREP_TOTAL,
 				TIPO_PARAGEM, MOMENTO_PARAGEM, TEMPO_EXEC_TOTAL = "";
@@ -3438,7 +3508,7 @@ public class SIIP {
 						// TODO Auto-generated catch block
 						String[] keyValuePairs = {
 								"TEXTO_ERRO ::" + e2.getMessage() + " " + file.getAbsolutePath() + "", };
-						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "",null);
+						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "", null);
 						criarfileerro(estado, patherro, data, alteracoes);
 						e2.printStackTrace();
 						return;
@@ -3467,7 +3537,7 @@ public class SIIP {
 						String[] keyValuePairs = {
 								"TEXTO_ERRO ::" + e2.getMessage() + " " + file.getAbsolutePath() + "", };
 						if (file.getAbsolutePath() != null)
-							verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "",null);
+							verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "", null);
 						criarfileerro(estado, patherro, data, alteracoes);
 						e2.printStackTrace();
 						return;
@@ -3506,7 +3576,7 @@ public class SIIP {
 
 		} catch (IOException e) {
 			String[] keyValuePairs = { "TEXTO_ERRO ::" + e.getMessage() + "", };
-			verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "",null);
+			verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "", null);
 			criarfileerro(estado, patherro, data, alteracoes);
 			e.printStackTrace();
 			return;
@@ -3523,7 +3593,7 @@ public class SIIP {
 
 			} catch (IOException ex) {
 				String[] keyValuePairs = { "TEXTO_ERRO ::" + ex.getMessage() + "", };
-				verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "",null);
+				verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "", null);
 				criarfileerro(estado, patherro, data, alteracoes);
 				ex.printStackTrace();
 				return;
@@ -3532,6 +3602,19 @@ public class SIIP {
 	}
 
 	public void criarFicheiroConsumo(Integer id_of_cab, Boolean ficheirosdownload, String nomezip) throws IOException {
+
+		Query query_matrix = entityManager.createNativeQuery("select a.ID_OF_CAB,a.OF_NUM from RP_OF_CAB a "
+				+ "inner join DOC_DIC_POSTOS b on a.IP_POSTO = b.IP_POSTO "
+				+ "inner join PR_DIC_MAQUINAS_MATRIX c on b.ID_MAQUINA = b.ID_MAQUINA "
+				+ "where a.ID_OF_CAB = :id and b.TIPO_POSTO = 'ETIQUETAS_MATRIX' " + "and a.MAQ_NUM = c.MAQUINA_SILVER")
+				.setParameter("id", id_of_cab);
+
+		List<Object[]> dados_matrix = query_matrix.getResultList();
+
+		if (dados_matrix.size() > 0) {
+			return;
+		}
+
 		java.util.Date datacria = new java.util.Date();
 		SimpleDateFormat formate = new SimpleDateFormat("yyyyMMdd");
 		SimpleDateFormat horaformate = new SimpleDateFormat("HHmmss");
@@ -3562,10 +3645,11 @@ public class SIIP {
 		Query query = entityManager.createNativeQuery("DECLARE @ID_OF_CAB int = " + id_of_cab + "; "
 				+ "select t.ETQNUM,e.OF_NUM,e.OP_NUM,e.OP_COD_ORIGEM,e.MAQ_NUM_ORIG,m.DATA_INI_M2,m.HORA_INI_M2,m.DATA_FIM_M2,m.HORA_FIM_M2 "
 				+ ",(select ID_TURNO from RP_CONF_TURNO WHERE m.HORA_INI_M2 > HORA_INICIO and m.HORA_INI_M2 < HORA_FIM) N_EQUIPA,t.PROREF,t.VA1REF,t.VA2REF,t.INDREF,t.INDNUMENR,t.UNICOD, "
-				+ "t.LIECOD,t.EMPCOD,t.ETQORILOT1,t.ETQNUMENR,(d.QUANT_BOAS_M2 + d.QUANT_DEF_M2 ) QUANT,t.LOTNUMENR "
+				+ "t.LIECOD,t.EMPCOD,t.ETQORILOT1,t.ETQNUMENR,"
+				+ " (d.QUANT_BOAS_M2 + CASE WHEN TIPO_PECA  in ('COM','COMS') THEN 0 ELSE d.QUANT_DEF_M2 END) QUANT,t.LOTNUMENR "
 				+ "from RP_OF_CAB a inner join RP_OF_OP_CAB b on a.ID_OF_CAB = b.ID_OF_CAB "
 				+ "inner join RP_OF_OP_LIN c on b.ID_OP_CAB = c.ID_OP_CAB inner join RP_OF_OP_ETIQUETA d on c.ID_OP_LIN = d.ID_OP_LIN "
-				+ "left join (select ETQNUM,PROREF,VA1REF,VA2REF,INDREF,st.INDNUMENR,UNICOD,LIECOD,EMPCOD,ETQORILOT1,ETQNUMENR,sl.LOTNUMENR from SILVER.dbo.SETQDE st "
+				+ "left join (select ETQNUM,st.PROREF,VA1REF,VA2REF,INDREF,st.INDNUMENR,UNICOD,LIECOD,EMPCOD,ETQORILOT1,ETQNUMENR,sl.LOTNUMENR from SILVER.dbo.SETQDE st "
 				+ "left join  SILVER.dbo.STOLOT sl on st.INDNUMENR = sl.INDNUMENR and st.ETQORILOT1 = sl.LOTREF "
 				+ "where ETQNUM in (select RIGHT ('000'+CAST(td.REF_ETIQUETA as varchar(10)),10) from RP_OF_CAB ta inner join RP_OF_OP_CAB tb on ta.ID_OF_CAB = tb.ID_OF_CAB "
 				+ "inner join RP_OF_OP_LIN tc on tb.ID_OP_CAB = tc.ID_OP_CAB inner join RP_OF_OP_ETIQUETA td on tc.ID_OP_LIN = td.ID_OP_LIN) "
@@ -3573,7 +3657,7 @@ public class SIIP {
 				+ "left join (select * from RP_OF_CAB where ID_OF_CAB = @ID_OF_CAB) e on  a.ID_OF_CAB_ORIGEM = e.ID_OF_CAB "
 				+ "left join (select g.ID_OF_CAB,h.* from RP_OF_CAB f inner join RP_OF_OP_CAB g on f.ID_OF_CAB = g.ID_OF_CAB "
 				+ "inner join RP_OF_OP_FUNC h on g.ID_OP_CAB = h.ID_OP_CAB and f.ID_UTZ_CRIA = h.ID_UTZ_CRIA where f.ID_OF_CAB = @ID_OF_CAB) m on a.ID_OF_CAB_ORIGEM = m.ID_OF_CAB "
-				+ "where a.ID_OF_CAB_ORIGEM = @ID_OF_CAB and (d.QUANT_BOAS_M2 + d.QUANT_DEF_M2 ) > 0");
+				+ "where a.ID_OF_CAB_ORIGEM = @ID_OF_CAB and (d.QUANT_BOAS_M2 + CASE WHEN TIPO_PECA in ('COM','COMS') THEN 0 ELSE d.QUANT_DEF_M2 END ) > 0");
 
 		dados = query.getResultList();
 
@@ -3845,7 +3929,7 @@ public class SIIP {
 				file2.createNewFile();
 			} catch (IOException e2) {
 				String[] keyValuePairs = { "TEXTO_ERRO ::" + e2.getMessage() + " " + file2.getAbsolutePath() + "", };
-				verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "",null);
+				verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "", null);
 				e2.printStackTrace();
 			}
 		}
@@ -3877,7 +3961,7 @@ public class SIIP {
 					} catch (IOException e1) {
 						String[] keyValuePairs = {
 								"TEXTO_ERRO ::" + e1.getMessage() + " " + file2.getAbsolutePath() + "", };
-						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "",null);
+						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "", null);
 						e1.printStackTrace();
 					}
 				}
@@ -3887,7 +3971,7 @@ public class SIIP {
 					} catch (IOException e1) {
 						String[] keyValuePairs = {
 								"TEXTO_ERRO ::" + e1.getMessage() + " " + file2.getAbsolutePath() + "", };
-						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "",null);
+						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "", null);
 						e1.printStackTrace();
 					}
 				}
@@ -3898,7 +3982,7 @@ public class SIIP {
 
 		{
 			String[] keyValuePairs = { "TEXTO_ERRO ::" + err + "", };
-			verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", path_error,null);
+			verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", path_error, null);
 		}
 	}
 
@@ -4324,7 +4408,7 @@ public class SIIP {
 				// TODO Auto-generated catch block
 				String[] keyValuePairs = { "TEXTO_ERRO ::" + e2.getMessage() + " " + file2.getAbsolutePath() + "", };
 				if (file2.getAbsolutePath() != null)
-					verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "",null);
+					verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "", null);
 				criar_ficheiro_Pausa(data, path_error, count, false, nomeficheiro, nomezip, path_error);
 				e2.printStackTrace();
 				return;
@@ -4653,8 +4737,20 @@ public class SIIP {
 
 	}
 
-	public void ficheiroimprimiretiqueta(String ip_posto, Integer ID, Boolean ficheirosdownload, String nomezip)
-			throws IOException {
+	public void ficheiroimprimiretiqueta(String ip_posto, Integer ID, Boolean ficheirosdownload, String nomezip,
+			Boolean manual) throws IOException {
+
+		Query query_matrix = entityManager.createNativeQuery("select a.ID_OF_CAB,a.OF_NUM from RP_OF_CAB a "
+				+ "inner join DOC_DIC_POSTOS b on a.IP_POSTO = b.IP_POSTO "
+				+ "inner join PR_DIC_MAQUINAS_MATRIX c on b.ID_MAQUINA = b.ID_MAQUINA "
+				+ "where a.ID_OF_CAB = :id and b.TIPO_POSTO = 'ETIQUETAS_MATRIX' "
+				+ "and a.MAQ_NUM = c.MAQUINA_SILVER ").setParameter("id", ID);
+
+		List<Object[]> dados_matrix = query_matrix.getResultList();
+
+		if (dados_matrix.size() > 0) {
+			return;
+		}
 
 		String modelo_REPORT = "";
 		String nomeimpressora = "";
@@ -4684,7 +4780,7 @@ public class SIIP {
 		List<Object[]> dados_folder = query_folder.getResultList();
 
 		Query query_etiquetas = entityManager.createNativeQuery(
-				"select (c.QUANT_ETIQUETA - (c.QUANT_BOAS_M2 +   c.QUANT_DEF_M2)) QUANT, e.ETQNUM,b.REF_NUM,PRODES1,PRODES2,c.REF_LOTE as ETQORILOT1"
+				"select (c.QUANT_ETIQUETA - (c.QUANT_BOAS_M2 +  CASE WHEN TIPO_PECA in ('COM','COMS') THEN 0 ELSE c.QUANT_DEF_M2 END)) QUANT, e.ETQNUM,b.REF_NUM,PRODES1,PRODES2,c.REF_LOTE as ETQORILOT1"
 						+ ",e.DATCRE,e.UNICOD,ETQORIDOC1 from RP_OF_OP_CAB a "
 						+ "inner join RP_OF_OP_LIN b on a.ID_OP_CAB = b.ID_OP_CAB "
 						+ "INNER join RP_OF_CAB d on  d.ID_OF_CAB = a.ID_OF_CAB "
@@ -4693,7 +4789,7 @@ public class SIIP {
 						+ "inner join SILVER.dbo.SDTPRA g on h.PROREF = g.PROREF) e on e.ETQNUM = RIGHT(CONCAT('000', c.REF_ETIQUETA) ,10) "
 						+ "where   a.ID_OF_CAB in (select ID_OF_CAB from RP_OF_CAB where ID_OF_CAB_ORIGEM = " + ID
 						+ ") "
-						+ "and b.TIPO_PECA not in ('COM','COMS') AND  (c.QUANT_ETIQUETA - (c.QUANT_BOAS_M2 +   c.QUANT_DEF_M2)) > 0");
+						+ "/*and b.TIPO_PECA not in ('COM','COMS')*/ AND  (c.QUANT_ETIQUETA - (c.QUANT_BOAS_M2 +   CASE WHEN TIPO_PECA in ('COM','COMS') THEN 0 ELSE c.QUANT_DEF_M2 END)) > 0");
 
 		List<Object[]> dados_etiqeutas = query_etiquetas.getResultList();
 
@@ -4725,9 +4821,9 @@ public class SIIP {
 			UNIDADE = value[7].toString();
 			ETIQUETA = value[1].toString();
 			PROREF = value[2].toString();
-			ETQORILOT1 = value[5].toString();
-			DESC1 = value[3].toString();
-			DESC2 = value[4].toString();
+			ETQORILOT1 = (value[5] == null) ? "" : value[5].toString();
+			DESC1 = (value[3] == null) ? "" : value[3].toString();
+			DESC2 = (value[4] == null) ? "" : value[4].toString();
 			ETQORIDOC1 = value[8].toString();
 
 			java.util.Date date1 = null;
@@ -4795,8 +4891,17 @@ public class SIIP {
 
 		if (count > 0) {
 			if (!ficheirosdownload) {
-				if (!path2.isEmpty())
+				if (!path2.isEmpty()) {
 					criar_ficheiro(data_etiq, path2, path_error, false, "");
+					ConnectProgress connectionProgress = new ConnectProgress();
+					try {
+						if (!manual)
+							connectionProgress.EXEC_SINCRO2(ETIQUETA, Float.parseFloat(QUANT), getURL());
+					} catch (SQLException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
 			} else {
 
 				Map<String, String> env = new HashMap<>();
@@ -5157,6 +5262,58 @@ public class SIIP {
 	public String getData(@Context HttpServletRequest request) {
 		String ip = request.getRemoteAddr();
 		return ip;
+	}
+
+	@POST
+	@Path("/INSERT_RP_OF_OP_ETIQUETA_MATRIX")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public List<Object[]> INSERT_RP_OF_OP_ETIQUETA_MATRIX(final List<HashMap<String, String>> dados) {
+
+		HashMap<String, String> firstMap = dados.get(0);
+		String ETIQUETA = firstMap.get("ETIQUETA");
+		String ID_OF_CAB = firstMap.get("ID_OF_CAB");
+		String IP_POSTO = firstMap.get("IP_POSTO");
+		String ID_OP_LIN = firstMap.get("ID_OP_LIN");
+		String ID_REF_ETIQ = firstMap.get("ID_REF_ETIQ");
+		String ID_MAQUINA = firstMap.get("ID_MAQUINA");
+		String USER = firstMap.get("USER");
+		String PROGRAMA = firstMap.get("PROGRAMA");
+
+		if (ETIQUETA != null)
+			ETIQUETA = "'" + ETIQUETA + "'";
+
+		if (IP_POSTO != null)
+			IP_POSTO = "'" + IP_POSTO + "'";
+
+		if (USER != null)
+			USER = "'" + USER + "'";
+
+		if (PROGRAMA != null)
+			PROGRAMA = "'" + PROGRAMA + "'";
+
+		Query query_folder = entityManager.createNativeQuery(
+				"EXEC INSERT_RP_OF_OP_ETIQUETA_MATRIX " + ID_OF_CAB + "," + IP_POSTO + "," + ID_OP_LIN + ","
+						+ ID_REF_ETIQ + "," + ETIQUETA + "," + USER + "," + PROGRAMA + "," + ID_MAQUINA);
+
+		List<Object[]> dados_folder = query_folder.getResultList();
+
+		return dados_folder;
+	}
+
+	@GET
+	@Path("/REMOVE_RP_OF_OP_ETIQUETA_MATRIX/{id}/{force}/{user}")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public List<Object[]> REMOVE_RP_OF_OP_ETIQUETA_MATRIX(@PathParam("id") Integer id,
+			@PathParam("force") Integer force, @PathParam("user") String user) {
+
+		Query query_folder = entityManager
+				.createNativeQuery("EXEC REMOVE_RP_OF_OP_ETIQUETA_MATRIX " + id + "," + force + ", '" + user + "'");
+
+		List<Object[]> dados_folder = query_folder.getResultList();
+
+		return dados_folder;
 	}
 
 }

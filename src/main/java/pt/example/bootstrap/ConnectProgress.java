@@ -2,6 +2,7 @@ package pt.example.bootstrap;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -481,9 +482,9 @@ public class ConnectProgress {
 				+ "left join SDTPRA b on a.PROREF = b.PROREF "
 				+ "left join SDTZPA c on b.ZPANUM = c.ZPANUM and  c.zpacod='ALER' " + "where a.OFANUMENR = '"
 				+ OFANUMENR + "' and  (a.NCLACTCST = 0 AND b.PROTYPCOD not like 'EMB%' /*AND b.PROTYPCOD != 'COM'*/)"; // AND
-																								// b.PROTYPCOD
-																								// !=
-																								// 'COM'
+		// b.PROTYPCOD
+		// !=
+		// 'COM'
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
@@ -692,7 +693,13 @@ public class ConnectProgress {
 				+ "left JOIN SDTPRA AS A ON E.proref = A.proref L"
 				+ "EFT JOIN STOLOT AS L ON E.indnumenr = L.indnumenr AND E.etqorilot1 = L.lotref 	"
 				+ "WHERE E.etqetat='1' AND E.etqsitsto='2' and E.proref='" + PROREF
-				+ "' 	ORDER BY L.DATCRE, E.etqnum";
+				+ "' and e.ETQNUM not in (select a.REF_ETIQUETA from SGIID.dbo.RP_OF_OP_ETIQUETA a "
+				+ "inner join SGIID.dbo.RP_OF_OP_LIN b on a.ID_OP_LIN = b.ID_OP_LIN "
+				+ "inner join SGIID.dbo.RP_OF_OP_CAB c on b.ID_OP_CAB = c.ID_OP_CAB "
+				+ "inner join SGIID.dbo.RP_OF_CAB d on c.ID_OF_CAB = d.ID_OF_CAB "
+				+ "where d.ID_OF_CAB in (select ID_OF_CAB from SGIID.dbo.RP_OF_CAB WHERE ESTADO in ('E','S','P') and ID_OF_CAB_ORIGEM is null) "
+				+ "or d.ID_OF_CAB_ORIGEM in (select ID_OF_CAB from SGIID.dbo.RP_OF_CAB WHERE ESTADO in ('E','S','P') and ID_OF_CAB_ORIGEM is null) "
+				+ ")	ORDER BY L.DATCRE, E.etqnum";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
@@ -723,6 +730,43 @@ public class ConnectProgress {
 			globalconnection.close();
 		}
 		return list;
+	}
+
+	public void EXEC_SINCRO2(String etqnum, Float qtd, String url) throws SQLException {
+
+		try {
+
+			Connection connection = getConnection(url);
+
+			String sql = "UPDATE SETQDE set ETQEMBQTE = " + qtd + "where etqnum = '" + etqnum + "'";
+			PreparedStatement ps = connection.prepareStatement(sql);
+
+			boolean results = ps.execute();
+			int rsCount = 0;
+			// Loop through the available result sets.
+			while (results) {
+
+				ResultSet rs = ps.getResultSet();
+
+				while (rs.next()) {
+					// System.out.println(rs.getString("message"));
+				}
+				rs.close();
+
+				// Check for next result set
+				results = ps.getMoreResults();
+			}
+			ps.close();
+
+			connection.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			globalconnection.close();
+			// System.exit(2);
+		} finally {
+
+		}
+
 	}
 
 	public List<HashMap<String, String>> getEtiqueta(String etiqueta, String url) throws SQLException {
@@ -758,6 +802,15 @@ public class ConnectProgress {
 				x.put("PROREF", rs.getString("PROREF"));
 				x.put("OFDATFR", rs.getString("OFDATFR"));
 				x.put("PROREFCOMP", rs.getString("PROREFCOMP"));
+
+				ArrayList<String> result = getDadosEtiquetaTotal(url, etiqueta);
+
+				if (result != null) {
+					x.put("EXISTE_ETIQUETAS", result.get(0));
+				} else {
+					x.put("EXISTE_ETIQUETAS", "0");
+				}
+
 				list.add(x);
 			}
 			stmt.close();
@@ -770,6 +823,47 @@ public class ConnectProgress {
 			globalconnection.close();
 		}
 		return list;
+	}
+
+	public ArrayList<String> getDadosEtiquetaTotal(String url, String etiqueta) throws SQLException {
+
+		if (etiqueta == null) {
+			return null;
+		}
+
+		String query = "select count(*) AS TOTAL from SGIID.dbo.RP_OF_OP_ETIQUETA a "
+				+ "inner join SGIID.dbo.RP_OF_OP_LIN b on a.ID_OP_LIN = b.ID_OP_LIN "
+				+ "inner join SGIID.dbo.RP_OF_OP_CAB c on b.ID_OP_CAB = c.ID_OP_CAB "
+				+ "inner join SGIID.dbo.RP_OF_CAB d on c.ID_OF_CAB = d.ID_OF_CAB "
+				+ "where d.ID_OF_CAB in (select ID_OF_CAB from SGIID.dbo.RP_OF_CAB WHERE ESTADO in ('E','S','P') and ID_OF_CAB_ORIGEM is null) "
+				+ "or d.ID_OF_CAB_ORIGEM in (select ID_OF_CAB from SGIID.dbo.RP_OF_CAB WHERE ESTADO in ('E','S','P') and ID_OF_CAB_ORIGEM is null) "
+				+ "and a.REF_ETIQUETA = " + etiqueta + " "
+				+ " and NOT EXISTS(select a.ID_OF_CAB,a.OF_NUM from SGIID.dbo.RP_OF_CAB a "
+				+ " inner join SGIID.dbo.DOC_DIC_POSTOS b on a.IP_POSTO = b.IP_POSTO "
+				+ " inner join SGIID.dbo.PR_DIC_MAQUINAS_MATRIX c on b.ID_MAQUINA = b.ID_MAQUINA "
+				+ " where a.ID_OF_CAB = d.ID_OF_CAB_ORIGEM and b.TIPO_POSTO = 'ETIQUETAS_MATRIX' and a.MAQ_NUM = c.MAQUINA_SILVER)";
+
+		ArrayList<String> result = null;
+
+		// Usa sempre assim que fecha os resources automaticamente
+		try (Connection connection = getConnection(url);
+				Statement stmt = connection.createStatement();
+				ResultSet rs = stmt.executeQuery(query)) {
+			while (rs.next()) {
+				result = new ArrayList<>();
+				result.add(0, rs.getString("TOTAL"));
+			}
+
+			stmt.close();
+			rs.close();
+			connection.close();
+			globalconnection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			globalconnection.close();
+		}
+		return result;
 	}
 
 	public List<HashMap<String, String>> getEtiquetacaixas(String etiqueta, String url) throws SQLException {
@@ -811,7 +905,7 @@ public class ConnectProgress {
 		}
 		return list;
 	}
-	
+
 	public List<HashMap<String, String>> getEtiquetacaixaMatrix(String etiqueta, String url) throws SQLException {
 
 		String query = "EXEC GET_ETIQUETAS_CAIXA_MATRIX '" + etiqueta + "'";
@@ -826,7 +920,7 @@ public class ConnectProgress {
 				x.put("ETQEMBQTE", rs.getString("ETQEMBQTE"));
 				x.put("PROREF", rs.getString("PROREF"));
 				x.put("ETQCLIREF", rs.getString("ETQCLIREF"));
-				
+
 				list.add(x);
 			}
 			stmt.close();
@@ -840,7 +934,6 @@ public class ConnectProgress {
 		}
 		return list;
 	}
-
 
 	public List<HashMap<String, String>> gama_embalagem(String proref, String ID_OF_CAB, String url)
 			throws SQLException {
@@ -872,11 +965,11 @@ public class ConnectProgress {
 		}
 		return list;
 	}
-	
-	public List<HashMap<String, String>> valida_REFERENCIA_CONTROLO_ETIQUETAS(String proref , String url)
+
+	public List<HashMap<String, String>> valida_REFERENCIA_CONTROLO_ETIQUETAS(String proref, String url)
 			throws SQLException {
 
-		String query = "select proref,etqcliref from SILVER_BI.dbo.SETQDE where etqcliref ='"+proref+"')";
+		String query = "select proref,etqcliref from SILVER_BI.dbo.SETQDE where etqcliref ='" + proref + "')";
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
 
 		try (Connection connection = getConnection(url);
@@ -1033,8 +1126,8 @@ public class ConnectProgress {
 		 * "INNER JOIN SOFB e ON d.OFANUMENR = e.ofanumenr " +
 		 * "WHERE b.rescod ='"+RESCOD+"' AND b.DATDEB='"+DATDEB+"'	" +
 		 * "AND e.PROREF ='"+PROREF+"' AND c.OFNUM='"+OFNUM+"' AND d.OPECOD='"
-		 * +OPECOD+"'"; String query = "SELECT top 1 b.OPENUM FROM SCPSVA	a "
-		 * + "INNER JOIN SOFD b ON a.OFANUMENR = b.OFANUMENR " +
+		 * +OPECOD+"'"; String query = "SELECT top 1 b.OPENUM FROM SCPSVA	a " +
+		 * "INNER JOIN SOFD b ON a.OFANUMENR = b.OFANUMENR " +
 		 * " INNER JOIN SOFA c ON a.ofanumenr = c.ofanumenr " +
 		 * "INNER JOIN SOFB e ON c.OFANUMENR = e.ofanumenr " +
 		 * "WHERE a.rescod ='"+RESCOD+"' AND a.DATDEB='"
@@ -1079,11 +1172,11 @@ public class ConnectProgress {
 		 * "INNER JOIN SOFA ON SOFD.ofanumenr = SOFA.ofanumenr " +
 		 * "INNER JOIN SOFB ON SOFB.ofanumenr = SOFA.ofanumenr " +
 		 * "INNER JOIN SCPSVQ ON SCPSVQ.SVANUMENR = (CASE WHEN SCPSVA.SVANUMORI = 0 THEN SCPSVA.SVANUMENR ELSE SCPSVA.SVANUMORI END) "
-		 * + "WHERE SCPSVA.rescod = '" + RESCOD + "' AND SCPSVA.datdeb = '" +
-		 * DATDEB + "' AND SCPSVA.heudeb = '" + HEUDEB.substring(0, 8) +
-		 * "' AND SOFA.ofnum = '" + OFNUM + "' AND SOFD.opecod = '" + OPECOD +
-		 * "' " + "AND SCPSVQ.QTERB = " + BOAS + " AND SCPSVQ.QTERR = " +
-		 * DEFEITOS + " AND SOFB.PROREF = '" + PROREF + "'";
+		 * + "WHERE SCPSVA.rescod = '" + RESCOD + "' AND SCPSVA.datdeb = '" + DATDEB +
+		 * "' AND SCPSVA.heudeb = '" + HEUDEB.substring(0, 8) + "' AND SOFA.ofnum = '" +
+		 * OFNUM + "' AND SOFD.opecod = '" + OPECOD + "' " + "AND SCPSVQ.QTERB = " +
+		 * BOAS + " AND SCPSVQ.QTERR = " + DEFEITOS + " AND SOFB.PROREF = '" + PROREF +
+		 * "'";
 		 */
 
 		String query = "SELECT SOFD.OPENUM FROM SCPSVA " + "INNER JOIN SOFD ON SCPSVA.ofdnumenr = SOFD.ofdnumenr "
