@@ -39,6 +39,8 @@ public class RP_OF_CAB {
 	private String ESTADO_INICIAL;
 	private String IP_POSTO;
 	private String IP_POSTO_FINAL;
+	private Boolean PRIMEIRA_OPENUM;
+	private Boolean ULTIMA_OPENUM;
 
 	@Id
 	@Column(name = "ID_OF_CAB")
@@ -266,7 +268,7 @@ public class RP_OF_CAB {
 	public void setIP_POSTO(String iP_POSTO) {
 		IP_POSTO = iP_POSTO;
 	}
-	
+
 	@Column(name = "IP_POSTO_FINAL")
 	public String getIP_POSTO_FINAL() {
 		return IP_POSTO_FINAL;
@@ -274,6 +276,24 @@ public class RP_OF_CAB {
 
 	public void setIP_POSTO_FINAL(String iP_POSTO_FINAL) {
 		IP_POSTO_FINAL = iP_POSTO_FINAL;
+	}
+
+	@Column(name = "PRIMEIRA_OPENUM")
+	public Boolean getPRIMEIRA_OPENUM() {
+		return PRIMEIRA_OPENUM;
+	}
+
+	@Column(name = "ULTIMA_OPENUM")
+	public Boolean getULTIMA_OPENUM() {
+		return ULTIMA_OPENUM;
+	}
+
+	public void setPRIMEIRA_OPENUM(Boolean pRIMEIRA_OPENUM) {
+		PRIMEIRA_OPENUM = pRIMEIRA_OPENUM;
+	}
+
+	public void setULTIMA_OPENUM(Boolean uLTIMA_OPENUM) {
+		ULTIMA_OPENUM = uLTIMA_OPENUM;
 	}
 
 }

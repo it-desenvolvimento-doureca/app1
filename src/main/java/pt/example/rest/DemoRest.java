@@ -44,16 +44,28 @@ public class DemoRest {
 		List<HashMap<String, String>> dados = connectionProgress.getofpai_filho(ofnum, getURL());
 		return dados;
 	}
-
+	
 	@GET
-	@Path("/operacao/{ofanumenr}")
+	@Path("/getEtiquetasTrabalho/{id_of_cab}")
 	@Produces("application/json")
-	public List<HashMap<String, String>> operacao(@PathParam("ofanumenr") String ofanumenr)
+	public List<HashMap<String, String>> getEtiquetasTrabalho(@PathParam("id_of_cab") String id_of_cab)
 			throws SQLException, ClassNotFoundException {
 
 		ConnectProgress connectionProgress = new ConnectProgress();
 
-		List<HashMap<String, String>> dados = connectionProgress.getOP(ofanumenr, getURL());
+		List<HashMap<String, String>> dados = connectionProgress.getEtiquetasTrabalho(id_of_cab, getURL());
+		return dados;
+	}
+
+	@GET
+	@Path("/operacao/{ofanumenr}")
+	@Produces("application/json")
+	public List<HashMap<String, Object>> operacao(@PathParam("ofanumenr") String ofanumenr)
+			throws SQLException, ClassNotFoundException {
+
+		ConnectProgress connectionProgress = new ConnectProgress();
+
+		List<HashMap<String, Object>> dados = connectionProgress.getOP(ofanumenr, getURL());
 		return dados;
 	}
 
@@ -280,6 +292,18 @@ public class DemoRest {
 		return dados;
 	}
 
+	@GET
+	@Path("/getDefeitosOFNUM/{ofnum}")
+	@Produces("application/json")
+	public List<HashMap<String, String>> getDefeitosOFNUM(@PathParam("ofnum") String ofnum)
+			throws SQLException, ClassNotFoundException {
+
+		ConnectProgress connectionProgress = new ConnectProgress();
+
+		List<HashMap<String, String>> dados = connectionProgress.getDefeitosOFNUM(ofnum, getURL());
+		return dados;
+	}
+	
 	@GET
 	@Path("/consulta_Impressao/{proref}")
 	@Produces("application/json")

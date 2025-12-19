@@ -1,5 +1,7 @@
 package pt.example.entity;
 
+import java.math.BigDecimal;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -33,6 +35,7 @@ public class RP_OF_OP_LIN {
 	private String GESCOD;
 	private Boolean PROQTEFMT;
 	private String TIPO_PECA;
+	private BigDecimal NCLQTE;
 
 	@Id
 	@Column(name = "ID_OP_LIN")
@@ -233,5 +236,16 @@ public class RP_OF_OP_LIN {
 	public void setTIPO_PECA(String tIPO_PECA) {
 		TIPO_PECA = tIPO_PECA;
 	}
+
+	@Column(name = "NCLQTE")
+	public BigDecimal getNCLQTE() {
+		return NCLQTE;
+	}
+
+	public void setNCLQTE(BigDecimal nCLQTE) {
+		NCLQTE = nCLQTE;
+	}
+	
+	
 
 }

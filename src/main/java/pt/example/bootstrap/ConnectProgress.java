@@ -111,7 +111,7 @@ public class ConnectProgress {
 
 	public List<HashMap<String, String>> getofpai_filho(String ofnum, String url) throws SQLException {
 
-		String query = "select a.PROREF, (select f.proref from SDTPRC f where a.indnumcse = f.indnumenr ) PAI from SOFC a "
+		String query = "select a.PROREF, (select f.proref from SDTPRC f where a.indnumcse = f.indnumenr ) PAI,NCLQTE from SOFC a "
 				+ "inner join SOFA b on a.OFANUMENR = b.OFANUMENR " + "LEFT JOIN SDTPRA p ON p.proref= a.proref "
 				+ "where b.OFNUM= '" + ofnum + "'and  (p.PROTYPCOD != 'EMBA') ";
 
@@ -125,6 +125,7 @@ public class ConnectProgress {
 				HashMap<String, String> x = new HashMap<>();
 				x.put("PROREF", rs.getString("PROREF"));
 				x.put("PAI", rs.getString("PAI"));
+				x.put("NCLQTE", rs.getString("NCLQTE"));
 				list.add(x);
 			}
 			stmt.close();
@@ -139,24 +140,28 @@ public class ConnectProgress {
 		return list;
 	}
 
-	public List<HashMap<String, String>> getOP(String ofanumenr, String url) throws SQLException {
+	public List<HashMap<String, Object>> getOP(String ofanumenr, String url) throws SQLException {
 
-		String query = "select OPECOD,OPENUM,OPEDES,SECNUMENR1 from SOFD where ofanumenr= '" + ofanumenr
-				+ "' order by OPENUM";
+		String query = " SELECT OPECOD,OPENUM,OPEDES,SECNUMENR1, "
+				+ "CASE WHEN OPENUM = MAX(CASE WHEN RETOUCHE = 0 THEN OPENUM END) OVER (PARTITION BY ofanumenr) AND RETOUCHE = 0 THEN 1 ELSE 0 END AS ULTIMA_OPENUM, "
+				+ "CASE WHEN OPENUM = MIN(CASE WHEN RETOUCHE = 0 THEN OPENUM END) OVER (PARTITION BY ofanumenr) AND RETOUCHE = 0 THEN 1 ELSE 0 END AS PRIMEIRA_OPENUM "
+				+ "FROM SOFD WHERE ofanumenr = '"+ ofanumenr +"' order by OPENUM";
 
-		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
+		List<HashMap<String, Object>> list = new ArrayList<HashMap<String, Object>>();
 
 		// Usa sempre assim que fecha os resources automaticamente
 		try (Connection connection = getConnection(url);
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
-				HashMap<String, String> x = new HashMap<>();
+				
+				HashMap<String, Object> x = new HashMap<>();
 				x.put("OPECOD", rs.getString("OPECOD"));
 				x.put("OPENUM", rs.getString("OPENUM"));
 				x.put("OPEDES", rs.getString("OPEDES"));
 				x.put("SECNUMENR1", rs.getString("SECNUMENR1"));
+				x.put("ULTIMA_OPENUM", rs.getBoolean("ULTIMA_OPENUM"));
+				x.put("PRIMEIRA_OPENUM", rs.getBoolean("PRIMEIRA_OPENUM"));
 				list.add(x);
 			}
 			stmt.close();
@@ -182,7 +187,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("OPECOD", rs.getString("OPECOD"));
 				x.put("OPEDES", rs.getString("OPEDES"));
@@ -222,7 +227,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("OPECOD", rs.getString("OPECOD"));
 				x.put("OPEDES", rs.getString("OPEDES"));
@@ -261,7 +266,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("FAMCOD", rs.getString("FAMCOD"));
 				x.put("FAMLIB", rs.getString("FAMLIB"));
@@ -290,7 +295,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("ARRCOD", rs.getString("ARRCOD"));
 				x.put("arrlib", rs.getString("arrlib"));
@@ -320,7 +325,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("SECTYP", rs.getString("SECTYP"));
 				x.put("OPECOD", rs.getString("OPECOD"));
@@ -354,7 +359,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("SECCOD", rs.getString("SECCOD"));
 				x.put("ssecod", rs.getString("ssecod"));
@@ -387,7 +392,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("ssecod", rs.getString("ssecod"));
 				x.put("SSEDES", rs.getString("SSEDES"));
@@ -416,7 +421,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("fam", rs.getString("fam"));
 				// x.put("SSEDES", rs.getString("SSEDES"));
@@ -450,7 +455,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("PROREF", rs.getString("PROREF"));
 				x.put("PRODES1", rs.getString("PRODES1"));
@@ -478,7 +483,7 @@ public class ConnectProgress {
 
 	public List<HashMap<String, String>> getfilhosprimeiro(String OFANUMENR, String url) throws SQLException {
 
-		String query = "select b.PROREF,b.PRODES1,b.PRODES2,b.PRDFAMCOD,c.ZPAVAL,b.GESCOD,b.PROQTEFMT,b.PROTYPCOD from SOFC  a "
+		String query = "select b.PROREF,b.PRODES1,b.PRODES2,b.PRDFAMCOD,c.ZPAVAL,b.GESCOD,b.PROQTEFMT,b.PROTYPCOD,NCLQTE from SOFC  a "
 				+ "left join SDTPRA b on a.PROREF = b.PROREF "
 				+ "left join SDTZPA c on b.ZPANUM = c.ZPANUM and  c.zpacod='ALER' " + "where a.OFANUMENR = '"
 				+ OFANUMENR + "' and  (a.NCLACTCST = 0 AND b.PROTYPCOD not like 'EMB%' /*AND b.PROTYPCOD != 'COM'*/)"; // AND
@@ -493,7 +498,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("PROREF", rs.getString("PROREF"));
 				x.put("PRODES1", rs.getString("PRODES1"));
@@ -503,6 +508,7 @@ public class ConnectProgress {
 				x.put("GESCOD", rs.getString("GESCOD"));
 				x.put("PROQTEFMT", rs.getString("PROQTEFMT"));
 				x.put("PROTYPCOD", rs.getString("PROTYPCOD"));
+				x.put("NCLQTE", rs.getString("NCLQTE"));
 				list.add(x);
 			}
 			stmt.close();
@@ -520,8 +526,8 @@ public class ConnectProgress {
 	public List<HashMap<String, String>> getOrigineComposant(String url, String PROREF, String OF) throws SQLException {
 
 		String query = "select a.PROREF,a.OFANUMENR,a.NCLRANG,a.INDNUMCSE,"
-				+ "(select f.proref from SDTPRC f where a.indnumcse = f.indnumenr ) PAI from SOFC a "
-				+ "inner join SOFA b on a.OFANUMENR = b.OFANUMENR " + "where b.OFNUM= '" + OF + "' and PROREF = '"
+				+ "(select f.proref from SDTPRC f  with(nolock) where a.indnumcse = f.indnumenr ) PAI from SOFC a   with(nolock)"
+				+ "inner join SOFA b  with(nolock) on a.OFANUMENR = b.OFANUMENR " + "where b.OFNUM= '" + OF + "' and PROREF = '"
 				+ PROREF + "'";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
@@ -561,7 +567,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("QUACOD", rs.getString("QUACOD"));
 				x.put("QUALIB", rs.getString("QUALIB"));
@@ -590,7 +596,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("QUACOD", rs.getString("QUACOD"));
 				x.put("QUALIB", rs.getString("QUALIB"));
@@ -624,7 +630,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("PROREF", rs.getString("PROREF"));
 				x.put("PRODES1", rs.getString("PRODES1"));
@@ -666,7 +672,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("OPECOD", rs.getString("OPECOD"));
 				x.put("OPENUM", rs.getString("OPENUM"));
@@ -708,7 +714,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("REF", rs.getString("Ref"));
 				x.put("DESREF", rs.getString("DesRef"));
@@ -778,7 +784,7 @@ public class ConnectProgress {
 		 * "inner join SOFA b on b.ofnum = left(a.etqoridoc1,10) inner join SOFB c on b.ofanumenr = c.ofanumenr"
 		 * + " where a.etqnum = '" + etiqueta + "'";
 		 */
-		String query = "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,c.INDNUMENR,c.VA1REF,c.VA2REF,c.INDREF,c.PROREF,b.OFDATFR,a.PROREF as PROREFCOMP from SETQDE a "
+		String query = "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,c.INDNUMENR,c.VA1REF,c.VA2REF,c.INDREF,c.PROREF,b.OFDATFR,a.PROREF as PROREFCOMP,a.ETQORILOT1 ,a.ETQORIQTE1 from SETQDE a "
 				+ "LEFT join SOFB c on  c.ofbnumenr = a.orinumenr LEFT join SOFA b on b.ofanumenr = c.ofanumenr "
 				+ " where a.etqnum = '" + etiqueta + "'";
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
@@ -789,7 +795,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("OFNUM", rs.getString("OFNUM"));
 				x.put("ofanumenr", rs.getString("ofanumenr"));
@@ -802,6 +808,8 @@ public class ConnectProgress {
 				x.put("PROREF", rs.getString("PROREF"));
 				x.put("OFDATFR", rs.getString("OFDATFR"));
 				x.put("PROREFCOMP", rs.getString("PROREFCOMP"));
+				x.put("ETQORILOT1", rs.getString("ETQORILOT1"));
+				x.put("ETQORIQTE1", rs.getString("ETQORIQTE1"));
 
 				ArrayList<String> result = getDadosEtiquetaTotal(url, etiqueta);
 
@@ -824,6 +832,45 @@ public class ConnectProgress {
 		}
 		return list;
 	}
+	
+	public List<HashMap<String, String>> getDefeitosOFNUM(String ofnum, String url) throws SQLException {
+
+		String query = "select  d.quacod Defeito,e.qualib DescDefeito,d.QTERR qtd ,f.OPEDES Familia from SOFA a "
+				+ "INNER JOIN SOFB b on a.OFANUMENR = b.OFANUMENR "
+				+ "INNER JOIN SCPSVQ c  on b.OFBNUMENR = c.OFBNUMENR "
+				+ "INNER JOIN SCPSVR d ON d.svanumenr = c.svanumenr AND d.indnumenr = c.indnumenr AND d.ofbchrono = c.ofbchrono  "
+				+ "LEFT JOIN SPAQUA e ON e.quacod = d.quacod  "
+				+ "LEFT JOIN SDTOPP f ON LEFT(d.quacod,2) = f.OPECOD "
+				+ "where a.OFNUM = '" + ofnum + "' AND d.QTERR > 0 ";
+		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
+
+		// System.out.println(query);
+		// Usa sempre assim que fecha os resources automaticamente
+		try (Connection connection = getConnection(url);
+				Statement stmt = connection.createStatement();
+				ResultSet rs = stmt.executeQuery(query)) {
+			while (rs.next()) {
+				
+				HashMap<String, String> x = new HashMap<>();
+				x.put("Defeito", rs.getString("Defeito"));
+				x.put("DescDefeito", rs.getString("DescDefeito"));
+				x.put("qtd", rs.getString("qtd"));
+				x.put("Familia", rs.getString("Familia"));
+
+				list.add(x);
+			}
+			stmt.close();
+			rs.close();
+			connection.close();
+			// globalconnection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			globalconnection.close();
+		}
+		return list;
+	}
+	
 
 	public ArrayList<String> getDadosEtiquetaTotal(String url, String etiqueta) throws SQLException {
 
@@ -878,7 +925,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("OFNUM", rs.getString("OFNUM"));
 				x.put("ofanumenr", rs.getString("ofanumenr"));
@@ -915,12 +962,40 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("ETQEMBQTE", rs.getString("ETQEMBQTE"));
 				x.put("PROREF", rs.getString("PROREF"));
 				x.put("ETQCLIREF", rs.getString("ETQCLIREF"));
 
+				list.add(x);
+			}
+			stmt.close();
+			rs.close();
+			connection.close();
+			// globalconnection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			globalconnection.close();
+		}
+		return list;
+	}
+	
+	public List<HashMap<String, String>> getEtiquetasTrabalho(String id_of_cab, String url) throws SQLException {
+
+		String query = "select a.ETQNUM,a.ETQEMBQTE from SETQDE a " 
+				+ " where a.ETQINFO = '" + id_of_cab +"'";
+		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
+
+		try (Connection connection = getConnection(url);
+				Statement stmt = connection.createStatement();
+				ResultSet rs = stmt.executeQuery(query)) {
+			while (rs.next()) {
+				
+				HashMap<String, String> x = new HashMap<>();
+				x.put("ETQNUM", rs.getString("ETQNUM"));
+				x.put("ETQEMBQTE", rs.getString("ETQEMBQTE"));
 				list.add(x);
 			}
 			stmt.close();
@@ -947,7 +1022,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("QuantidadeCaixa", rs.getString("QuantidadeCaixa"));
 				x.put("proref", rs.getString("proref"));
@@ -976,7 +1051,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("etqcliref", rs.getString("etqcliref"));
 				x.put("proref", rs.getString("proref"));
@@ -1005,7 +1080,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("RESCOD", rs.getString("RESCOD"));
 				x.put("RESDES", rs.getString("RESDES"));
@@ -1035,7 +1110,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("RESCOD", rs.getString("RESCOD"));
 				x.put("RESDES", rs.getString("RESDES"));
@@ -1065,7 +1140,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("SECCOD", rs.getString("SECCOD"));
 				x.put("SECLIB", rs.getString("SECLIB"));
@@ -1095,7 +1170,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				HashMap<String, String> x = new HashMap<>();
 				x.put("SECCOD", rs.getString("SECCOD"));
 				x.put("SECLIB", rs.getString("SECLIB"));
@@ -1148,7 +1223,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				val = rs.getString("OPENUM");
 			}
 			stmt.close();
@@ -1193,7 +1268,7 @@ public class ConnectProgress {
 				Statement stmt = connection.createStatement();
 				ResultSet rs = stmt.executeQuery(query)) {
 			while (rs.next()) {
-				// parser das opera��es
+				
 				val = rs.getString("OPENUM");
 			}
 			stmt.close();

@@ -17,14 +17,14 @@ public class RP_OF_DEF_LINDao extends GenericDaoJpaImpl<RP_OF_DEF_LIN, Integer>
 		if (id_ref.equals("null")) {
 
 			query = entityManager.createNativeQuery(
-					"select a.COD_DEF,a.DESC_DEF, a.QUANT_DEF_M2,a.ID_DEF_LIN,a.OBS_DEF  from RP_OF_DEF_LIN a where ID_OP_LIN = :id2 and substring(a.COD_DEF, 1, 2) = :id and  ID_REF_ETIQUETA is null "
-							+ "UNION select b.COD_DEF,b.DESC_DEF,'' QUANT_DEF_M2,'' ID_DEF_LIN, '' OBS_DEF from RP_OF_LST_DEF b where "
+					"select a.COD_DEF,a.DESC_DEF, a.QUANT_DEF_M2,a.ID_DEF_LIN,a.OBS_DEF,a.QUANT_DEF_ORIGINAL  from RP_OF_DEF_LIN a where ID_OP_LIN = :id2 and substring(a.COD_DEF, 1, 2) = :id and  ID_REF_ETIQUETA is null "
+							+ "UNION select b.COD_DEF,b.DESC_DEF,'' QUANT_DEF_M2,'' ID_DEF_LIN, '' OBS_DEF,null as QUANT_DEF_ORIGINAL from RP_OF_LST_DEF b where "
 							+ "b.ID_OP_LIN = :id2 and b.COD_DEF not in (select c.COD_DEF from RP_OF_DEF_LIN c where c.ID_OP_LIN=:id2 and ID_REF_ETIQUETA is null) and substring(b.COD_DEF, 1, 2) = :id ");
 		} else {
 			query = entityManager.createNativeQuery(
-					"select a.COD_DEF,a.DESC_DEF, a.QUANT_DEF_M2,a.ID_DEF_LIN,a.OBS_DEF from RP_OF_DEF_LIN a where ID_OP_LIN = :id2 and substring(a.COD_DEF, 1, 2) = :id and  ID_REF_ETIQUETA = "
+					"select a.COD_DEF,a.DESC_DEF, a.QUANT_DEF_M2,a.ID_DEF_LIN,a.OBS_DEF,a.QUANT_DEF_ORIGINAL from RP_OF_DEF_LIN a where ID_OP_LIN = :id2 and substring(a.COD_DEF, 1, 2) = :id and  ID_REF_ETIQUETA = "
 							+ id_ref + " "
-							+ "UNION select b.COD_DEF,b.DESC_DEF,'' QUANT_DEF_M2,'' ID_DEF_LIN, '' OBS_DEF from RP_OF_LST_DEF b where "
+							+ "UNION select b.COD_DEF,b.DESC_DEF,'' QUANT_DEF_M2,'' ID_DEF_LIN, '' OBS_DEF,null as QUANT_DEF_ORIGINAL  from RP_OF_LST_DEF b where "
 							+ "b.ID_OP_LIN = :id2 and b.COD_DEF not in (select c.COD_DEF from RP_OF_DEF_LIN c where c.ID_OP_LIN=:id2 and ID_REF_ETIQUETA = "
 							+ id_ref + ") and substring(b.COD_DEF, 1, 2) = :id ");
 		}
@@ -147,6 +147,8 @@ public class RP_OF_DEF_LINDao extends GenericDaoJpaImpl<RP_OF_DEF_LIN, Integer>
 				}
 			}
 
+			data.setQUANT_DEF_ORIGINAL(utz2.get(0).getQUANT_DEF_ORIGINAL());
+			data.setDESC_FAMILIA(utz2.get(0).getDESC_FAMILIA());
 			/*
 			 * Query query2 = entityManager.
 			 * createQuery("UPDATE RP_OF_DEF_LIN a set a.QUANT_DEF = " +

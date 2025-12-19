@@ -21,11 +21,13 @@ public class RP_OF_DEF_LIN {
 	private String OBS_DEF;
 	private String COD_DEF;
 	private String DESC_DEF;
+	private String DESC_FAMILIA;
 	private Integer QUANT_DEF;
 	private Timestamp DATA_HORA_REG;
 	private Integer QUANT_DEF_M1;
 	private Integer QUANT_DEF_M2;
 	private Integer VERSAO_MODIF;
+	private Integer QUANT_DEF_ORIGINAL;
 
 	@Id
 	@Column(name = "ID_DEF_LIN")
@@ -144,6 +146,24 @@ public class RP_OF_DEF_LIN {
 
 	public void setDATA_HORA_REG(Timestamp dATA_HORA_REG) {
 		DATA_HORA_REG = dATA_HORA_REG;
+	}
+
+	@Column(name = "QUANT_DEF_ORIGINAL")
+	public Integer getQUANT_DEF_ORIGINAL() {
+		return QUANT_DEF_ORIGINAL;
+	}
+
+	public void setQUANT_DEF_ORIGINAL(Integer qUANT_DEF_ORIGINAL) {
+		QUANT_DEF_ORIGINAL = qUANT_DEF_ORIGINAL;
+	}
+
+	@Column(name = "DESC_FAMILIA")
+	public String getDESC_FAMILIA() {
+		return DESC_FAMILIA;
+	}
+
+	public void setDESC_FAMILIA(String dESC_FAMILIA) {
+		DESC_FAMILIA = dESC_FAMILIA;
 	}
 
 }

@@ -31,7 +31,8 @@ public class RP_OF_OP_ETIQUETADao extends GenericDaoJpaImpl<RP_OF_OP_ETIQUETA, I
 						+ "left join RP_OF_OP_LIN b on a.ID_OP_LIN = b.ID_OP_LIN "
 						+ "left join RP_OF_OP_CAB c on b.ID_OP_CAB = c.ID_OP_CAB "
 						+ "left join RP_OF_CAB d on c.ID_OF_CAB = d.ID_OF_CAB where d.ID_OF_CAB_ORIGEM = " + id + " "
-						+ "and ((a.QUANT_BOAS_M2 > 0 and a.QUANT_DEF_M2 = 0) or (a.QUANT_BOAS_M2 = 0 and a.QUANT_DEF_M2 > 0) or (a.QUANT_BOAS_M2 > 0 and a.QUANT_DEF_M2 > 0) )");
+						+ "and ((a.QUANT_BOAS_M2 > 0 and a.QUANT_DEF_M2 = 0) or (a.QUANT_BOAS_M2 = 0 and a.QUANT_DEF_M2 > 0) or (a.QUANT_BOAS_M2 > 0 and a.QUANT_DEF_M2 > 0) ) "
+						+ "and TIPO_PECA not in ('COMS','COM') ");
 		List<RP_OF_OP_ETIQUETA> data = query.getResultList();
 		return data;
 
@@ -49,7 +50,7 @@ public class RP_OF_OP_ETIQUETADao extends GenericDaoJpaImpl<RP_OF_OP_ETIQUETA, I
 	public List<RP_OF_OP_ETIQUETA> getbyid_oplin(Integer id) {
 
 		Query query = entityManager
-				.createQuery("Select a from RP_OF_OP_ETIQUETA a where a.ID_OP_LIN = :id AND a.ATIVO = 1");
+				.createQuery("Select a from RP_OF_OP_ETIQUETA a where a.ID_OP_LIN = :id AND a.ATIVO = 1 order by a.ID_REF_ETIQUETA desc");
 		query.setParameter("id", id);
 		List<RP_OF_OP_ETIQUETA> data = query.getResultList();
 		return data;
@@ -61,9 +62,9 @@ public class RP_OF_OP_ETIQUETADao extends GenericDaoJpaImpl<RP_OF_OP_ETIQUETA, I
 
 		Query query = entityManager
 				.createNativeQuery(" SELECT a.ID_REF_ETIQUETA,a.REF_ETIQUETA,a.QUANT_ETIQUETA,a.OF_NUM_ORIGEM,a.QUANT_DEF_M2,a.QUANT_BOAS_M2,a.NOVO,a.REF_LOTE,ultMatrix.ETIQUETA AS ultMatrix,ultMatrix.DATA_CRIA AS ultDataMatrix,ultMatrix.ESTADO AS ultEstadoMatrix,ultMatrix.ID AS ultIdMatrix, GETDATE() AS DataAtual "
-						+ "FROM RP_OF_OP_ETIQUETA a "
-						+ "OUTER APPLY (SELECT TOP 1 x.ETIQUETA ,x.DATA_CRIA,x.ESTADO,x.ID FROM RP_OF_OP_ETIQUETA_MATRIX x WHERE x.ID_REF_ETIQ = a.ID_REF_ETIQUETA ORDER BY x.DATA_CRIA DESC ) ultMatrix "
-						+ "WHERE a.ID_OP_LIN = :id AND a.ATIVO = 1");
+						+ "FROM RP_OF_OP_ETIQUETA a WITH (NOLOCK)"
+						+ "OUTER APPLY (SELECT TOP 1 x.ETIQUETA ,x.DATA_CRIA,x.ESTADO,x.ID FROM RP_OF_OP_ETIQUETA_MATRIX x WITH (NOLOCK) WHERE x.ID_REF_ETIQ = a.ID_REF_ETIQUETA ORDER BY x.DATA_CRIA DESC ) ultMatrix "
+						+ "WHERE a.ID_OP_LIN = :id AND a.ATIVO = 1 order by a.ID_REF_ETIQUETA desc");
 		query.setParameter("id", id);
 		List<RP_OF_OP_ETIQUETA> data = query.getResultList();
 		return data;
@@ -97,7 +98,7 @@ public class RP_OF_OP_ETIQUETADao extends GenericDaoJpaImpl<RP_OF_OP_ETIQUETA, I
 		Query query = entityManager.createNativeQuery(
 				"select (Select SUM(a.QUANT_DEF_M2) from RP_OF_DEF_LIN a  where a.ID_OP_LIN = " + id + ") as 'PF', "
 						+ "(Select SUM(a.QUANT_DEF_M2) from RP_OF_DEF_LIN a inner join RP_OF_OP_ETIQUETA b on a.ID_REF_ETIQUETA = b.ID_REF_ETIQUETA and a.ID_OP_LIN = b.ID_OP_LIN"
-						+ "  where b.ATIVO = 1 and a.ID_OP_LIN = " + id + ") as 'COMP'");
+						+ "  where b.ATIVO = 1 and a.ID_OP_LIN = " + id + ") as 'COMP' order by a.ID_REF_ETIQUETA desc");
 		List<RP_OF_OP_ETIQUETA> data = query.getResultList();
 		return data;
 	}

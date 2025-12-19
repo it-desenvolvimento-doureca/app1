@@ -12,16 +12,36 @@ public class RP_OF_OP_LINDao extends GenericDaoJpaImpl<RP_OF_OP_LIN, Integer>
 		super(RP_OF_OP_LIN.class);
 	}
 
-	public List<RP_OF_OP_LIN> getbyid(Integer id_utz) {
+	public List<RP_OF_OP_LIN> getbyid(Integer id) {
 
-		Query query = entityManager.createQuery("Select e,g from RP_OF_OP_LIN e, RP_OF_OP_CAB f, RP_OF_CAB g "
-				+ "where f.ID_OP_CAB = e.ID_OP_CAB and f.ID_OF_CAB = g.ID_OF_CAB and "
-				+ "(e.ID_OP_CAB in( select a.ID_OP_CAB from RP_OF_OP_CAB a where a.ID_OF_CAB in ( "
-				+ "Select c.ID_OF_CAB from RP_OF_OP_CAB b, RP_OF_CAB c where b.ID_OP_CAB = :id and b.ID_OF_CAB = c.ID_OF_CAB_ORIGEM ) ) "
-				+ "or  e.ID_OP_CAB = :id or "
-				+ "e.ID_OP_CAB in (Select r.ID_OP_CAB from RP_OF_OP_CAB r where r.ID_OF_CAB in ( select x.ID_OF_CAB from  RP_OF_OP_CAB x where x.ID_OP_CAB = :id ) and r.ID_OP_CAB != :id) )  order by g.ID_OF_CAB_ORIGEM,e.ID_OP_LIN");
-		query.setParameter("id", id_utz);
-		List<RP_OF_OP_LIN> utz = query.getResultList();
+		String sql = "SELECT e.ID_OP_LIN, e.ID_OP_CAB, e.REF_NUM, e.REF_DES, e.QUANT_OF, e.QUANT_BOAS_TOTAL_M2, e.QUANT_DEF_TOTAL_M2, e.OBS_REF, e.PROQTEFMT, e.TIPO_PECA, g.ID_UTZ_CRIA, g.ID_OF_CAB_ORIGEM, g.OF_NUM,e.NCLQTE "
+				+ "	 FROM RP_OF_OP_LIN e "
+				+ "	 JOIN RP_OF_OP_CAB f ON f.ID_OP_CAB = e.ID_OP_CAB "
+				+ "	 JOIN RP_OF_CAB g ON f.ID_OF_CAB = g.ID_OF_CAB "
+				+ "	 WHERE e.ID_OP_CAB IN ( "
+				+ "	     SELECT a.ID_OP_CAB "
+				+ "	     FROM RP_OF_OP_CAB a "
+				+ "	     WHERE a.ID_OF_CAB IN ( "
+				+ "	         SELECT c.ID_OF_CAB "
+				+ "	         FROM RP_OF_OP_CAB b "
+				+ "	         JOIN RP_OF_CAB c ON b.ID_OF_CAB = c.ID_OF_CAB_ORIGEM "
+				+ "	         WHERE b.ID_OP_CAB = :id "
+				+ "	     ) "
+				+ "	     UNION "
+				+ "	     SELECT :id "
+				+ "	     UNION "
+				+ "	     SELECT r.ID_OP_CAB "
+				+ "	     FROM RP_OF_OP_CAB r "
+				+ "	     WHERE r.ID_OF_CAB IN ( "
+				+ "	         SELECT x.ID_OF_CAB "
+				+ "	         FROM RP_OF_OP_CAB x "
+				+ "	         WHERE x.ID_OP_CAB = :id "
+				+ "	     ) AND r.ID_OP_CAB != :id "
+				+ "	 ) "
+				+ "	 ORDER BY g.ID_OF_CAB_ORIGEM, e.ID_OP_LIN";
+
+			Query query = entityManager.createNativeQuery(sql).setParameter("id", id);
+			List<RP_OF_OP_LIN> utz = query.getResultList();
 		return utz;
 
 	}
