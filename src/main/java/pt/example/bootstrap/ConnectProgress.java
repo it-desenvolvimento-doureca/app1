@@ -108,6 +108,63 @@ public class ConnectProgress {
 		}
 		return list;
 	}
+	
+	public List<HashMap<String, String>> getEtiquetaMuro(String etiqueta, String url) throws SQLException {
+
+		String query = "select  "
+				+ "d.PROREF, b.PRODES1,b.PRODES2,d.VA1REF, d.VA2REF,d.INDREF,a.etqembqte  as OFBQTEINI,d.INDNUMENR,c.FAMCOD,dw.ZPAVAL,b.PRDFAMCOD,b.GESCOD,b.PROQTEFMT,b.PROTYPCOD,a.etqnum, "
+				+ "ba.ofnum,ba.ofanumenr,ba.ofref,d.OFETAT,OPENUM,OPECOD "
+				+ "from SETQDE a  "
+				+ "inner join SDTPRA b on a.PROREF = b.PROREF   "
+				+ "left join (select * from SDTZPA f where f.ZPACOD='ALER') dw on b.ZPANUM = dw.ZPANUM  "
+				+ "inner join SPAFAM c on b.PRDFAMCOD = c.FAMCOD   "
+				+ "LEFT join SOFB d on  d.ofbnumenr = a.orinumenr  "
+				+ "LEFT join SOFA ba on ba.ofanumenr = d.ofanumenr  "
+				+ "LEFT JOIN (select  MAX(OPENUM)OPENUM, STRING_AGG(OPECOD,',') OPECOD , ofanumenr  from SOFD a where  OPECOD != '' and RETOUCHE != 1 GROUP BY ofanumenr ) x on  x.ofanumenr = d.ofanumenr "
+				+ "where a.etqnum = '" + etiqueta + "'  ";
+
+		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
+
+		// Usa sempre assim que fecha os resources automaticamente
+		try (Connection connection = getConnection(url);
+				Statement stmt = connection.createStatement();
+				ResultSet rs = stmt.executeQuery(query)) {
+			while (rs.next()) {
+				HashMap<String, String> x = new HashMap<>();
+				x.put("ofnum", rs.getString("ofnum"));
+				x.put("ofanumenr", rs.getString("ofanumenr"));
+				x.put("ofref", rs.getString("ofref"));
+				x.put("OFETAT", rs.getString("OFETAT"));
+				x.put("PROREF", rs.getString("PROREF"));
+				x.put("PRODES1", rs.getString("PRODES1"));
+				x.put("PRODES2", rs.getString("PRODES2"));
+				x.put("VA1REF", rs.getString("VA1REF"));
+				x.put("VA2REF", rs.getString("VA2REF"));
+				x.put("INDREF", rs.getString("INDREF"));
+				x.put("OFBQTEINI", rs.getString("OFBQTEINI"));
+				x.put("INDNUMENR", rs.getString("INDNUMENR"));
+				x.put("FAMCOD", rs.getString("FAMCOD"));
+				x.put("ZPAVAL", rs.getString("ZPAVAL"));
+				x.put("PRDFAMCOD", rs.getString("PRDFAMCOD"));
+				x.put("GESCOD", rs.getString("GESCOD"));
+				x.put("PROQTEFMT", rs.getString("PROQTEFMT"));
+				x.put("PROTYPCOD", rs.getString("PROTYPCOD"));
+				x.put("OPECOD", rs.getString("OPECOD"));
+				x.put("OPENUM", rs.getString("OPENUM"));
+				
+				list.add(x);
+			}
+			stmt.close();
+			rs.close();
+			connection.close();
+			// globalconnection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			globalconnection.close();
+		}
+		return list;
+	}
 
 	public List<HashMap<String, String>> getofpai_filho(String ofnum, String url) throws SQLException {
 
@@ -784,7 +841,7 @@ public class ConnectProgress {
 		 * "inner join SOFA b on b.ofnum = left(a.etqoridoc1,10) inner join SOFB c on b.ofanumenr = c.ofanumenr"
 		 * + " where a.etqnum = '" + etiqueta + "'";
 		 */
-		String query = "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,c.INDNUMENR,c.VA1REF,c.VA2REF,c.INDREF,c.PROREF,b.OFDATFR,a.PROREF as PROREFCOMP,a.ETQORILOT1 ,a.ETQORIQTE1 from SETQDE a "
+		String query = "select b.OFNUM, b.ofanumenr,ofref,a.ETQEMBQTE,c.INDNUMENR,c.VA1REF,c.VA2REF,c.INDREF,c.PROREF,b.OFDATFR,a.PROREF as PROREFCOMP,a.ETQORILOT1 ,a.ETQORIQTE1,a.ETQETAT,a.ETQSITSTO from SETQDE a "
 				+ "LEFT join SOFB c on  c.ofbnumenr = a.orinumenr LEFT join SOFA b on b.ofanumenr = c.ofanumenr "
 				+ " where a.etqnum = '" + etiqueta + "'";
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
@@ -810,6 +867,8 @@ public class ConnectProgress {
 				x.put("PROREFCOMP", rs.getString("PROREFCOMP"));
 				x.put("ETQORILOT1", rs.getString("ETQORILOT1"));
 				x.put("ETQORIQTE1", rs.getString("ETQORIQTE1"));
+				x.put("ETQETAT", rs.getString("ETQETAT"));
+				x.put("ETQSITSTO", rs.getString("ETQSITSTO"));
 
 				ArrayList<String> result = getDadosEtiquetaTotal(url, etiqueta);
 

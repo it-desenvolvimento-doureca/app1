@@ -41,6 +41,7 @@ public class RP_OF_CAB {
 	private String IP_POSTO_FINAL;
 	private Boolean PRIMEIRA_OPENUM;
 	private Boolean ULTIMA_OPENUM;
+	private String ETIQUETA;
 
 	@Id
 	@Column(name = "ID_OF_CAB")
@@ -295,5 +296,16 @@ public class RP_OF_CAB {
 	public void setULTIMA_OPENUM(Boolean uLTIMA_OPENUM) {
 		ULTIMA_OPENUM = uLTIMA_OPENUM;
 	}
+
+	@Column(name = "ETIQUETA")
+	public String getETIQUETA() {
+		return ETIQUETA;
+	}
+
+	public void setETIQUETA(String eTIQUETA) {
+		ETIQUETA = eTIQUETA;
+	}
+	
+	
 
 }

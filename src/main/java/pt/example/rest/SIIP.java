@@ -446,6 +446,15 @@ public class SIIP {
 	}
 
 	@GET
+	@Path("/verificaMuro/{etiqueta}/{op_cod}/{op_num}/{user}")
+	@Produces("application/json")
+	public List<RP_OF_CAB> verificaMuro(@PathParam("etiqueta") String etiqueta, @PathParam("op_cod") String op_cod,
+			@PathParam("op_num") String op_num, @PathParam("user") String user) {
+		return dao.verificaMuro(etiqueta, op_cod, op_num, user);
+	}
+
+	
+	@GET
 	@Path("/verificaetiquetas/{of_num}")
 	@Produces("application/json")
 	public List<Object[]> verificaetiquetas(@PathParam("of_num") String of_num) {

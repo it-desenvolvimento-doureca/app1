@@ -32,6 +32,18 @@ public class DemoRest {
 		List<HashMap<String, String>> dados = connectionProgress.getOF(ofnum, getURL());
 		return dados;
 	}
+	
+	@GET
+	@Path("/getEtiquetaMuro/{etiqueta}")
+	@Produces("application/json")
+	public List<HashMap<String, String>> getEtiquetaMuro(@PathParam("etiqueta") String etiqueta)
+			throws SQLException, ClassNotFoundException {
+
+		ConnectProgress connectionProgress = new ConnectProgress();
+
+		List<HashMap<String, String>> dados = connectionProgress.getEtiquetaMuro(etiqueta, getURL());
+		return dados;
+	}
 
 	@GET
 	@Path("/getofpai_filho/{ofnum}")
