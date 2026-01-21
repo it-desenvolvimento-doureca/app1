@@ -43,6 +43,16 @@ public class RP_OF_CAB {
 	private Boolean ULTIMA_OPENUM;
 	private String ETIQUETA;
 
+	// Informações Adicionais
+	private Boolean TESTE_DIMENSIONAL;
+	private Boolean OPERARIO_FORMACAO;
+	private Boolean ORIGEM_RECLAMACAO;
+	private Boolean STOCK_ETIQUETA_30;
+	private Boolean DEFEITOS_INJECAO;
+	private Boolean DEVOLUCAO_CLIENTE;
+	private Boolean GAMA_EMBALAGEM_INCORRETA;
+	private Boolean MODO_DEGRADADO;
+
 	@Id
 	@Column(name = "ID_OF_CAB")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -305,7 +315,77 @@ public class RP_OF_CAB {
 	public void setETIQUETA(String eTIQUETA) {
 		ETIQUETA = eTIQUETA;
 	}
-	
-	
+
+	@Column(name = "TESTE_DIMENSIONAL")
+	public Boolean getTESTE_DIMENSIONAL() {
+		return TESTE_DIMENSIONAL;
+	}
+
+	public void setTESTE_DIMENSIONAL(Boolean tESTE_DIMENSIONAL) {
+		TESTE_DIMENSIONAL = tESTE_DIMENSIONAL;
+	}
+
+	@Column(name = "OPERARIO_FORMACAO")
+	public Boolean getOPERARIO_FORMACAO() {
+		return OPERARIO_FORMACAO;
+	}
+
+	public void setOPERARIO_FORMACAO(Boolean oPERARIO_FORMACAO) {
+		OPERARIO_FORMACAO = oPERARIO_FORMACAO;
+	}
+
+	@Column(name = "ORIGEM_RECLAMACAO")
+	public Boolean getORIGEM_RECLAMACAO() {
+		return ORIGEM_RECLAMACAO;
+	}
+
+	public void setORIGEM_RECLAMACAO(Boolean oRIGEM_RECLAMACAO) {
+		ORIGEM_RECLAMACAO = oRIGEM_RECLAMACAO;
+	}
+
+	@Column(name = "STOCK_ETIQUETA_30")
+	public Boolean getSTOCK_ETIQUETA_30() {
+		return STOCK_ETIQUETA_30;
+	}
+
+	public void setSTOCK_ETIQUETA_30(Boolean sTOCK_ETIQUETA_30) {
+		STOCK_ETIQUETA_30 = sTOCK_ETIQUETA_30;
+	}
+
+	@Column(name = "DEFEITOS_INJECAO")
+	public Boolean getDEFEITOS_INJECAO() {
+		return DEFEITOS_INJECAO;
+	}
+
+	public void setDEFEITOS_INJECAO(Boolean dEFEITOS_INJECAO) {
+		DEFEITOS_INJECAO = dEFEITOS_INJECAO;
+	}
+
+	@Column(name = "DEVOLUCAO_CLIENTE")
+	public Boolean getDEVOLUCAO_CLIENTE() {
+		return DEVOLUCAO_CLIENTE;
+	}
+
+	public void setDEVOLUCAO_CLIENTE(Boolean dEVOLUCAO_CLIENTE) {
+		DEVOLUCAO_CLIENTE = dEVOLUCAO_CLIENTE;
+	}
+
+	@Column(name = "GAMA_EMBALAGEM_INCORRETA")
+	public Boolean getGAMA_EMBALAGEM_INCORRETA() {
+		return GAMA_EMBALAGEM_INCORRETA;
+	}
+
+	public void setGAMA_EMBALAGEM_INCORRETA(Boolean gAMA_EMBALAGEM_INCORRETA) {
+		GAMA_EMBALAGEM_INCORRETA = gAMA_EMBALAGEM_INCORRETA;
+	}
+
+	@Column(name = "MODO_DEGRADADO")
+	public Boolean getMODO_DEGRADADO() {
+		return MODO_DEGRADADO;
+	}
+
+	public void setMODO_DEGRADADO(Boolean mODO_DEGRADADO) {
+		MODO_DEGRADADO = mODO_DEGRADADO;
+	}
 
 }

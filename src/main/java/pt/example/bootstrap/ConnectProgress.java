@@ -113,7 +113,7 @@ public class ConnectProgress {
 
 		String query = "select  "
 				+ "d.PROREF, b.PRODES1,b.PRODES2,d.VA1REF, d.VA2REF,d.INDREF,a.etqembqte  as OFBQTEINI,d.INDNUMENR,c.FAMCOD,dw.ZPAVAL,b.PRDFAMCOD,b.GESCOD,b.PROQTEFMT,b.PROTYPCOD,a.etqnum, "
-				+ "ba.ofnum,ba.ofanumenr,ba.ofref,d.OFETAT,OPENUM,OPECOD "
+				+ "ba.ofnum,ba.ofanumenr,ba.ofref,d.OFETAT,OPENUM,x.OPECOD ,y.OPECOD AS OPECOD_MURO,y.OPEDES "
 				+ "from SETQDE a  "
 				+ "inner join SDTPRA b on a.PROREF = b.PROREF   "
 				+ "left join (select * from SDTZPA f where f.ZPACOD='ALER') dw on b.ZPANUM = dw.ZPANUM  "
@@ -121,6 +121,7 @@ public class ConnectProgress {
 				+ "LEFT join SOFB d on  d.ofbnumenr = a.orinumenr  "
 				+ "LEFT join SOFA ba on ba.ofanumenr = d.ofanumenr  "
 				+ "LEFT JOIN (select  MAX(OPENUM)OPENUM, STRING_AGG(OPECOD,',') OPECOD , ofanumenr  from SOFD a where  OPECOD != '' and RETOUCHE != 1 GROUP BY ofanumenr ) x on  x.ofanumenr = d.ofanumenr "
+				+ "CROSS JOIN (select * from SILVER.dbo.SDTOPP a where a.OPECOD = '100') y "
 				+ "where a.etqnum = '" + etiqueta + "'  ";
 
 		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
@@ -151,6 +152,8 @@ public class ConnectProgress {
 				x.put("PROTYPCOD", rs.getString("PROTYPCOD"));
 				x.put("OPECOD", rs.getString("OPECOD"));
 				x.put("OPENUM", rs.getString("OPENUM"));
+				x.put("OPECOD_MURO", rs.getString("OPECOD_MURO"));
+				x.put("OPEDES", rs.getString("OPEDES"));
 				
 				list.add(x);
 			}

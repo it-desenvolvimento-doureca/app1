@@ -66,6 +66,7 @@ import pt.example.dao.RP_CONF_FAMILIA_DEF_COMPRADASDao;
 import pt.example.dao.RP_CONF_OPDao;
 import pt.example.dao.RP_CONF_OP_NPREVDao;
 import pt.example.dao.RP_CONF_OP_RECUPERACAO_PECASDao;
+import pt.example.dao.RP_OF_OPERARIOS_CAIXADao;
 import pt.example.dao.RP_CONF_RELACAO_REF_ETIQUETASDao;
 import pt.example.dao.RP_GESTAO_ETIQUETAS_MATRIXDao;
 import pt.example.dao.RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIXDao;
@@ -92,6 +93,7 @@ import pt.example.entity.RP_CONF_FAMILIA_DEF_COMPRADAS;
 import pt.example.entity.RP_CONF_OP;
 import pt.example.entity.RP_CONF_OP_NPREV;
 import pt.example.entity.RP_CONF_OP_RECUPERACAO_PECAS;
+import pt.example.entity.RP_OF_OPERARIOS_CAIXA;
 import pt.example.entity.RP_CONF_RELACAO_REF_ETIQUETAS;
 import pt.example.entity.RP_CONF_UTZ_PERF;
 import pt.example.entity.RP_GESTAO_ETIQUETAS_MATRIX;
@@ -193,6 +195,9 @@ public class SIIP {
 
 	@Inject
 	private RP_CONF_OP_RECUPERACAO_PECASDao dao25;
+
+	@Inject
+	private RP_OF_OPERARIOS_CAIXADao dao26;
 
 	// RP_CONF_UTZ_PERF***************************************************************
 	@POST
@@ -516,6 +521,53 @@ public class SIIP {
 	public RP_OF_CAB updateRP_OF_CAB(final RP_OF_CAB RP_OF_CAB) {
 		RP_OF_CAB.setESTADO(RP_OF_CAB.getESTADO());
 		return dao.update(RP_OF_CAB);
+	}
+
+	@PUT
+	@Path("/updateInfoAdicionais")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public HashMap<String, Object> updateInfoAdicionais(final HashMap<String, Object> data) {
+		HashMap<String, Object> result = new HashMap<>();
+		try {
+			Integer idOfCab = (Integer) data.get("id_OF_CAB");
+			Boolean testeDimensional = (Boolean) data.get("teste_DIMENSIONAL");
+			Boolean operarioFormacao = (Boolean) data.get("operario_FORMACAO");
+			Boolean origemReclamacao = (Boolean) data.get("origem_RECLAMACAO");
+			Boolean stockEtiqueta30 = (Boolean) data.get("stock_ETIQUETA_30");
+			Boolean defeitosInjecao = (Boolean) data.get("defeitos_INJECAO");
+			Boolean devolucaoCliente = (Boolean) data.get("devolucao_CLIENTE");
+			Boolean gamaEmbalagemIncorreta = (Boolean) data.get("gama_EMBALAGEM_INCORRETA");
+			Boolean modoDegradado = (Boolean) data.get("modo_DEGRADADO");
+
+			entityManager.createNativeQuery(
+				"UPDATE RP_OF_CAB SET " +
+				"TESTE_DIMENSIONAL = :testeDimensional, " +
+				"OPERARIO_FORMACAO = :operarioFormacao, " +
+				"ORIGEM_RECLAMACAO = :origemReclamacao, " +
+				"STOCK_ETIQUETA_30 = :stockEtiqueta30, " +
+				"DEFEITOS_INJECAO = :defeitosInjecao, " +
+				"DEVOLUCAO_CLIENTE = :devolucaoCliente, " +
+				"GAMA_EMBALAGEM_INCORRETA = :gamaEmbalagemIncorreta, " +
+				"MODO_DEGRADADO = :modoDegradado " +
+				"WHERE ID_OF_CAB = :idOfCab")
+				.setParameter("testeDimensional", testeDimensional)
+				.setParameter("operarioFormacao", operarioFormacao)
+				.setParameter("origemReclamacao", origemReclamacao)
+				.setParameter("stockEtiqueta30", stockEtiqueta30)
+				.setParameter("defeitosInjecao", defeitosInjecao)
+				.setParameter("devolucaoCliente", devolucaoCliente)
+				.setParameter("gamaEmbalagemIncorreta", gamaEmbalagemIncorreta)
+				.setParameter("modoDegradado", modoDegradado)
+				.setParameter("idOfCab", idOfCab)
+				.executeUpdate();
+
+			result.put("success", true);
+		} catch (Exception e) {
+			result.put("success", false);
+			result.put("error", e.getMessage());
+		}
+		return result;
 	}
 
 	@POST
@@ -1803,6 +1855,8 @@ public class SIIP {
 		String url = getURL();
 		String estado = "C";
 		Boolean ficheirosdownload = true;
+		Boolean primeira_OPENUM = false;
+		Boolean DEVOLUCAO_CLIENTE = false;
 
 		Boolean pausa = true;
 		Integer comp_num = 1;
@@ -1816,12 +1870,20 @@ public class SIIP {
 			if (op_num == null || op_num.isEmpty()) {
 
 				Query query = entityManager.createNativeQuery(
-						"select ID_OF_CAB,ID_OF_CAB_ORIGEM,ID_UTZ_CRIA,OF_NUM,OP_NUM from RP_OF_CAB where ID_OF_CAB = "
-								+ content_of + " or ID_OF_CAB_ORIGEM = " + content_of);
+						"select ID_OF_CAB,ID_OF_CAB_ORIGEM,ID_UTZ_CRIA,OF_NUM,OP_NUM,ISNULL(PRIMEIRA_OPENUM,0) as PRIMEIRA_OPENUM,ISNULL(DEVOLUCAO_CLIENTE,0) as DEVOLUCAO_CLIENTE from RP_OF_CAB where ID_OF_CAB = "
+								+ content_of + " or ID_OF_CAB_ORIGEM = " + content_of + " order by ID_OF_CAB asc");
 
 				List<Object[]> dados = query.getResultList();
 
 				for (Object[] content : dados) {
+					
+					if (content[0].toString().equals(content_of.toString())) {
+						primeira_OPENUM = content[5].toString().equals("true") ? true : false;
+						DEVOLUCAO_CLIENTE = content[6].toString().equals("true") ? true : false;
+					}
+					
+					if(DEVOLUCAO_CLIENTE == true) return null;
+					
 					data = new SimpleDateFormat("yyyyMMddHHmmss_").format(new Date());
 					String inform_file = "";
 					Integer total = 1;
@@ -1971,6 +2033,8 @@ public class SIIP {
 		String url = getURL();
 		String estado = "C";
 		Boolean ficheirosdownload = false;
+		Boolean primeira_OPENUM = false;
+		Boolean DEVOLUCAO_CLIENTE = false;
 
 		Boolean pausa = true;
 		Integer comp_num = 1;
@@ -1984,12 +2048,20 @@ public class SIIP {
 			if (op_num == null || op_num.isEmpty()) {
 
 				Query query = entityManager.createNativeQuery(
-						"select ID_OF_CAB,ID_OF_CAB_ORIGEM,ID_UTZ_CRIA,OF_NUM,OP_NUM from RP_OF_CAB where ID_OF_CAB = "
-								+ content_of + " or ID_OF_CAB_ORIGEM = " + content_of);
+						"select ID_OF_CAB,ID_OF_CAB_ORIGEM,ID_UTZ_CRIA,OF_NUM,OP_NUM,ISNULL(PRIMEIRA_OPENUM,0) as PRIMEIRA_OPENUM,ISNULL(DEVOLUCAO_CLIENTE,0) as DEVOLUCAO_CLIENTE from RP_OF_CAB where ID_OF_CAB = "
+								+ content_of + " or ID_OF_CAB_ORIGEM = " + content_of + " order by ID_OF_CAB asc");
 
 				List<Object[]> dados = query.getResultList();
 
 				for (Object[] content : dados) {
+					
+					if (content[0].toString().equals(content_of.toString())) {
+						primeira_OPENUM = content[5].toString().equals("true") ? true : false;
+						DEVOLUCAO_CLIENTE = content[6].toString().equals("true") ? true : false;
+					}
+					
+					if(DEVOLUCAO_CLIENTE == true) return null;
+					
 					data = new SimpleDateFormat("yyyyMMddHHmmss_").format(new Date());
 					String inform_file = "";
 					Integer total = 1;
@@ -2288,6 +2360,7 @@ public class SIIP {
 		String url = getURL();
 
 		Boolean primeira_OPENUM = false;
+		Boolean DEVOLUCAO_CLIENTE = false;
 		try {
 			Thread.sleep(3000);
 			Integer comp_num = 1;
@@ -2295,8 +2368,8 @@ public class SIIP {
 			String nome_ficheiro = "";
 
 			Query query = entityManager.createNativeQuery(
-					"select ID_OF_CAB,ID_OF_CAB_ORIGEM,ID_UTZ_CRIA,OF_NUM,OP_NUM,ISNULL(PRIMEIRA_OPENUM,0) as PRIMEIRA_OPENUM from RP_OF_CAB where ID_OF_CAB = "
-							+ id + " or ID_OF_CAB_ORIGEM = " + id);
+					"select ID_OF_CAB,ID_OF_CAB_ORIGEM,ID_UTZ_CRIA,OF_NUM,OP_NUM,ISNULL(PRIMEIRA_OPENUM,0) as PRIMEIRA_OPENUM,ISNULL(DEVOLUCAO_CLIENTE,0) as DEVOLUCAO_CLIENTE from RP_OF_CAB where ID_OF_CAB = "
+							+ id + " or ID_OF_CAB_ORIGEM = " + id + " order by ID_OF_CAB asc");
 
 			if (estado.equals("C") && !ficheirosdownload && !manual) {
 				eventosAoConcluir(id);
@@ -2310,7 +2383,10 @@ public class SIIP {
 
 				if (content[0].toString().equals(id.toString())) {
 					primeira_OPENUM = content[5].toString().equals("true") ? true : false;
+					DEVOLUCAO_CLIENTE = content[6].toString().equals("true") ? true : false;
 				}
+				
+				if(DEVOLUCAO_CLIENTE == true) return null;
 
 				String inform_file = "";
 				Integer total = 1;
@@ -2551,8 +2627,9 @@ public class SIIP {
 	public void criarFicheiro(Integer id, Integer ficheiro, String nome_ficheiro, String tipo, String of,
 			Integer id_origem, Integer id_etiqueta, String estado, String nome_ficheiro2, String OP_NUM,
 			String ID_OP_LIN, Boolean cria_pausa, Integer total, Boolean ficheirosdownload, String nomezip,
-			String novaetiqueta, String estado2, Boolean manual, String ip_posto) throws IOException, ParseException {
-
+			String novaetiqueta, String estado2, Boolean manual, String ip_posto ) throws IOException, ParseException {
+ 
+		
 		if (tipo == "COMP") {
 			Query query_matrix = entityManager.createNativeQuery("select a.ID_OF_CAB,a.OF_NUM from RP_OF_CAB a "
 					+ "inner join DOC_DIC_POSTOS b on a.IP_POSTO = b.IP_POSTO "
@@ -4004,7 +4081,10 @@ public class SIIP {
 			data += "1";// Type op�ration
 
 			// OP_NUM
-			data += ("0010").substring(0, 4);// N� Op�ration
+			String OP_NUM = (content[2] == null) ? "" : content[2].toString();
+			data += ("0000" + OP_NUM).substring(("0000" + OP_NUM).length() - 4,
+					("0000" + OP_NUM).length());
+			//data += ("0010").substring(0, 4);// N� Op�ration
 
 			data += "1";// Position ( S12 )
 
@@ -5672,6 +5752,47 @@ public class SIIP {
 			final RP_CONF_OP_RECUPERACAO_PECAS RP_CONF_OP_RECUPERACAO_PECAS) {
 		RP_CONF_OP_RECUPERACAO_PECAS.setID(RP_CONF_OP_RECUPERACAO_PECAS.getID());
 		return dao25.update(RP_CONF_OP_RECUPERACAO_PECAS);
+	}
+
+	// RP_OF_OPERARIOS_CAIXA ***************************************************************
+	@POST
+	@Path("/createRP_OF_OPERARIOS_CAIXA")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public RP_OF_OPERARIOS_CAIXA createRP_OF_OPERARIOS_CAIXA(final RP_OF_OPERARIOS_CAIXA data) {
+		// Validar máximo 5 operários por OF
+		Long count = dao26.countByIdOfCab(data.getID_OF_CAB());
+		if (count >= 5) {
+			return null;
+		}
+		// Validar se já existe
+		List<RP_OF_OPERARIOS_CAIXA> existing = dao26.getByIdOfCabAndIdUtz(data.getID_OF_CAB(), data.getID_UTZ());
+		if (existing.size() > 0) {
+			return null;
+		}
+		return dao26.create(data);
+	}
+
+	@GET
+	@Path("/getRP_OF_OPERARIOS_CAIXA/{idOfCab}")
+	@Produces("application/json")
+	public List<RP_OF_OPERARIOS_CAIXA> getRP_OF_OPERARIOS_CAIXA(@PathParam("idOfCab") Integer idOfCab) {
+		return dao26.getByIdOfCab(idOfCab);
+	}
+
+	@GET
+	@Path("/countRP_OF_OPERARIOS_CAIXA/{idOfCab}")
+	@Produces("application/json")
+	public Long countRP_OF_OPERARIOS_CAIXA(@PathParam("idOfCab") Integer idOfCab) {
+		return dao26.countByIdOfCab(idOfCab);
+	}
+
+	@DELETE
+	@Path("/deleteRP_OF_OPERARIOS_CAIXA/{id}")
+	public void deleteRP_OF_OPERARIOS_CAIXA(@PathParam("id") Integer id) {
+		RP_OF_OPERARIOS_CAIXA data = new RP_OF_OPERARIOS_CAIXA();
+		data.setID_OPERARIO_CAIXA(id);
+		dao26.delete(data);
 	}
 
 }
