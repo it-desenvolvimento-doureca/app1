@@ -14,7 +14,7 @@ public class RP_OF_OP_LINDao extends GenericDaoJpaImpl<RP_OF_OP_LIN, Integer>
 
 	public List<RP_OF_OP_LIN> getbyid(Integer id) {
 
-		String sql = "SELECT e.ID_OP_LIN, e.ID_OP_CAB, e.REF_NUM, e.REF_DES, e.QUANT_OF, e.QUANT_BOAS_TOTAL_M2, e.QUANT_DEF_TOTAL_M2, e.OBS_REF, e.PROQTEFMT, e.TIPO_PECA, g.ID_UTZ_CRIA, g.ID_OF_CAB_ORIGEM, g.OF_NUM,e.NCLQTE "
+		String sql = "SELECT e.ID_OP_LIN, e.ID_OP_CAB, e.REF_NUM, e.REF_DES, e.QUANT_OF, e.QUANT_BOAS_TOTAL_M2, e.QUANT_DEF_TOTAL_M2, e.OBS_REF, e.PROQTEFMT, e.TIPO_PECA, g.ID_UTZ_CRIA, g.ID_OF_CAB_ORIGEM, g.OF_NUM, e.NCLQTE, e.CONFIRMAR_ZERO "
 				+ "	 FROM RP_OF_OP_LIN e "
 				+ "	 JOIN RP_OF_OP_CAB f ON f.ID_OP_CAB = e.ID_OP_CAB "
 				+ "	 JOIN RP_OF_CAB g ON f.ID_OF_CAB = g.ID_OF_CAB "
@@ -79,6 +79,25 @@ public class RP_OF_OP_LINDao extends GenericDaoJpaImpl<RP_OF_OP_LIN, Integer>
 		query.setParameter("id", id);
 		List<RP_OF_OP_LIN> utz = query.getResultList();
 		return utz;
+
+	}
+
+	public List<Object[]> getallbyid_fast(Integer id) {
+
+		String sql = "SELECT b.QUANT_BOAS_TOTAL_M2, b.QUANT_DEF_TOTAL_M2, b.NCLQTE, b.QUANT_OF, "
+				+ "b.TIPO_PECA, b.REF_NUM, b.REF_DES, b.CONFIRMAR_ZERO, g.ID_OF_CAB_ORIGEM "
+				+ "FROM RP_OF_OP_LIN b "
+				+ "JOIN RP_OF_OP_CAB a ON b.ID_OP_CAB = a.ID_OP_CAB "
+				+ "JOIN RP_OF_CAB g ON a.ID_OF_CAB = g.ID_OF_CAB "
+				+ "WHERE a.ID_OF_CAB IN ( "
+				+ "    SELECT ID_OF_CAB FROM RP_OF_OP_CAB WHERE ID_OP_CAB = :id "
+				+ "    UNION "
+				+ "    SELECT g2.ID_OF_CAB FROM RP_OF_CAB g2 "
+				+ "    WHERE g2.ID_OF_CAB_ORIGEM IN (SELECT ID_OF_CAB FROM RP_OF_OP_CAB WHERE ID_OP_CAB = :id) "
+				+ ") "
+				+ "ORDER BY g.ID_OF_CAB_ORIGEM, b.ID_OP_LIN";
+		Query query = entityManager.createNativeQuery(sql).setParameter("id", id);
+		return query.getResultList();
 
 	}
 

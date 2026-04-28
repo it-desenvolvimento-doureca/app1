@@ -36,6 +36,7 @@ public class RP_OF_OP_LIN {
 	private Boolean PROQTEFMT;
 	private String TIPO_PECA;
 	private BigDecimal NCLQTE;
+	private Boolean CONFIRMAR_ZERO;
 
 	@Id
 	@Column(name = "ID_OP_LIN")
@@ -245,7 +246,16 @@ public class RP_OF_OP_LIN {
 	public void setNCLQTE(BigDecimal nCLQTE) {
 		NCLQTE = nCLQTE;
 	}
-	
-	
+
+	@Column(name = "CONFIRMAR_ZERO")
+	public Boolean getCONFIRMAR_ZERO() {
+		return CONFIRMAR_ZERO;
+	}
+
+	public void setCONFIRMAR_ZERO(Boolean cONFIRMAR_ZERO) {
+		CONFIRMAR_ZERO = cONFIRMAR_ZERO;
+	}
+
+
 
 }

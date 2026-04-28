@@ -29,7 +29,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.ZipOutputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -114,6 +118,8 @@ import pt.example.entity.VERSAO_APP;
 @Stateless
 @Path("/siip")
 public class SIIP {
+
+	private static final Logger LOGGER = Logger.getLogger(SIIP.class.getName());
 
 	@PersistenceContext(unitName = "persistenceUnit")
 	protected EntityManager entityManager;
@@ -458,7 +464,6 @@ public class SIIP {
 		return dao.verificaMuro(etiqueta, op_cod, op_num, user);
 	}
 
-	
 	@GET
 	@Path("/verificaetiquetas/{of_num}")
 	@Produces("application/json")
@@ -534,33 +539,35 @@ public class SIIP {
 			Boolean testeDimensional = (Boolean) data.get("teste_DIMENSIONAL");
 			Boolean operarioFormacao = (Boolean) data.get("operario_FORMACAO");
 			Boolean origemReclamacao = (Boolean) data.get("origem_RECLAMACAO");
+			String dataOrigemReclamacao = (String) data.get("data_ORIGEM_RECLAMACAO");
+			String dataDevolucaoCliente = (String) data.get("data_DEVOLUCAO_CLIENTE");
 			Boolean stockEtiqueta30 = (Boolean) data.get("stock_ETIQUETA_30");
 			Boolean defeitosInjecao = (Boolean) data.get("defeitos_INJECAO");
 			Boolean devolucaoCliente = (Boolean) data.get("devolucao_CLIENTE");
 			Boolean gamaEmbalagemIncorreta = (Boolean) data.get("gama_EMBALAGEM_INCORRETA");
 			Boolean modoDegradado = (Boolean) data.get("modo_DEGRADADO");
+			Boolean ensaioDia = (Boolean) data.get("ensaio_DIA");
+			Boolean verificacaoQuantEmbalagem = (Boolean) data.get("verificacao_QUANT_EMBALAGEM");
+			String modoDegradadoMotivo = (String) data.get("modo_DEGRADADO_MOTIVO");
 
-			entityManager.createNativeQuery(
-				"UPDATE RP_OF_CAB SET " +
-				"TESTE_DIMENSIONAL = :testeDimensional, " +
-				"OPERARIO_FORMACAO = :operarioFormacao, " +
-				"ORIGEM_RECLAMACAO = :origemReclamacao, " +
-				"STOCK_ETIQUETA_30 = :stockEtiqueta30, " +
-				"DEFEITOS_INJECAO = :defeitosInjecao, " +
-				"DEVOLUCAO_CLIENTE = :devolucaoCliente, " +
-				"GAMA_EMBALAGEM_INCORRETA = :gamaEmbalagemIncorreta, " +
-				"MODO_DEGRADADO = :modoDegradado " +
-				"WHERE ID_OF_CAB = :idOfCab")
-				.setParameter("testeDimensional", testeDimensional)
-				.setParameter("operarioFormacao", operarioFormacao)
-				.setParameter("origemReclamacao", origemReclamacao)
-				.setParameter("stockEtiqueta30", stockEtiqueta30)
-				.setParameter("defeitosInjecao", defeitosInjecao)
-				.setParameter("devolucaoCliente", devolucaoCliente)
-				.setParameter("gamaEmbalagemIncorreta", gamaEmbalagemIncorreta)
-				.setParameter("modoDegradado", modoDegradado)
-				.setParameter("idOfCab", idOfCab)
-				.executeUpdate();
+			entityManager.createNativeQuery("UPDATE RP_OF_CAB SET " + "TESTE_DIMENSIONAL = :testeDimensional, "
+					+ "OPERARIO_FORMACAO = :operarioFormacao, " + "ORIGEM_RECLAMACAO = :origemReclamacao, "
+					+ "DATA_ORIGEM_RECLAMACAO = :dataOrigemReclamacao,DATA_DEVOLUCAO_CLIENTE = :dataDevolucaoCliente, " + "STOCK_ETIQUETA_30 = :stockEtiqueta30, "
+					+ " MODO_DEGRADADO_MOTIVO = :modoDegradadoMotivo,DEFEITOS_INJECAO = :defeitosInjecao, " + "DEVOLUCAO_CLIENTE = :devolucaoCliente, ENSAIO_DIA= :ensaioDia, "
+					+ "GAMA_EMBALAGEM_INCORRETA = :gamaEmbalagemIncorreta, " + "MODO_DEGRADADO = :modoDegradado, "
+					+ "VERIFICACAO_QUANT_EMBALAGEM = :verificacaoQuantEmbalagem " + "WHERE ID_OF_CAB = :idOfCab")
+					.setParameter("testeDimensional", testeDimensional)
+					.setParameter("operarioFormacao", operarioFormacao)
+					.setParameter("origemReclamacao", origemReclamacao)
+					.setParameter("dataOrigemReclamacao", dataOrigemReclamacao)
+					.setParameter("dataDevolucaoCliente", dataDevolucaoCliente)
+					.setParameter("ensaioDia", ensaioDia)
+					.setParameter("modoDegradadoMotivo", modoDegradadoMotivo)
+					.setParameter("stockEtiqueta30", stockEtiqueta30).setParameter("defeitosInjecao", defeitosInjecao)
+					.setParameter("devolucaoCliente", devolucaoCliente)
+					.setParameter("gamaEmbalagemIncorreta", gamaEmbalagemIncorreta)
+					.setParameter("verificacaoQuantEmbalagem", verificacaoQuantEmbalagem)
+					.setParameter("modoDegradado", modoDegradado).setParameter("idOfCab", idOfCab).executeUpdate();
 
 			result.put("success", true);
 		} catch (Exception e) {
@@ -670,6 +677,13 @@ public class SIIP {
 	}
 
 	@GET
+	@Path("/getRP_OF_OP_LINallid_fast/{id}")
+	@Produces("application/json")
+	public List<Object[]> getallbyid_fast(@PathParam("id") Integer id) {
+		return dao7.getallbyid_fast(id);
+	}
+
+	@GET
 	@Path("/getRP_OF_OP_LINOp/{id}")
 	@Produces("application/json")
 	public List<RP_OF_OP_LIN> getop(@PathParam("id") Integer id) {
@@ -705,6 +719,29 @@ public class SIIP {
 	@Consumes("*/*")
 	@Produces("application/json")
 	public RP_OF_PREP_LIN insertRP_OF_PREP_LIN(final RP_OF_PREP_LIN data) {
+		// Corrigir datas/horas início se tiverem mais de 10 minutos de diferença da
+		// hora atual
+		if (data.getDATA_INI() != null && data.getHORA_INI() != null) {
+			try {
+				LocalDateTime dataHoraInicio = LocalDateTime.of(data.getDATA_INI().toLocalDate(),
+						data.getHORA_INI().toLocalTime());
+				LocalDateTime agora = LocalDateTime.now();
+				long diferencaMinutos = Math.abs(java.time.Duration.between(dataHoraInicio, agora).toMinutes());
+
+				if (diferencaMinutos > 10) {
+					java.sql.Date dataAtual = java.sql.Date.valueOf(agora.toLocalDate());
+					java.sql.Time horaAtual = java.sql.Time.valueOf(agora.toLocalTime());
+					data.setDATA_INI(dataAtual);
+					data.setHORA_INI(horaAtual);
+					data.setDATA_INI_M1(dataAtual);
+					data.setHORA_INI_M1(horaAtual);
+					data.setDATA_INI_M2(dataAtual);
+					data.setHORA_INI_M2(horaAtual);
+				}
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Erro ao validar data/hora em createRP_OF_PREP_LIN: " + e.getMessage(), e);
+			}
+		}
 		return dao8.create(data);
 	}
 
@@ -712,9 +749,38 @@ public class SIIP {
 	@Path("/updateRP_OF_PREP_LIN")
 	@Consumes("*/*")
 	@Produces("application/json")
-	public RP_OF_PREP_LIN updateRP_OF_PREP_LIN(final RP_OF_PREP_LIN RP_OF_PREP_LIN) {
-		RP_OF_PREP_LIN.setESTADO(RP_OF_PREP_LIN.getESTADO());
-		return dao8.update(RP_OF_PREP_LIN);
+	public RP_OF_PREP_LIN updateRP_OF_PREP_LIN(final RP_OF_PREP_LIN data) {
+		data.setESTADO(data.getESTADO());
+
+		// Só validar data fim se o pedido enviar data fim
+		if (data.getDATA_FIM() != null) {
+			try {
+				Query query = entityManager
+						.createNativeQuery("SELECT DATA_FIM, HORA_FIM FROM RP_OF_PREP_LIN WHERE ID_PREP_LIN = ?1")
+						.setParameter(1, data.getID_PREP_LIN());
+				List<?> result = query.getResultList();
+
+				if (!result.isEmpty()) {
+					Object[] row = (Object[]) result.get(0);
+					if (row[0] == null || row[1] == null) {
+						LocalDateTime agora = LocalDateTime.now();
+						java.sql.Date dataAtual = java.sql.Date.valueOf(agora.toLocalDate());
+						java.sql.Time horaAtual = java.sql.Time.valueOf(agora.toLocalTime());
+
+						data.setDATA_FIM(dataAtual);
+						data.setHORA_FIM(horaAtual);
+						data.setDATA_FIM_M1(dataAtual);
+						data.setHORA_FIM_M1(horaAtual);
+						data.setDATA_FIM_M2(dataAtual);
+						data.setHORA_FIM_M2(horaAtual);
+					}
+				}
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Erro ao verificar data fim em updateRP_OF_PREP_LIN: " + e.getMessage(), e);
+			}
+		}
+
+		return dao8.update(data);
 	}
 
 	// RP_CONF_FAMILIA_DEF_COMPRADAS***********************************
@@ -1017,6 +1083,29 @@ public class SIIP {
 	@Consumes("*/*")
 	@Produces("application/json")
 	public RP_OF_OP_FUNC insertRP_OF_OP_FUNC(final RP_OF_OP_FUNC data) {
+		// Corrigir datas/horas se tiverem mais de 10 minutos de diferença da hora atual
+		if (data.getDATA_INI() != null && data.getHORA_INI() != null) {
+			try {
+				LocalDateTime dataHoraInicio = LocalDateTime.of(data.getDATA_INI().toLocalDate(),
+						data.getHORA_INI().toLocalTime());
+				LocalDateTime agora = LocalDateTime.now();
+				long diferencaMinutos = Math.abs(java.time.Duration.between(dataHoraInicio, agora).toMinutes());
+
+				if (diferencaMinutos > 10) {
+					java.sql.Date dataAtual = java.sql.Date.valueOf(agora.toLocalDate());
+					java.sql.Time horaAtual = java.sql.Time.valueOf(agora.toLocalTime());
+					// Corrigir todos os campos para a hora atual
+					data.setDATA_INI(dataAtual);
+					data.setHORA_INI(horaAtual);
+					data.setDATA_INI_M1(dataAtual);
+					data.setHORA_INI_M1(horaAtual);
+					data.setDATA_INI_M2(dataAtual);
+					data.setHORA_INI_M2(horaAtual);
+				}
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Erro ao validar data/hora em createRP_OF_OP_FUNC: " + e.getMessage(), e);
+			}
+		}
 		return dao11.create(data);
 	}
 
@@ -1024,9 +1113,39 @@ public class SIIP {
 	@Path("/updateRP_OF_OP_FUNC")
 	@Consumes("*/*")
 	@Produces("application/json")
-	public RP_OF_OP_FUNC updateRP_OF_OP_FUNC(final RP_OF_OP_FUNC RP_OF_OP_FUNC) {
-		RP_OF_OP_FUNC.setID_OP_FUNC(RP_OF_OP_FUNC.getID_OP_FUNC());
-		return dao11.update(RP_OF_OP_FUNC);
+	public RP_OF_OP_FUNC updateRP_OF_OP_FUNC(final RP_OF_OP_FUNC data) {
+		data.setID_OP_FUNC(data.getID_OP_FUNC());
+
+		// Só validar data fim se o pedido enviar data fim
+		if (data.getDATA_FIM() != null) {
+			try {
+				Query query = entityManager
+						.createNativeQuery("SELECT DATA_FIM, HORA_FIM FROM RP_OF_OP_FUNC WHERE ID_OP_FUNC = ?1")
+						.setParameter(1, data.getID_OP_FUNC());
+				List<?> result = query.getResultList();
+
+				if (!result.isEmpty()) {
+					Object[] row = (Object[]) result.get(0);
+					// Se DATA_FIM ou HORA_FIM estiverem vazios na BD, preencher com hora atual
+					if (row[0] == null || row[1] == null) {
+						LocalDateTime agora = LocalDateTime.now();
+						java.sql.Date dataAtual = java.sql.Date.valueOf(agora.toLocalDate());
+						java.sql.Time horaAtual = java.sql.Time.valueOf(agora.toLocalTime());
+
+						data.setDATA_FIM(dataAtual);
+						data.setHORA_FIM(horaAtual);
+						data.setDATA_FIM_M1(dataAtual);
+						data.setHORA_FIM_M1(horaAtual);
+						data.setDATA_FIM_M2(dataAtual);
+						data.setHORA_FIM_M2(horaAtual);
+					}
+				}
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Erro ao verificar data fim em updateRP_OF_OP_FUNC: " + e.getMessage(), e);
+			}
+		}
+
+		return dao11.update(data);
 	}
 
 	@GET
@@ -1130,6 +1249,29 @@ public class SIIP {
 	@Consumes("*/*")
 	@Produces("application/json")
 	public RP_OF_PARA_LIN insertRP_OF_PARA_LIN(final RP_OF_PARA_LIN data) {
+		// Corrigir datas/horas início se tiverem mais de 10 minutos de diferença da
+		// hora atual
+		if (data.getDATA_INI() != null && data.getHORA_INI() != null) {
+			try {
+				LocalDateTime dataHoraInicio = LocalDateTime.of(data.getDATA_INI().toLocalDate(),
+						data.getHORA_INI().toLocalTime());
+				LocalDateTime agora = LocalDateTime.now();
+				long diferencaMinutos = Math.abs(java.time.Duration.between(dataHoraInicio, agora).toMinutes());
+
+				if (diferencaMinutos > 10) {
+					java.sql.Date dataAtual = java.sql.Date.valueOf(agora.toLocalDate());
+					java.sql.Time horaAtual = java.sql.Time.valueOf(agora.toLocalTime());
+					data.setDATA_INI(dataAtual);
+					data.setHORA_INI(horaAtual);
+					data.setDATA_INI_M1(dataAtual);
+					data.setHORA_INI_M1(horaAtual);
+					data.setDATA_INI_M2(dataAtual);
+					data.setHORA_INI_M2(horaAtual);
+				}
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Erro ao validar data/hora em createRP_OF_PARA_LIN: " + e.getMessage(), e);
+			}
+		}
 		return dao9.create(data);
 	}
 
@@ -1137,9 +1279,38 @@ public class SIIP {
 	@Path("/updateRP_OF_PARA_LIN")
 	@Consumes("*/*")
 	@Produces("application/json")
-	public RP_OF_PARA_LIN updateRP_OF_PARA_LIN(final RP_OF_PARA_LIN RP_OF_PARA_LIN) {
-		RP_OF_PARA_LIN.setESTADO(RP_OF_PARA_LIN.getESTADO());
-		return dao9.update(RP_OF_PARA_LIN);
+	public RP_OF_PARA_LIN updateRP_OF_PARA_LIN(final RP_OF_PARA_LIN data) {
+		data.setESTADO(data.getESTADO());
+
+		// Só validar data fim se o pedido enviar data fim
+		if (data.getDATA_FIM() != null) {
+			try {
+				Query query = entityManager
+						.createNativeQuery("SELECT DATA_FIM, HORA_FIM FROM RP_OF_PARA_LIN WHERE ID_PARA_LIN = ?1")
+						.setParameter(1, data.getID_PARA_LIN());
+				List<?> result = query.getResultList();
+
+				if (!result.isEmpty()) {
+					Object[] row = (Object[]) result.get(0);
+					if (row[0] == null || row[1] == null) {
+						LocalDateTime agora = LocalDateTime.now();
+						java.sql.Date dataAtual = java.sql.Date.valueOf(agora.toLocalDate());
+						java.sql.Time horaAtual = java.sql.Time.valueOf(agora.toLocalTime());
+
+						data.setDATA_FIM(dataAtual);
+						data.setHORA_FIM(horaAtual);
+						data.setDATA_FIM_M1(dataAtual);
+						data.setHORA_FIM_M1(horaAtual);
+						data.setDATA_FIM_M2(dataAtual);
+						data.setHORA_FIM_M2(horaAtual);
+					}
+				}
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Erro ao verificar data fim em updateRP_OF_PARA_LIN: " + e.getMessage(), e);
+			}
+		}
+
+		return dao9.update(data);
 	}
 
 	// RP_OF_DEF_LIN********************************************
@@ -1480,6 +1651,7 @@ public class SIIP {
 			data.setCOD_SECTOR(cod);
 			data.setDES_SECTOR(desc);
 		}
+		data.setESTADO("P");
 		return dao18.create(data);
 	}
 
@@ -1876,14 +2048,15 @@ public class SIIP {
 				List<Object[]> dados = query.getResultList();
 
 				for (Object[] content : dados) {
-					
+
 					if (content[0].toString().equals(content_of.toString())) {
 						primeira_OPENUM = content[5].toString().equals("true") ? true : false;
 						DEVOLUCAO_CLIENTE = content[6].toString().equals("true") ? true : false;
 					}
-					
-					if(DEVOLUCAO_CLIENTE == true) return null;
-					
+
+					if (DEVOLUCAO_CLIENTE == true)
+						return null;
+
 					data = new SimpleDateFormat("yyyyMMddHHmmss_").format(new Date());
 					String inform_file = "";
 					Integer total = 1;
@@ -1891,6 +2064,10 @@ public class SIIP {
 					// cria
 					// 2)
 					if (content[1] == null && todos) {
+
+						if (content[3] == null)
+							return null;
+
 						Integer id_origem = Integer.parseInt(content[0].toString());
 						Query query3 = entityManager.createNativeQuery(
 								"select ID_OP_LIN,REF_NUM from RP_OF_OP_LIN where ID_OP_CAB in (select xx.ID_OP_CAB from RP_OF_OP_CAB xx where xx.ID_OF_CAB = "
@@ -2054,14 +2231,15 @@ public class SIIP {
 				List<Object[]> dados = query.getResultList();
 
 				for (Object[] content : dados) {
-					
+
 					if (content[0].toString().equals(content_of.toString())) {
 						primeira_OPENUM = content[5].toString().equals("true") ? true : false;
 						DEVOLUCAO_CLIENTE = content[6].toString().equals("true") ? true : false;
 					}
-					
-					if(DEVOLUCAO_CLIENTE == true) return null;
-					
+
+					if (DEVOLUCAO_CLIENTE == true)
+						return null;
+
 					data = new SimpleDateFormat("yyyyMMddHHmmss_").format(new Date());
 					String inform_file = "";
 					Integer total = 1;
@@ -2354,22 +2532,28 @@ public class SIIP {
 			@PathParam("ficheiros") Boolean ficheirosdownload, @PathParam("manual") Boolean manual,
 			final List<HashMap<String, String>> data2) throws IOException, ParseException {
 
+		// Validação para evitar NullPointerException
+		if (data2 == null || data2.isEmpty()) {
+			LOGGER.warning("getFicheiro chamado com data2 vazio ou nulo para id: " + id);
+			return Response.status(Response.Status.BAD_REQUEST).build();
+		}
+
 		HashMap<String, String> firstMap = data2.get(0);
 		String ip_posto = firstMap.get("ip_posto");
-		String data = new SimpleDateFormat("yyyyMMddHHmmss_").format(new Date());
+		String data = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss_"));
 		String url = getURL();
 
 		Boolean primeira_OPENUM = false;
 		Boolean DEVOLUCAO_CLIENTE = false;
 		try {
-			Thread.sleep(3000);
+			// Thread.sleep(3000);
 			Integer comp_num = 1;
 
-			String nome_ficheiro = "";
+			String nome_ficheiro;
 
 			Query query = entityManager.createNativeQuery(
-					"select ID_OF_CAB,ID_OF_CAB_ORIGEM,ID_UTZ_CRIA,OF_NUM,OP_NUM,ISNULL(PRIMEIRA_OPENUM,0) as PRIMEIRA_OPENUM,ISNULL(DEVOLUCAO_CLIENTE,0) as DEVOLUCAO_CLIENTE from RP_OF_CAB where ID_OF_CAB = "
-							+ id + " or ID_OF_CAB_ORIGEM = " + id + " order by ID_OF_CAB asc");
+					"select ID_OF_CAB,ID_OF_CAB_ORIGEM,ID_UTZ_CRIA,OF_NUM,OP_NUM,ISNULL(PRIMEIRA_OPENUM,0) as PRIMEIRA_OPENUM,ISNULL(DEVOLUCAO_CLIENTE,0) as DEVOLUCAO_CLIENTE from RP_OF_CAB where ID_OF_CAB = ?1 or ID_OF_CAB_ORIGEM = ?1 order by ID_OF_CAB asc")
+					.setParameter(1, id);
 
 			if (estado.equals("C") && !ficheirosdownload && !manual) {
 				eventosAoConcluir(id);
@@ -2382,11 +2566,12 @@ public class SIIP {
 			for (Object[] content : dados) {
 
 				if (content[0].toString().equals(id.toString())) {
-					primeira_OPENUM = content[5].toString().equals("true") ? true : false;
-					DEVOLUCAO_CLIENTE = content[6].toString().equals("true") ? true : false;
+					primeira_OPENUM = "true".equals(content[5].toString());
+					DEVOLUCAO_CLIENTE = "true".equals(content[6].toString());
 				}
-				
-				if(DEVOLUCAO_CLIENTE == true) return null;
+
+				if (DEVOLUCAO_CLIENTE)
+					return null;
 
 				String inform_file = "";
 				Integer total = 1;
@@ -2394,8 +2579,8 @@ public class SIIP {
 				if (content[1] == null) {
 					Integer id_origem = Integer.parseInt(content[0].toString());
 					Query query3 = entityManager.createNativeQuery(
-							"select ID_OP_LIN,REF_NUM from RP_OF_OP_LIN where ID_OP_CAB in (select xx.ID_OP_CAB from RP_OF_OP_CAB xx where xx.ID_OF_CAB = "
-									+ id_origem + ")");
+							"select ID_OP_LIN,REF_NUM from RP_OF_OP_LIN where ID_OP_CAB in (select xx.ID_OP_CAB from RP_OF_OP_CAB xx where xx.ID_OF_CAB = ?1)")
+							.setParameter(1, id_origem);
 					List<Object[]> dados3 = query3.getResultList();
 					total = dados3.size();
 					for (Object[] content3 : dados3) {
@@ -2456,15 +2641,17 @@ public class SIIP {
 					}
 				} else {
 					Integer id_origem = Integer.parseInt(content[1].toString());
-					String data_query = "";
-					if (estado.equals("M"))
-						data_query = " and  (c.VERSAO_MODIF != (select VERSAO_MODIF from RP_OF_CAB where ID_OF_CAB = "
-								+ id_origem
-								+ ") or (c.QUANT_BOAS_M1 != c.QUANT_BOAS_M2 or c.QUANT_DEF_M1 != c.QUANT_DEF_M2 or c.NOVO = 1 or c.APAGADO = 1)) ";
+					Integer id_of_cab_content = Integer.parseInt(content[0].toString());
 
-					Query query2 = entityManager.createNativeQuery(
-							"select OF_NUM_ORIGEM,a.ID_OF_CAB,c.ID_REF_ETIQUETA,c.OP_NUM,b.ID_OP_LIN,c.NOVO,c.ATIVO,c.APAGADO   from RP_OF_OP_CAB a inner join RP_OF_OP_LIN b on a.ID_OP_CAB = b.ID_OP_CAB inner join RP_OF_CAB d on  d.ID_OF_CAB = a.ID_OF_CAB inner join RP_OF_OP_ETIQUETA c on b.ID_OP_LIN = c.ID_OP_LIN  where b.TIPO_PECA not in ('COM','COMS') and a.ID_OF_CAB = "
-									+ Integer.parseInt(content[0].toString()) + data_query);
+					String sql = "select OF_NUM_ORIGEM,a.ID_OF_CAB,c.ID_REF_ETIQUETA,c.OP_NUM,b.ID_OP_LIN,c.NOVO,c.ATIVO,c.APAGADO from RP_OF_OP_CAB a inner join RP_OF_OP_LIN b on a.ID_OP_CAB = b.ID_OP_CAB inner join RP_OF_CAB d on d.ID_OF_CAB = a.ID_OF_CAB inner join RP_OF_OP_ETIQUETA c on b.ID_OP_LIN = c.ID_OP_LIN where b.TIPO_PECA not in ('COM','COMS') and a.ID_OF_CAB = ?1";
+					if (estado.equals("M")) {
+						sql += " and (c.VERSAO_MODIF != (select VERSAO_MODIF from RP_OF_CAB where ID_OF_CAB = ?2) or (c.QUANT_BOAS_M1 != c.QUANT_BOAS_M2 or c.QUANT_DEF_M1 != c.QUANT_DEF_M2 or c.NOVO = 1 or c.APAGADO = 1))";
+					}
+
+					Query query2 = entityManager.createNativeQuery(sql).setParameter(1, id_of_cab_content);
+					if (estado.equals("M")) {
+						query2.setParameter(2, id_origem);
+					}
 
 					List<Object[]> dados2 = query2.getResultList();
 					Integer etiqueta_num = 1;
@@ -2511,14 +2698,14 @@ public class SIIP {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, "Erro ao processar ficheiro para id: " + id, e);
 		}
 
 		if (estado.equals("C")) {
 			try {
 				ficheiroimprimiretiqueta(ip_posto, id, ficheirosdownload, data, manual, primeira_OPENUM);
 			} catch (Exception e) {
-				System.err.println("Erro ao imprimir etiqueta: " + e.getMessage());
+				LOGGER.log(Level.WARNING, "Erro ao imprimir etiqueta para id: " + id, e);
 			}
 		}
 
@@ -2526,12 +2713,11 @@ public class SIIP {
 			try {
 				criarFicheiroConsumo(id, ficheirosdownload, data, primeira_OPENUM);
 			} catch (Exception e) {
-				System.err.println("Erro ao criar ficheiro de consumo: " + e.getMessage());
+				LOGGER.log(Level.WARNING, "Erro ao criar ficheiro de consumo para id: " + id, e);
 			}
 		}
 
 		if (ficheirosdownload) {
-
 			final File file = new File("c:/sgiid/temp_files/" + data + ".zip");
 			ResponseBuilder response = Response.ok((Object) file);
 			response.header("Content-Disposition", "attachment; filename=ficheiros.zip");
@@ -2543,7 +2729,6 @@ public class SIIP {
 				}
 			}, 5000);
 			return response.build();
-
 		} else {
 			return null;
 		}
@@ -2627,9 +2812,21 @@ public class SIIP {
 	public void criarFicheiro(Integer id, Integer ficheiro, String nome_ficheiro, String tipo, String of,
 			Integer id_origem, Integer id_etiqueta, String estado, String nome_ficheiro2, String OP_NUM,
 			String ID_OP_LIN, Boolean cria_pausa, Integer total, Boolean ficheirosdownload, String nomezip,
-			String novaetiqueta, String estado2, Boolean manual, String ip_posto ) throws IOException, ParseException {
- 
-		
+			String novaetiqueta, String estado2, Boolean manual, String ip_posto) throws IOException, ParseException {
+
+		// Verificar se é trabalho do Muro (campo ETIQUETA não nulo e não vazio)
+		Boolean isMuro = false;
+		Query queryMuro = entityManager.createNativeQuery("select ETIQUETA from RP_OF_CAB where ID_OF_CAB = ?1")
+				.setParameter(1, id_origem);
+		List<?> dadosMuro = queryMuro.getResultList();
+		if (!dadosMuro.isEmpty() && dadosMuro.get(0) != null) {
+			String etiquetaMuro = dadosMuro.get(0).toString().trim();
+			isMuro = !etiquetaMuro.isEmpty();
+		}
+
+		// Variável para acumular pausas quando for Muro
+		String pausasMuro = "";
+
 		if (tipo == "COMP") {
 			Query query_matrix = entityManager.createNativeQuery("select a.ID_OF_CAB,a.OF_NUM from RP_OF_CAB a "
 					+ "inner join DOC_DIC_POSTOS b on a.IP_POSTO = b.IP_POSTO "
@@ -2790,7 +2987,7 @@ public class SIIP {
 
 				// OP_NUM
 				if (estado.equals("C")) {
-					if (content[11].toString().equals("1")) {
+					if (content[11].toString().equals("1") && !OP_NUM.equals("NULL")) {
 						data_A += ("0000" + OP_NUM).substring(("0000" + OP_NUM).length() - 4,
 								("0000" + OP_NUM).length()); // N� Op�ration
 					} else {
@@ -2953,7 +3150,9 @@ public class SIIP {
 
 				data += data_A;
 				// if (estado.equals("P")) {
-				if (cria_pausa) {
+				// Preencher linha_utz quando cria_pausa=true OU quando for Muro (para usar nas
+				// pausas)
+				if (cria_pausa || isMuro) {
 					linha_utz.put(content[1].toString(), data_A);
 					linha_utz_inicio.put(content[1].toString(), data_A.substring(0, 87));
 				}
@@ -2966,8 +3165,11 @@ public class SIIP {
 			}
 
 			// PAUSA
-			// estado.equals("P") &&
-			if (cria_pausa) {
+			// Para Muro: processar pausas quando estado != "P" (quando o ficheiro vai ser
+			// escrito)
+			// Para não-Muro: processar apenas quando cria_pausa=true (comportamento
+			// original)
+			if (cria_pausa || (isMuro && !estado.equals("P"))) {
 				Boolean criou_PAUSA = false;
 				Query query2 = entityManager.createNativeQuery("select c." + DATA_INI + ",c." + HORA_INI + ",c."
 						+ DATA_FIM + ",c." + HORA_FIM + ", " + "cast((DATEDIFF(second,DATEADD(DAY, DATEDIFF(DAY, c."
@@ -3029,13 +3231,19 @@ public class SIIP {
 					data_pausa += "                                       \r\n"; // Texte
 																					// libre
 
+					StringBuffer buf3 = new StringBuffer(linha_utz.get(content2[7].toString()));
 					String seq = sequencia(id.toString());
 
-					StringBuffer buf3 = new StringBuffer(linha_utz.get(content2[7].toString()));
-					buf3.replace(18, 27, seq);
+					if (!isMuro) {
+						buf3.replace(18, 27, seq);
+					}
+
 					String linha3 = buf3.toString();
 					if (!existe_maquina) {
-						data_pausa_p += linha3;
+						if (isMuro) {
+						} else {
+							data_pausa_p += linha3;
+						}
 					}
 
 					String linha_A_MAQUINA = "";
@@ -3047,7 +3255,8 @@ public class SIIP {
 						while ((line = bufReader.readLine()) != null) {
 
 							StringBuffer buf6 = new StringBuffer(line);
-							buf6.replace(18, 27, seq);
+							if (!isMuro)
+								buf6.replace(18, 27, seq);
 							buf6.replace(121, 136, "000000000000000");
 							buf6.replace(139, 154, "000000000000000");
 							String linha6 = buf6.toString();
@@ -3065,7 +3274,8 @@ public class SIIP {
 					if (existe_maquina && tipo.equals("PF")
 							&& (content2[7].toString().equals(content2[8].toString()))) {
 						StringBuffer buf2 = new StringBuffer(data_maquina);
-						buf2.replace(18, 27, seq);
+						if (!isMuro)
+							buf2.replace(18, 27, seq);
 						String linha2 = buf2.toString();
 						// data_pausa_p += linha2.substring(0, 87) + data_pausa;
 
@@ -3120,24 +3330,40 @@ public class SIIP {
 					}
 
 					StringBuffer buf = new StringBuffer(linha_utz_inicio.get(content2[7].toString()));
-					buf.replace(18, 27, seq);
+					if (!isMuro)
+						buf.replace(18, 27, seq);
 					String linha = buf.toString();
 					data_pausa_p += linha + data_pausa;
 
+					// Verificar se deve criar ficheiro de pausa
+					boolean deveCriarPausa = false;
 					if (estado2.equals("M") && content2[9].toString().equals("1")
 							&& !content2[10].toString().equals("1") && Float.parseFloat(content2[4].toString()) > 0) {
-						criar_ficheiro_Pausa(data_pausa_p, path2, count, ficheirosdownload, nome_ficheiro2, nomezip,
-								path_error);
+						deveCriarPausa = true;
 					} else if (estado2.equals("M") && content2[10].toString().equals("1") && ficheiro == 2
 							&& ((content2[4] != null) ? Float.parseFloat(content2[4].toString()) : 0) > 0) {
-						criar_ficheiro_Pausa(data_pausa_p, path2, count, ficheirosdownload, nome_ficheiro2, nomezip,
-								path_error);
+						deveCriarPausa = true;
 					} else if (!estado2.equals("M") && Float.parseFloat(content2[4].toString()) > 0) {
-						criar_ficheiro_Pausa(data_pausa_p, path2, count, ficheirosdownload, nome_ficheiro2, nomezip,
-								path_error);
+						deveCriarPausa = true;
+					}
+
+					if (deveCriarPausa) {
+						if (isMuro) {
+							// Se for Muro, acumula as pausas para concatenar ao ficheiro normal
+							pausasMuro += data_pausa_p;
+						} else {
+							// Caso contrário, cria ficheiro separado
+							criar_ficheiro_Pausa(data_pausa_p, path2, count, ficheirosdownload, nome_ficheiro2, nomezip,
+									path_error);
+						}
 					}
 
 				}
+			}
+
+			// Se for Muro, concatenar as pausas ao ficheiro normal
+			if (isMuro && !pausasMuro.isEmpty()) {
+				data += pausasMuro;
 			}
 
 			if (!estado.equals("P") && !estado.equals("M")) {
@@ -3227,7 +3453,7 @@ public class SIIP {
 
 					// OP_NUM
 					if (estado.equals("C")) {
-						if (content3[18].toString().equals("1")) {
+						if (content3[18].toString().equals("1") && !OP_NUM.equals("NULL")) {
 							data_quantidades += ("0000" + OP_NUM).substring(("0000" + OP_NUM).length() - 4,
 									("0000" + OP_NUM).length()); // N� Op�ration
 						} else {
@@ -3380,7 +3606,8 @@ public class SIIP {
 										+ ip_posto + "'");
 						List<Object[]> dados_impressora = query_impressora.getResultList();
 						for (Object[] content2 : dados_impressora) {
-							nomeimpressora = content2[0].toString();
+							if (content2[0] != null)
+								nomeimpressora = content2[0].toString();
 							if (content2[1] != null) {
 								ipimpressora = content2[1].toString();
 							}
@@ -3535,7 +3762,7 @@ public class SIIP {
 
 					// OP_NUM
 					if (estado.equals("C")) {
-						if (content4[21].toString().equals("1")) {
+						if (content4[21].toString().equals("1") && !OP_NUM.equals("NULL")) {
 							data_defeitos += ("0000" + OP_NUM).substring(("0000" + OP_NUM).length() - 4,
 									("0000" + OP_NUM).length()); // N� Op�ration
 						} else {
@@ -3831,7 +4058,7 @@ public class SIIP {
 
 			// OP_NUM
 			if (estado.equals("C")) {
-				if (content3[18].toString().equals("1")) {
+				if (content3[18].toString().equals("1") && !OP_NUM.equals("NULL")) {
 					data_quantidades += ("0000" + OP_NUM).substring(("0000" + OP_NUM).length() - 4,
 							("0000" + OP_NUM).length()); // N� Op�ration
 				} else {
@@ -4082,9 +4309,8 @@ public class SIIP {
 
 			// OP_NUM
 			String OP_NUM = (content[2] == null) ? "" : content[2].toString();
-			data += ("0000" + OP_NUM).substring(("0000" + OP_NUM).length() - 4,
-					("0000" + OP_NUM).length());
-			//data += ("0010").substring(0, 4);// N� Op�ration
+			data += ("0000" + OP_NUM).substring(("0000" + OP_NUM).length() - 4, ("0000" + OP_NUM).length());
+			// data += ("0010").substring(0, 4);// N� Op�ration
 
 			data += "1";// Position ( S12 )
 
@@ -5207,7 +5433,7 @@ public class SIIP {
 		}
 		data_etiq += "THT_NAME=" + nomeimpressora /* + ipimpressora */ + "\r\n";
 		data_etiq += "AF100;AF101;AF1;AF2;A2;AF3;A3;AF4;A4;AF5;A5;AF6;AF7;A7;AF8;AF9;AF10;AF11;AF24;AF12;AF16;A16;AF17;AF18;AF19;AF20;A20;AF21;A21;AF22;AF23;AF25;AF26;AF27;AF28;AF29;AF30;AF31;AF32;AF33;AF34;AF35;AF36;AF37;AF38;AF39;AF40;AF41;AF42;AF43;AF44;XF01;END;\r\n";
-		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+
 		Integer count = 0;
 		for (Object[] value : dados_etiqeutas) {
 			count++;
@@ -5221,15 +5447,16 @@ public class SIIP {
 			DESC2 = (value[4] == null) ? "" : value[4].toString();
 			ETQORIDOC1 = value[8].toString();
 
-			java.util.Date date1 = null;
+			SimpleDateFormat inputFormatter = new SimpleDateFormat("yyyy-MM-dd");
+			SimpleDateFormat outputFormatter = new SimpleDateFormat("yyMMdd");
+
+			String datas = "";
 			try {
-				date1 = formatter.parse(DATCRE);
+				java.util.Date date1 = inputFormatter.parse(DATCRE);
+				datas = outputFormatter.format(date1);
 			} catch (ParseException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			formatter = new SimpleDateFormat("yyMMdd");
-			String datas = formatter.format(date1);
 
 			String quant = String.format("%.3f", Float.parseFloat(QUANT)).replace("$", ",");
 			data_etiq += "DOURECA - PT- 4940;DOURECA - PT- 4940;;;;";
@@ -5754,7 +5981,8 @@ public class SIIP {
 		return dao25.update(RP_CONF_OP_RECUPERACAO_PECAS);
 	}
 
-	// RP_OF_OPERARIOS_CAIXA ***************************************************************
+	// RP_OF_OPERARIOS_CAIXA
+	// ***************************************************************
 	@POST
 	@Path("/createRP_OF_OPERARIOS_CAIXA")
 	@Consumes("*/*")

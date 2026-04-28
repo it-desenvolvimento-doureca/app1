@@ -42,16 +42,22 @@ public class RP_OF_CAB {
 	private Boolean PRIMEIRA_OPENUM;
 	private Boolean ULTIMA_OPENUM;
 	private String ETIQUETA;
+	private String DATCRE_ETIQUETA;
 
 	// Informações Adicionais
 	private Boolean TESTE_DIMENSIONAL;
 	private Boolean OPERARIO_FORMACAO;
 	private Boolean ORIGEM_RECLAMACAO;
+	private String DATA_ORIGEM_RECLAMACAO;
 	private Boolean STOCK_ETIQUETA_30;
 	private Boolean DEFEITOS_INJECAO;
 	private Boolean DEVOLUCAO_CLIENTE;
 	private Boolean GAMA_EMBALAGEM_INCORRETA;
 	private Boolean MODO_DEGRADADO;
+	private Boolean VERIFICACAO_QUANT_EMBALAGEM;
+	private String DATA_DEVOLUCAO_CLIENTE;
+	private Boolean ENSAIO_DIA;
+	private String MODO_DEGRADADO_MOTIVO;
 
 	@Id
 	@Column(name = "ID_OF_CAB")
@@ -343,6 +349,15 @@ public class RP_OF_CAB {
 		ORIGEM_RECLAMACAO = oRIGEM_RECLAMACAO;
 	}
 
+	@Column(name = "DATA_ORIGEM_RECLAMACAO")
+	public String getDATA_ORIGEM_RECLAMACAO() {
+		return DATA_ORIGEM_RECLAMACAO;
+	}
+
+	public void setDATA_ORIGEM_RECLAMACAO(String dATA_ORIGEM_RECLAMACAO) {
+		DATA_ORIGEM_RECLAMACAO = dATA_ORIGEM_RECLAMACAO;
+	}
+
 	@Column(name = "STOCK_ETIQUETA_30")
 	public Boolean getSTOCK_ETIQUETA_30() {
 		return STOCK_ETIQUETA_30;
@@ -388,4 +403,49 @@ public class RP_OF_CAB {
 		MODO_DEGRADADO = mODO_DEGRADADO;
 	}
 
+	@Column(name = "VERIFICACAO_QUANT_EMBALAGEM")
+	public Boolean getVERIFICACAO_QUANT_EMBALAGEM() {
+		return VERIFICACAO_QUANT_EMBALAGEM;
+	}
+
+	public void setVERIFICACAO_QUANT_EMBALAGEM(Boolean vERIFICACAO_QUANT_EMBALAGEM) {
+		VERIFICACAO_QUANT_EMBALAGEM = vERIFICACAO_QUANT_EMBALAGEM;
+	}
+	
+	@Column(name = "DATA_DEVOLUCAO_CLIENTE")
+	public String getDATA_DEVOLUCAO_CLIENTE() {
+		return DATA_DEVOLUCAO_CLIENTE;
+	}
+	
+	public void setDATA_DEVOLUCAO_CLIENTE(String dATA_DEVOLUCAO_CLIENTE) {
+		DATA_DEVOLUCAO_CLIENTE = dATA_DEVOLUCAO_CLIENTE;
+	}
+	
+	@Column(name = "ENSAIO_DIA")
+	public Boolean getENSAIO_DIA() {
+		return ENSAIO_DIA;
+	}
+	
+	public void setENSAIO_DIA(Boolean eNSAIO_DIA) {
+		ENSAIO_DIA = eNSAIO_DIA;
+	}
+	
+	@Column(name = "MODO_DEGRADADO_MOTIVO")
+	public String getMODO_DEGRADADO_MOTIVO() {
+		return MODO_DEGRADADO_MOTIVO;
+	}
+	
+	public void setMODO_DEGRADADO_MOTIVO(String mODO_DEGRADADO_MOTIVO) {
+		MODO_DEGRADADO_MOTIVO = mODO_DEGRADADO_MOTIVO;
+	}
+	
+	@Column(name = "DATCRE_ETIQUETA")
+	public String getDATCRE_ETIQUETA() {
+		return DATCRE_ETIQUETA;
+	}
+	
+	public void setDATCRE_ETIQUETA(String dATCRE_ETIQUETA) {
+		DATCRE_ETIQUETA = dATCRE_ETIQUETA;
+	}
+	
 }

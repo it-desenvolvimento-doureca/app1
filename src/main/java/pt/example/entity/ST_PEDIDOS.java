@@ -28,6 +28,7 @@ public class ST_PEDIDOS {
 	public Integer COD_SECTOR_OF;
 	public String DES_SECTOR_OF;
 	public String IP_POSTO;
+	public String ESTADO;
 
 	@Id
 	@Column(name = "ID_PEDIDO")
@@ -165,4 +166,14 @@ public class ST_PEDIDOS {
 	public void setIP_POSTO(String iP_POSTO) {
 		IP_POSTO = iP_POSTO;
 	}
+	
+	@Column(name = "ESTADO")
+	public String getESTADO() {
+		return ESTADO;
+	}
+	
+	public void setESTADO(String eSTADO) {
+		ESTADO = eSTADO;
+	}
+	
 }
