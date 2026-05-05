@@ -5156,7 +5156,7 @@ public class SIIP {
 
 				String[] entry = pair.split("::");
 
-				mensagem = mensagem.replace("{" + entry[0].trim() + "}", entry[1].trim());
+				mensagem = mensagem.replace("{" + entry[0].trim() + "}", (entry.length > 1) ? entry[1].trim() : "");
 				assunto = assunto.replace("{" + entry[0].trim() + "}", (entry.length > 1) ? entry[1].trim() : "");
 			}
 			email.setASSUNTO(assunto);
@@ -5282,7 +5282,7 @@ public class SIIP {
 
 			for (String pair : keyValuePairs) {
 				String[] entry = pair.split("::");
-				mensagem = mensagem.replace("{" + entry[0].trim() + "}", entry[1].trim());
+				mensagem = mensagem.replace("{" + entry[0].trim() + "}", (entry.length > 1) ? entry[1].trim() : "");
 				assunto = assunto.replace("{" + entry[0].trim() + "}", (entry.length > 1) ? entry[1].trim() : "");
 			}
 			email.setASSUNTO(assunto);
