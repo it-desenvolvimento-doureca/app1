@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -1587,7 +1588,13 @@ public class SIIP {
 	@Path("/createGER_EVENTO")
 	@Consumes("*/*")
 	@Produces("application/json")
-	public GER_EVENTO insertGER_EVENTO(final GER_EVENTO data) {
+	public GER_EVENTO insertGER_EVENTO(final GER_EVENTO data, @Context HttpServletRequest request) {
+		if (data.getDATA_HORA_CRIA() == null) {
+			data.setDATA_HORA_CRIA(new Timestamp(System.currentTimeMillis()));
+		}
+		if (data.getID_UTZ_CRIA() == null || data.getID_UTZ_CRIA().isEmpty()) {
+			data.setID_UTZ_CRIA("000");
+		}
 		return dao15.create(data);
 	}
 
