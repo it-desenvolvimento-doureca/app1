@@ -1512,7 +1512,6 @@ public class SIIP {
 	@Consumes("*/*")
 	@Produces("application/json")
 	public RP_OF_OP_ETIQUETA updateRP_OF_OP_ETIQUETA(final RP_OF_OP_ETIQUETA RP_OF_OP_ETIQUETA) {
-		RP_OF_OP_ETIQUETA.setQUANT_BOAS(RP_OF_OP_ETIQUETA.getQUANT_BOAS());
 		return dao13.update(RP_OF_OP_ETIQUETA);
 	}
 
