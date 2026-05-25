@@ -125,6 +125,15 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 
 	public List<RP_OF_CAB> getof(Integer id) {
 
+		Query query2 = entityManager.createNativeQuery("UPDATE a set ESTADO = c.ESTADO from RP_OF_CAB a  "
+				+ " LEFT join RP_OF_OP_CAB b on a.ID_OF_CAB = b.ID_OF_CAB  "
+				+ " LEFT join RP_OF_OP_FUNC c on b.ID_OP_CAB = c.ID_OP_CAB and a.ID_UTZ_CRIA = c.ID_UTZ_CRIA  "
+				+ " where a.ESTADO in ('C') and c.ESTADO not in ('C','M') "
+				+ " and a.ID_OF_CAB_ORIGEM is null "
+				+ " and a.ID_OF_CAB = :id ");
+		query2.setParameter("id", id);
+		query2.executeUpdate();
+		
 		Query query = entityManager.createQuery("Select a from RP_OF_CAB a where a.ID_OF_CAB = :id");
 		query.setParameter("id", id);
 		List<RP_OF_CAB> utz = query.getResultList();

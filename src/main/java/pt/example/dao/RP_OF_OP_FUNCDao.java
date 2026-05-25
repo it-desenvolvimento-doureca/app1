@@ -25,11 +25,12 @@ public class RP_OF_OP_FUNCDao extends GenericDaoJpaImpl<RP_OF_OP_FUNC, Integer>
 				+ "a.ID_OP_CAB  in (select e.ID_OP_CAB from RP_OF_CAB d, RP_OF_OP_CAB e  "
 				+ "where (d.ID_OF_CAB =:id or d.ID_OF_CAB_ORIGEM = :id) and e.ID_OF_CAB = d.ID_OF_CAB) "
 				+ "and c.ID_OF_CAB in (select d.ID_OF_CAB from RP_OF_CAB d where d.ID_OF_CAB_ORIGEM = :id or d.ID_OF_CAB=:id) and  "
-				+ "a.ID_UTZ_CRIA = :user and b.ESTADO NOT IN (:estado) and a.ESTADO NOT IN (:estado) order by b.ID_OF_CAB_ORIGEM,b.ID_OF_CAB");
+				+ "a.ID_UTZ_CRIA = :user  and a.ESTADO NOT IN (:estado) order by b.ID_OF_CAB_ORIGEM,b.ID_OF_CAB");
 		query.setParameter("id", id_of_cab);
 		query.setParameter("user", user);
 		query.setParameter("estado", estado);
 		List<RP_OF_OP_FUNC> utz = query.getResultList();
+		/*and b.ESTADO NOT IN (:estado)*/
 		return utz;
 
 	}
