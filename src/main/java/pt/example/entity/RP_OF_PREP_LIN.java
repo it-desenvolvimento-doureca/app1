@@ -27,6 +27,7 @@ public class RP_OF_PREP_LIN {
 	private String ID_UTZ_MODIF;
 	private Timestamp DATA_HORA_MODIF;
 	private String ESTADO;
+	private String PERFIL_CRIA;
 
 	private Date DATA_INI_M1;
 	private Time HORA_INI_M1;
@@ -205,6 +206,15 @@ public class RP_OF_PREP_LIN {
 
 	public void setESTADO(String eSTADO) {
 		ESTADO = eSTADO;
+	}
+
+	@Column(name = "PERFIL_CRIA")
+	public String getPERFIL_CRIA() {
+		return PERFIL_CRIA;
+	}
+
+	public void setPERFIL_CRIA(String pERFIL_CRIA) {
+		PERFIL_CRIA = pERFIL_CRIA;
 	}
 
 }

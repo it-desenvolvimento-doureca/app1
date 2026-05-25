@@ -43,6 +43,8 @@ public class RP_OF_CAB {
 	private Boolean ULTIMA_OPENUM;
 	private String ETIQUETA;
 	private String DATCRE_ETIQUETA;
+	private String ID_UTZ_REG_RETRO;
+	private String NOME_UTZ_REG_RETRO;
 
 	// Informações Adicionais
 	private Boolean TESTE_DIMENSIONAL;
@@ -447,5 +449,23 @@ public class RP_OF_CAB {
 	public void setDATCRE_ETIQUETA(String dATCRE_ETIQUETA) {
 		DATCRE_ETIQUETA = dATCRE_ETIQUETA;
 	}
-	
+
+	@Column(name = "ID_UTZ_REG_RETRO")
+	public String getID_UTZ_REG_RETRO() {
+		return ID_UTZ_REG_RETRO;
+	}
+
+	public void setID_UTZ_REG_RETRO(String iD_UTZ_REG_RETRO) {
+		ID_UTZ_REG_RETRO = iD_UTZ_REG_RETRO;
+	}
+
+	@Column(name = "NOME_UTZ_REG_RETRO")
+	public String getNOME_UTZ_REG_RETRO() {
+		return NOME_UTZ_REG_RETRO;
+	}
+
+	public void setNOME_UTZ_REG_RETRO(String nOME_UTZ_REG_RETRO) {
+		NOME_UTZ_REG_RETRO = nOME_UTZ_REG_RETRO;
+	}
+
 }

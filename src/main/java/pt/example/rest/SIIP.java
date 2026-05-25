@@ -729,7 +729,7 @@ public class SIIP {
 				LocalDateTime agora = LocalDateTime.now();
 				long diferencaMinutos = Math.abs(java.time.Duration.between(dataHoraInicio, agora).toMinutes());
 
-				if (diferencaMinutos > 10) {
+				if (diferencaMinutos > 10 && !"S".equals(data.getPERFIL_CRIA())) {
 					java.sql.Date dataAtual = java.sql.Date.valueOf(agora.toLocalDate());
 					java.sql.Time horaAtual = java.sql.Time.valueOf(agora.toLocalTime());
 					data.setDATA_INI(dataAtual);
@@ -1092,7 +1092,7 @@ public class SIIP {
 				LocalDateTime agora = LocalDateTime.now();
 				long diferencaMinutos = Math.abs(java.time.Duration.between(dataHoraInicio, agora).toMinutes());
 
-				if (diferencaMinutos > 10) {
+				if (diferencaMinutos > 10 && !"S".equals(data.getPERFIL_CRIA())) {
 					java.sql.Date dataAtual = java.sql.Date.valueOf(agora.toLocalDate());
 					java.sql.Time horaAtual = java.sql.Time.valueOf(agora.toLocalTime());
 					// Corrigir todos os campos para a hora atual
