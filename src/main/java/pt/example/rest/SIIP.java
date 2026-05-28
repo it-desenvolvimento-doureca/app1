@@ -3038,14 +3038,14 @@ public class SIIP {
 				data_A += (content[1] + "         ").substring(0, 10);
 
 				data_A += "   A"; // N� �tablissement + Type d'�l�ment A
-				data_A += content[5].toString().replaceAll("-", ""); // Date
-																		// d�but
-				data_A += content[6].toString().replace(":", "").substring(0, 6); // Heure
-																					// d�but
-				data_A += content[7].toString().replaceAll("-", ""); // Date
-																		// fin
-				data_A += content[8].toString().replace(":", "").substring(0, 6); // Heure
-																					// fin
+				if (content[5] == null || content[6] == null || content[7] == null || content[8] == null) {
+					LOGGER.warning("DATA_INI/FIM null para id_origem=" + id_origem + " - race condition, ficheiro nao gerado");
+					continue;
+				}
+				data_A += content[5].toString().replaceAll("-", ""); // Date debut
+				data_A += content[6].toString().replace(":", "").substring(0, 6); // Heure debut
+				data_A += content[7].toString().replaceAll("-", ""); // Date fin
+				data_A += content[8].toString().replace(":", "").substring(0, 6); // Heure fin
 				data_A += "04002"; // Nombre de postes + Origine temps pr�pa.
 
 				// Temps de pr�paration
