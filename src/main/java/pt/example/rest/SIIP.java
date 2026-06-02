@@ -1,4 +1,4 @@
-package pt.example.rest;
+﻿package pt.example.rest;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -83,6 +83,7 @@ import pt.example.dao.RP_OF_OP_FUNCDao;
 import pt.example.dao.RP_OF_OP_LINDao;
 import pt.example.dao.RP_OF_OUTRODEF_LINDao;
 import pt.example.dao.RP_OF_PARA_LINDao;
+import pt.example.dao.RP_OF_OP_PREVISTADao;
 import pt.example.dao.RP_OF_PREP_LINDao;
 import pt.example.dao.ST_PEDIDOSDao;
 import pt.example.dao.VERSAO_APPDao;
@@ -112,6 +113,7 @@ import pt.example.entity.RP_OF_OP_FUNC;
 import pt.example.entity.RP_OF_OP_LIN;
 import pt.example.entity.RP_OF_OUTRODEF_LIN;
 import pt.example.entity.RP_OF_PARA_LIN;
+import pt.example.entity.RP_OF_OP_PREVISTA;
 import pt.example.entity.RP_OF_PREP_LIN;
 import pt.example.entity.ST_PEDIDOS;
 import pt.example.entity.VERSAO_APP;
@@ -205,6 +207,9 @@ public class SIIP {
 
 	@Inject
 	private RP_OF_OPERARIOS_CAIXADao dao26;
+
+	@Inject
+	private RP_OF_OP_PREVISTADao daoOpPrevista;
 
 	// RP_CONF_UTZ_PERF***************************************************************
 	@POST
@@ -500,6 +505,18 @@ public class SIIP {
 	@Consumes("*/*")
 	@Produces("application/json")
 	public RP_OF_CAB insertRP_OF_CAB(final RP_OF_CAB data) {
+		if ("2".equals(data.getOP_PREVISTA()) && data.getOF_NUM() != null && data.getOP_COD_ORIGEM() != null) {
+			boolean existe = daoOpPrevista.existsByOfNumAndOpCod(data.getOF_NUM(), data.getOP_COD_ORIGEM());
+			if (existe) {
+				data.setOP_PREVISTA("1");
+			}
+
+			if (data.getOP_NUM() == null || data.getOP_NUM().isEmpty()) {
+				int opNum = 9000 + Integer.parseInt(data.getOP_COD_ORIGEM());
+				data.setOP_NUM(String.valueOf(opNum));
+			}
+
+		}
 		return dao.create(data);
 	}
 
@@ -1429,6 +1446,9 @@ public class SIIP {
 	@Consumes("*/*")
 	@Produces("application/json")
 	public RP_OF_OP_ETIQUETA insertRP_OF_OP_ETIQUETA(final RP_OF_OP_ETIQUETA data) {
+		if (data.getOP_COD_ORIGEM() != null && (data.getOP_NUM() == null || data.getOP_NUM().isEmpty())) {
+			data.setOP_NUM(String.valueOf(9000 + Integer.parseInt(data.getOP_COD_ORIGEM())));
+		}
 		return dao13.create(data);
 	}
 
@@ -1972,6 +1992,19 @@ public class SIIP {
 
 		return op_num;
 
+	}
+
+	public void registarOpPrevista(Integer idOfCab, String ofNum, String opCod, String opPrevista, String utzCria) {
+		if (!"2".equals(opPrevista) || ofNum == null || opCod == null)
+			return;
+		boolean existe = daoOpPrevista.existsByOfNumAndOpCod(ofNum, opCod);
+		if (!existe) {
+			int opNum = 9000 + Integer.parseInt(opCod);
+			entityManager.createNativeQuery(
+					"INSERT INTO RP_OF_OP_PREVISTA (OF_NUM,OP_COD,DATA_CRIA,OP_NUM,UTZ_CRIA) VALUES ('"
+							+ ofNum + "','" + opCod + "',GETDATE()," + opNum + ",'" + utzCria + "')")
+					.executeUpdate();			 
+		}
 	}
 
 	public String getURL() {
@@ -2557,15 +2590,13 @@ public class SIIP {
 
 			String nome_ficheiro;
 
-			Query query = entityManager.createNativeQuery(
-					"select ID_OF_CAB,ID_OF_CAB_ORIGEM,ID_UTZ_CRIA,OF_NUM,OP_NUM,ISNULL(PRIMEIRA_OPENUM,0) as PRIMEIRA_OPENUM,ISNULL(DEVOLUCAO_CLIENTE,0) as DEVOLUCAO_CLIENTE from RP_OF_CAB where ID_OF_CAB = ?1 or ID_OF_CAB_ORIGEM = ?1 order by ID_OF_CAB asc")
-					.setParameter(1, id);
+			List<Object[]> dados = entityManager.createNativeQuery(
+					"select ID_OF_CAB,ID_OF_CAB_ORIGEM,ID_UTZ_CRIA,OF_NUM,OP_NUM,ISNULL(PRIMEIRA_OPENUM,0) as PRIMEIRA_OPENUM,ISNULL(DEVOLUCAO_CLIENTE,0) as DEVOLUCAO_CLIENTE,OP_COD_ORIGEM,OP_PREVISTA from RP_OF_CAB where ID_OF_CAB = ?1 or ID_OF_CAB_ORIGEM = ?1 order by ID_OF_CAB asc")
+					.setParameter(1, id).getResultList();
 
 			if (estado.equals("C") && !ficheirosdownload && !manual) {
 				eventosAoConcluir(id);
 			}
-
-			List<Object[]> dados = query.getResultList();
 
 			Boolean pausa = true;
 
@@ -2584,6 +2615,13 @@ public class SIIP {
 				// se for PF cria ficheiro (se o estado for modifica��o cria 2)
 				if (content[1] == null) {
 					Integer id_origem = Integer.parseInt(content[0].toString());
+					if (estado.equals("C")) {
+						registarOpPrevista(id_origem,
+								content[3] != null ? content[3].toString() : null,
+								content[7] != null ? content[7].toString() : null,
+								content[8] != null ? content[8].toString() : null,
+								content[2] != null ? content[2].toString() : null);
+					}
 					Query query3 = entityManager.createNativeQuery(
 							"select ID_OP_LIN,REF_NUM from RP_OF_OP_LIN where ID_OP_CAB in (select xx.ID_OP_CAB from RP_OF_OP_CAB xx where xx.ID_OF_CAB = ?1)")
 							.setParameter(1, id_origem);
