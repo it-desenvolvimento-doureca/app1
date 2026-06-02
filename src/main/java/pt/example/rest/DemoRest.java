@@ -376,6 +376,18 @@ public class DemoRest {
 	}
 
 	@GET
+	@Path("/getcomponentes/{OFANUMENR}")
+	@Produces("application/json")
+	public List<HashMap<String, String>> getSPComponentes(@PathParam("OFANUMENR") String OFANUMENR)
+			throws SQLException, ClassNotFoundException {
+
+		ConnectProgress connectionProgress = new ConnectProgress();
+
+		List<HashMap<String, String>> dados = connectionProgress.getSPComponentes(OFANUMENR, getURL());
+		return dados;
+	}
+
+	@GET
 	@Path("/defeitos/{fam}")
 	@Produces("application/json")
 	public List<HashMap<String, String>> getDefeitos(@PathParam("fam") String fam)
