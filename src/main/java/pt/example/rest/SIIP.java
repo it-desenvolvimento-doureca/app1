@@ -1998,17 +1998,38 @@ public class SIIP {
 
 	}
 
-	public void registarOpPrevista(Integer idOfCab, String ofNum, String opCod, String opPrevista, String utzCria) {
+	/**
+	 * Verifica se a combinacao OF_NUM+OP_COD ja existe em RP_OF_OP_PREVISTA.
+	 * Se nao existe, faz INSERT.
+	 * Retorna true se JA EXISTIA antes (ficheiro deve usar TypeOp="1"),
+	 *         false se foi inserido agora (ficheiro deve usar TypeOp="2").
+	 */
+	/**
+	 * Verifica se a combinacao OF_NUM+OP_COD ja existe em RP_OF_OP_PREVISTA.
+	 * Se nao existe, faz INSERT com ID_OF_CAB (PF) ou ID_REF_ETIQUETA (COMP).
+	 * Retorna true se JA EXISTIA antes (ficheiro deve usar TypeOp="1"),
+	 *         false se foi inserido agora (ficheiro deve usar TypeOp="2").
+	 *
+	 * @param idRefEtiqueta null para PF, ID_REF_ETIQUETA para COMP
+	 */
+	public boolean registarOpPrevista(Integer idOfCab, String ofNum, String opCod,
+			String opPrevista, String utzCria, Integer idRefEtiqueta, String opNum) {
+
 		if (!"2".equals(opPrevista) || ofNum == null || opCod == null)
-			return;
-		boolean existe = daoOpPrevista.existsByOfNumAndOpCod(ofNum, opCod);
-		if (!existe) {
-			int opNum = 9000 + Integer.parseInt(opCod);
+			return false;
+		boolean existia = daoOpPrevista.existsByOfNumAndOpCod(ofNum, opCod);
+		if (!existia) {
+			String idOfCabVal = idRefEtiqueta == null ? String.valueOf(idOfCab) : "NULL";
+			String idRefEtqVal = idRefEtiqueta != null ? String.valueOf(idRefEtiqueta) : "NULL";
+			String opNumVal = (opNum != null && !opNum.isEmpty() && !"NULL".equals(opNum))
+					? opNum : String.valueOf(9000 + Integer.parseInt(opCod));
 			entityManager.createNativeQuery(
-					"INSERT INTO RP_OF_OP_PREVISTA (OF_NUM,OP_COD,DATA_CRIA,OP_NUM,UTZ_CRIA) VALUES ('"
-							+ ofNum + "','" + opCod + "',GETDATE()," + opNum + ",'" + utzCria + "')")
-					.executeUpdate();			 
+					"INSERT INTO RP_OF_OP_PREVISTA (OF_NUM,OP_COD,DATA_CRIA,OP_NUM,UTZ_CRIA,ID_OF_CAB,ID_REF_ETIQUETA)"
+					+ " VALUES ('" + ofNum + "','" + opCod + "',GETDATE()," + opNumVal + ",'"
+					+ utzCria + "'," + idOfCabVal + "," + idRefEtqVal + ")")
+					.executeUpdate();
 		}
+		return existia;
 	}
 
 	public String getURL() {
@@ -2133,10 +2154,10 @@ public class SIIP {
 									OPNUM = (content[4] == null) ? "NULL" : content[4].toString();
 								criarFicheiroService.criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
 										"P", data + inform_file2, OPNUM, content3[0].toString(), pausa, total,
-										ficheirosdownload, data, null, estado, true, null);
+										ficheirosdownload, data, null, estado, true, null, null);
 								criarFicheiroService.criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
 										estado, data + inform_file2, OPNUM, content3[0].toString(), false, total,
-										ficheirosdownload, data_file, null, estado, true, null);
+										ficheirosdownload, data_file, null, estado, true, null, null);
 
 							} else {
 							}
@@ -2148,11 +2169,11 @@ public class SIIP {
 							}
 							criarFicheiroService.criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
 									"P", data + inform_file2, OPNUM, content3[0].toString(), pausa, total,
-									ficheirosdownload, data_file, null, estado, true, null);
+									ficheirosdownload, data_file, null, estado, true, null, null);
 							pausa = false;
 							criarFicheiroService.criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
 									estado, data + inform_file2, OPNUM, content3[0].toString(), pausa, total,
-									ficheirosdownload, data_file, null, estado, true, null);
+									ficheirosdownload, data_file, null, estado, true, null, null);
 
 							// se for COMP verifica se exitem etiquetas para
 							// o
@@ -2200,7 +2221,7 @@ public class SIIP {
 									OPNUM = (content2[3] == null) ? "NULL" : content2[3].toString();
 								criarFicheiroService.criarFicheiro(id_of_cab, 1, nome_ficheiro, "COMP", content2[0].toString(), id_origem,
 										etiqueta, estado, null, OPNUM, content2[4].toString(), false, 1,
-										ficheirosdownload, data_file, novaet, estado, manual, null);
+										ficheirosdownload, data_file, novaet, estado, manual, null, null);
 							}
 
 							nome_ficheiro = data + inform_file + ".txt";
@@ -2210,7 +2231,7 @@ public class SIIP {
 							if (ativo.equals("true")) {
 								criarFicheiroService.criarFicheiro(id_of_cab, 2, nome_ficheiro, "COMP", content2[0].toString(), id_origem,
 										etiqueta, estado, null, OPNUM, content2[4].toString(), false, 1,
-										ficheirosdownload, data_file, novaet, estado, manual, null);
+										ficheirosdownload, data_file, novaet, estado, manual, null, null);
 							}
 						}
 						if (dados2.size() > 0)
@@ -2312,10 +2333,10 @@ public class SIIP {
 									OPNUM = (content[4] == null) ? "NULL" : content[4].toString();
 								criarFicheiroService.criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
 										"P", data + inform_file2, OPNUM, content3[0].toString(), pausa, total,
-										ficheirosdownload, data, null, estado, true, null);
+										ficheirosdownload, data, null, estado, true, null, null);
 								criarFicheiroService.criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
 										estado, data + inform_file2, OPNUM, content3[0].toString(), false, total,
-										ficheirosdownload, data_file, null, estado, true, null);
+										ficheirosdownload, data_file, null, estado, true, null, null);
 
 							} else {
 							}
@@ -2327,11 +2348,11 @@ public class SIIP {
 							}
 							criarFicheiroService.criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
 									"P", data + inform_file2, OPNUM, content3[0].toString(), pausa, total,
-									ficheirosdownload, data_file, null, estado, true, null);
+									ficheirosdownload, data_file, null, estado, true, null, null);
 							pausa = false;
 							criarFicheiroService.criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
 									estado, data + inform_file2, OPNUM, content3[0].toString(), pausa, total,
-									ficheirosdownload, data_file, null, estado, true, null);
+									ficheirosdownload, data_file, null, estado, true, null, null);
 
 							// se for COMP verifica se exitem etiquetas para
 							// o
@@ -2379,7 +2400,7 @@ public class SIIP {
 									OPNUM = (content2[3] == null) ? "NULL" : content2[3].toString();
 								criarFicheiroService.criarFicheiro(id_of_cab, 1, nome_ficheiro, "COMP", content2[0].toString(), id_origem,
 										etiqueta, estado, null, OPNUM, content2[4].toString(), false, 1,
-										ficheirosdownload, data_file, novaet, estado, manual, null);
+										ficheirosdownload, data_file, novaet, estado, manual, null, null);
 							}
 
 							nome_ficheiro = data + inform_file + ".txt";
@@ -2389,7 +2410,7 @@ public class SIIP {
 							if (ativo.equals("true")) {
 								criarFicheiroService.criarFicheiro(id_of_cab, 2, nome_ficheiro, "COMP", content2[0].toString(), id_origem,
 										etiqueta, estado, null, OPNUM, content2[4].toString(), false, 1,
-										ficheirosdownload, data_file, novaet, estado, manual, null);
+										ficheirosdownload, data_file, novaet, estado, manual, null, null);
 							}
 						}
 						if (dados2.size() > 0)
@@ -2603,6 +2624,7 @@ public class SIIP {
 			}
 
 			Boolean pausa = true;
+			String pfOfNum = null; // OF_NUM do PF, usado como fallback para COMP
 
 			for (Object[] content : dados) {
 
@@ -2619,13 +2641,20 @@ public class SIIP {
 				// se for PF cria ficheiro (se o estado for modifica��o cria 2)
 				if (content[1] == null) {
 					Integer id_origem = Integer.parseInt(content[0].toString());
+					pfOfNum = content[3] != null ? content[3].toString() : null; // guardar OF_NUM do PF
+					// jaExistia=true → combinacao ja estava registada → TypeOp="1" no ficheiro
+					// jaExistia=false → 1ª terminacao → TypeOp="2" no ficheiro
+					boolean jaExistia = false;
 					if (estado.equals("C")) {
-						registarOpPrevista(id_origem,
+						jaExistia = registarOpPrevista(id_origem,
 								content[3] != null ? content[3].toString() : null,
 								content[7] != null ? content[7].toString() : null,
 								content[8] != null ? content[8].toString() : null,
-								content[2] != null ? content[2].toString() : null);
+								content[2] != null ? content[2].toString() : null,
+								null,  // PF: sem ID_REF_ETIQUETA
+								content[4] != null ? content[4].toString() : null); // OP_NUM
 					}
+					String opPrevistaFicheiro = jaExistia ? "1" : (content[8] != null ? content[8].toString() : "1");
 					Query query3 = entityManager.createNativeQuery(
 							"select ID_OP_LIN,REF_NUM from RP_OF_OP_LIN where ID_OP_CAB in (select xx.ID_OP_CAB from RP_OF_OP_CAB xx where xx.ID_OF_CAB = ?1)")
 							.setParameter(1, id_origem);
@@ -2647,10 +2676,10 @@ public class SIIP {
 								OPNUM = (content[4] == null) ? "NULL" : content[4].toString();
 							criarFicheiroService.criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
 									"P", data + inform_file2, OPNUM, content3[0].toString(), pausa, total,
-									ficheirosdownload, data, null, estado, manual, ip_posto);
+									ficheirosdownload, data, null, estado, manual, ip_posto, opPrevistaFicheiro);
 							criarFicheiroService.criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(), id_origem, null,
 									estado, data + inform_file2, OPNUM, content3[0].toString(), false, total,
-									ficheirosdownload, data, null, estado, manual, ip_posto);
+									ficheirosdownload, data, null, estado, manual, ip_posto, opPrevistaFicheiro);
 
 							/*
 							 * criarFicheiroService.criarFicheiro(id_origem, 1, nome_ficheiro, "PF", content[3].toString(),
@@ -2677,11 +2706,11 @@ public class SIIP {
 						}
 						criarFicheiroService.criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null, "P",
 								data + inform_file2, OPNUM, content3[0].toString(), pausa, total, ficheirosdownload,
-								data, null, estado, manual, ip_posto);
+								data, null, estado, manual, ip_posto, opPrevistaFicheiro);
 						pausa = false;
 						criarFicheiroService.criarFicheiro(id_origem, 2, nome_ficheiro, "PF", content[3].toString(), id_origem, null, estado,
 								data + inform_file2, OPNUM, content3[0].toString(), pausa, total, ficheirosdownload,
-								data, null, estado, manual, ip_posto);
+								data, null, estado, manual, ip_posto, opPrevistaFicheiro);
 
 						// se for COMP verifica se exitem etiquetas para o comp
 						// e cria
@@ -2691,7 +2720,38 @@ public class SIIP {
 					Integer id_origem = Integer.parseInt(content[1].toString());
 					Integer id_of_cab_content = Integer.parseInt(content[0].toString());
 
-					String sql = "select OF_NUM_ORIGEM,a.ID_OF_CAB,c.ID_REF_ETIQUETA,c.OP_NUM,b.ID_OP_LIN,c.NOVO,c.ATIVO,c.APAGADO from RP_OF_OP_CAB a inner join RP_OF_OP_LIN b on a.ID_OP_CAB = b.ID_OP_CAB inner join RP_OF_CAB d on d.ID_OF_CAB = a.ID_OF_CAB inner join RP_OF_OP_ETIQUETA c on b.ID_OP_LIN = c.ID_OP_LIN where b.TIPO_PECA not in ('COM','COMS') and a.ID_OF_CAB = ?1";
+					// Registar OP_PREVISTA para TODAS as etiquetas do COMP (incluindo COM/COMS)
+					// Query sem filtro TIPO_PECA — guarda resultados para usar no inner loop
+					// Map<ID_REF_ETIQUETA, jaExistia>
+					java.util.Map<Integer, Boolean> opPrevistaMap = new java.util.HashMap<>();
+					if (estado.equals("C")) {
+						@SuppressWarnings("unchecked")
+						List<Object[]> todasEtiquetas = entityManager.createNativeQuery(
+								"SELECT c.OF_NUM_ORIGEM, a.ID_OF_CAB, c.ID_REF_ETIQUETA, c.OP_NUM, c.OP_COD_ORIGEM"
+								+ " FROM RP_OF_OP_CAB a"
+								+ " INNER JOIN RP_OF_OP_LIN b ON a.ID_OP_CAB = b.ID_OP_CAB"
+								+ " INNER JOIN RP_OF_OP_ETIQUETA c ON b.ID_OP_LIN = c.ID_OP_LIN"
+								+ " WHERE a.ID_OF_CAB = ?1")
+								.setParameter(1, id_of_cab_content)
+								.getResultList();
+						for (Object[] etq : todasEtiquetas) {
+							String opCodOrigEtq = etq[4] != null ? etq[4].toString() : null;
+							String ofNumOrigEtq = etq[0] != null ? etq[0].toString() : pfOfNum;
+							Integer idRefEtq = etq[2] != null ? Integer.parseInt(etq[2].toString()) : null;
+							Integer idOfCabEtq = etq[1] != null ? Integer.parseInt(etq[1].toString()) : id_of_cab_content;
+							String opNumEtq = etq[3] != null ? etq[3].toString() : null;
+							if (opCodOrigEtq != null && ofNumOrigEtq != null) {
+								boolean jaExistia = registarOpPrevista(idOfCabEtq, ofNumOrigEtq, opCodOrigEtq, "2",
+										content[2] != null ? content[2].toString() : null,
+										idRefEtq, opNumEtq);
+								if (idRefEtq != null) opPrevistaMap.put(idRefEtq, jaExistia);
+							}
+						}
+					}
+
+					// [0]OF_NUM_ORIGEM [1]ID_OF_CAB [2]ID_REF_ETIQUETA [3]OP_NUM [4]ID_OP_LIN
+					// [5]NOVO [6]ATIVO [7]APAGADO [8]OP_COD_ORIGEM
+					String sql = "select OF_NUM_ORIGEM,a.ID_OF_CAB,c.ID_REF_ETIQUETA,c.OP_NUM,b.ID_OP_LIN,c.NOVO,c.ATIVO,c.APAGADO,c.OP_COD_ORIGEM from RP_OF_OP_CAB a inner join RP_OF_OP_LIN b on a.ID_OP_CAB = b.ID_OP_CAB inner join RP_OF_CAB d on d.ID_OF_CAB = a.ID_OF_CAB inner join RP_OF_OP_ETIQUETA c on b.ID_OP_LIN = c.ID_OP_LIN where b.TIPO_PECA not in ('COM','COMS') and a.ID_OF_CAB = ?1";
 					if (estado.equals("M")) {
 						sql += " and (c.VERSAO_MODIF != (select VERSAO_MODIF from RP_OF_CAB where ID_OF_CAB = ?2) or (c.QUANT_BOAS_M1 != c.QUANT_BOAS_M2 or c.QUANT_DEF_M1 != c.QUANT_DEF_M2 or c.NOVO = 1 or c.APAGADO = 1))";
 					}
@@ -2712,10 +2772,18 @@ public class SIIP {
 						String novaet = (content2[5] != null) ? content2[5].toString() : "0";
 						String ativo = (content2[6] != null) ? content2[6].toString() : "0";
 						String apagado = (content2[7] != null) ? content2[7].toString() : "0";
+						String opCodOrigEtiqueta = (content2[8] != null) ? content2[8].toString() : null;
+						// OF_NUM_ORIGEM da etiqueta; se nulo, usa o OF_NUM do PF pai
+						String ofNumOrigEtiqueta = (content2[0] != null) ? content2[0].toString() : pfOfNum;
 
 						if (novaet.equals("true")) {
 							novaet = "1";
 						}
+
+						// opPrevistaFicheiroComp: usar resultado do Map (já processado acima)
+						Boolean jaExistiaComp = opPrevistaMap.get(etiqueta);
+						String opPrevistaFicheiroComp = (jaExistiaComp != null && jaExistiaComp) ? "1"
+								: (opCodOrigEtiqueta != null ? "2" : "1");
 
 						if (estado.equals("M") && !novaet.equals("1")
 								&& ((!ativo.equals("true") && apagado.equals("true"))
@@ -2726,7 +2794,7 @@ public class SIIP {
 								OPNUM = (content2[3] == null) ? "NULL" : content2[3].toString();
 							criarFicheiroService.criarFicheiro(id_of_cab, 1, nome_ficheiro, "COMP", content2[0].toString(), id_origem,
 									etiqueta, estado, null, OPNUM, content2[4].toString(), false, 1, ficheirosdownload,
-									data, novaet, estado, manual, ip_posto);
+									data, novaet, estado, manual, ip_posto, opPrevistaFicheiroComp);
 						}
 
 						nome_ficheiro = data + inform_file + ".txt";
@@ -2736,7 +2804,7 @@ public class SIIP {
 						if (ativo.equals("true")) {
 							criarFicheiroService.criarFicheiro(id_of_cab, 2, nome_ficheiro, "COMP", content2[0].toString(), id_origem,
 									etiqueta, estado, null, OPNUM, content2[4].toString(), false, 1, ficheirosdownload,
-									data, novaet, estado, manual, ip_posto);
+									data, novaet, estado, manual, ip_posto, opPrevistaFicheiroComp);
 						}
 					}
 					if (dados2.size() > 0)

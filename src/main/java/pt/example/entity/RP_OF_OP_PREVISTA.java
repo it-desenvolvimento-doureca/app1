@@ -19,6 +19,8 @@ public class RP_OF_OP_PREVISTA {
 	private Timestamp DATA_CRIA;
 	private Integer OP_NUM;
 	private String UTZ_CRIA;
+	private Integer ID_OF_CAB;      // ID do registo PF em RP_OF_CAB
+	private Integer ID_REF_ETIQUETA; // ID da etiqueta COMP (null para PF)
 
 	@Id
 	@Column(name = "ID")
@@ -74,6 +76,24 @@ public class RP_OF_OP_PREVISTA {
 
 	public void setUTZ_CRIA(String uTZ_CRIA) {
 		UTZ_CRIA = uTZ_CRIA;
+	}
+
+	@Column(name = "ID_OF_CAB")
+	public Integer getID_OF_CAB() {
+		return ID_OF_CAB;
+	}
+
+	public void setID_OF_CAB(Integer iD_OF_CAB) {
+		ID_OF_CAB = iD_OF_CAB;
+	}
+
+	@Column(name = "ID_REF_ETIQUETA")
+	public Integer getID_REF_ETIQUETA() {
+		return ID_REF_ETIQUETA;
+	}
+
+	public void setID_REF_ETIQUETA(Integer iD_REF_ETIQUETA) {
+		ID_REF_ETIQUETA = iD_REF_ETIQUETA;
 	}
 
 }

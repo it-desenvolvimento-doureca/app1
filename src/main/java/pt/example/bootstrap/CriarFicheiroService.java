@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
@@ -16,9 +17,11 @@ import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -28,1980 +31,1256 @@ import javax.persistence.Query;
 import pt.example.entity.EMAIL;
 import pt.example.entity.GER_EVENTOS_CONF;
 
+/**
+ * Gera ficheiros Silver-CS de registo de producao.
+ *
+ * Tipos de registo:
+ *   A  Suivi ressource          pos 1-167
+ *   B  Arrets / pausas          pos 1-194
+ *   Q  Quantites bonnes         pos 1-334
+ *   R  Rebuts / defeitos        pos 1-338
+ *   C  Consommation             pos 1-395
+ *
+ * Cabecalho comum (pos 1-87):
+ *   [1-10]  Societe
+ *   [11-18] Date suivi  (yyyyMMdd)
+ *   [19-27] No sequence (9 chars)
+ *   [28-31] Ligne de production (4 chars)
+ *   [32]    Type No OF
+ *   [33-42] No OF
+ *   [43]    Type operation
+ *   [44-47] No Operation
+ *   [48]    Position S12
+ *   [49-58] Code section
+ *   [59-68] Code sous-section
+ *   [69-70] No equipe
+ *   [71-74] Type ressource
+ *   [75-84] Code ressource
+ *   [85-87] No etablissement
+ */
 @Stateless
 public class CriarFicheiroService {
+
+	private static final Logger LOG = Logger.getLogger(CriarFicheiroService.class.getName());
 
 	@PersistenceContext(unitName = "persistenceUnit")
 	protected EntityManager entityManager;
 
+	// ── Silver-CS: constantes de campo ───────────────────────────────────────
+	private static final String SOCIEDADE  = "01        ";
+	private static final String CRLF       = "\r\n";
+	private static final String ZEROS_15   = "000000000000000";
+	private static final String ZEROS_9    = "000000000";
+	private static final String ESPACOS_10 = "          ";
+	private static final String ESPACOS_4  = "    ";
+
+	// ── Indices da query principal (Registo A) ────────────────────────────────
+	private static final int QA_OF_NUM       = 0;
+	private static final int QA_UTZ_CRIA     = 1;
+	private static final int QA_SEC_NUM      = 3;
+	private static final int QA_MAQ_NUM_ORIG = 4;
+	private static final int QA_DATA_INI     = 5;
+	private static final int QA_HORA_INI     = 6;
+	private static final int QA_DATA_FIM     = 7;
+	private static final int QA_HORA_FIM     = 8;
+	private static final int QA_TEMPO_PREP   = 9;
+	private static final int QA_TEMPO_EXEC   = 10;
+	private static final int QA_OP_PREVISTA  = 11;
+	private static final int QA_OP_COD_ORIG  = 12;
+	private static final int QA_TURNO        = 13;
+	private static final int QA_ALTERADO     = 14;
+	private static final int QA_REF_NUM      = 15;
+
+	// ── Indices da query Q/R (Quantidades/Defeitos) ───────────────────────────
+	private static final int QQ_ID_CAB_ORIG   = 0;
+	private static final int QQ_OF_NUM        = 1;
+	private static final int QQ_OF_NUM_ORIG   = 2;
+	private static final int QQ_REF_NUM       = 4;
+	private static final int QQ_REF_VAR1      = 5;
+	private static final int QQ_REF_VAR2      = 6;
+	private static final int QQ_REF_INDNUMENR = 7;
+	private static final int QQ_MAQ_NUM_ORIG  = 8;
+	private static final int QQ_SEC_NUM       = 9;
+	private static final int QQ_DATA_INI      = 10;
+	private static final int QQ_HORA_INI      = 11;
+	private static final int QQ_DATA_FIM      = 12;
+	private static final int QQ_HORA_FIM      = 13;
+	private static final int QQ_UTZ_CRIA      = 14;
+	private static final int QQ_REF_IND       = 15;
+	private static final int QQ_QUANT_TOTAL   = 16;
+	private static final int QQ_QUANT         = 17;
+	private static final int QQ_OP_PREVISTA   = 18;
+	private static final int QQ_TURNO         = 20;
+	private static final int QQ_OP_COD_ORIG   = 21;
+	private static final int QQ_ALTERADO      = 22;
+
+	private static final int QR_COD_DEF       = 0;
+	private static final int QR_QUANT_DEF     = 1;
+	private static final int QR_ID_CAB_ORIG   = 2;
+	private static final int QR_OF_NUM        = 3;
+	private static final int QR_OF_NUM_ORIG   = 4;
+	private static final int QR_REF_NUM       = 6;
+	private static final int QR_REF_VAR1      = 7;
+	private static final int QR_REF_VAR2      = 8;
+	private static final int QR_REF_INDNUMENR = 9;
+	private static final int QR_MAQ_NUM_ORIG  = 10;
+	private static final int QR_SEC_NUM       = 11;
+	private static final int QR_DATA_INI      = 12;
+	private static final int QR_HORA_INI      = 13;
+	private static final int QR_DATA_FIM      = 14;
+	private static final int QR_HORA_FIM      = 15;
+	private static final int QR_UTZ_CRIA      = 16;
+	private static final int QR_REF_IND       = 17;
+	private static final int QR_QUANT_TOTAL   = 18;
+	private static final int QR_QUANT         = 19;
+	private static final int QR_OBS_DEF       = 20;
+	private static final int QR_OP_PREVISTA   = 21;
+	private static final int QR_TURNO         = 22;
+	private static final int QR_OP_COD_ORIG   = 23;
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// MaquinaConfig: encapsula nomes de coluna M1 / M2 / Manual
+	// ─────────────────────────────────────────────────────────────────────────
+	static final class MaquinaConfig {
+		final String DATA_INI, HORA_INI, DATA_FIM, HORA_FIM;
+		final String QUANT_BOAS_TOTAL, QUANT_BOAS, QUANT_DEF;
+		final String TEMPO_PREP_TOTAL, TEMPO_EXEC_TOTAL;
+		final String TIPO_PARAGEM, MOMENTO_PARAGEM;
+		final String SINAL;
+
+		private MaquinaConfig(String sufixo, String sinal) {
+			String s = sufixo.isEmpty() ? "" : "_" + sufixo;
+			DATA_INI         = "DATA_INI"         + s;
+			HORA_INI         = "HORA_INI"         + s;
+			DATA_FIM         = "DATA_FIM"         + s;
+			HORA_FIM         = "HORA_FIM"         + s;
+			QUANT_BOAS_TOTAL = "QUANT_BOAS_TOTAL" + s;
+			QUANT_BOAS       = "QUANT_BOAS"       + s;
+			QUANT_DEF        = "QUANT_DEF"        + s;
+			TEMPO_PREP_TOTAL = "TEMPO_PREP_TOTAL" + s;
+			TEMPO_EXEC_TOTAL = "TEMPO_EXEC_TOTAL" + s;
+			TIPO_PARAGEM     = "TIPO_PARAGEM"     + s;
+			MOMENTO_PARAGEM  = "MOMENTO_PARAGEM"  + s;
+			SINAL            = sinal;
+		}
+
+		static MaquinaConfig para(int ficheiro, boolean manual) {
+			if (ficheiro == 1) return new MaquinaConfig("M1", "-");
+			if (manual)        return new MaquinaConfig("",   "+");
+			return             new MaquinaConfig("M2",        "+");
+		}
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// Helpers de formatacao Silver-CS
+	// ─────────────────────────────────────────────────────────────────────────
+
+	/** Pad a direita com espacos ate ao comprimento indicado. Null-safe. */
+	static String padRight(Object value, int length) {
+		String s = value == null ? "" : value.toString();
+		if (s.length() >= length) return s.substring(0, length);
+		StringBuilder sb = new StringBuilder(length);
+		sb.append(s);
+		for (int i = s.length(); i < length; i++) sb.append(' ');
+		return sb.toString();
+	}
+
+	/** Pad a esquerda com zeros. Ex: "42" + length=9 -> "000000042". Null-safe. */
+	static String padZeroLeft(Object value, int length) {
+		String s = value == null ? "" : value.toString();
+		String z  = ZEROS_15.substring(0, Math.min(length, 15));
+		String combined = z + s;
+		return combined.substring(combined.length() - length);
+	}
+
+	/** Remove hifenes da data -> yyyyMMdd. Null -> 8 espacos. */
+	static String formatDate(Object value) {
+		return value == null ? "        " : value.toString().replaceAll("-", "");
+	}
+
+	/** Remove ":" e trunca a 6 chars -> HHmmss. Null -> 6 espacos. */
+	static String formatTime(Object value) {
+		if (value == null) return "      ";
+		String s = value.toString().replace(":", "");
+		return s.length() >= 6 ? s.substring(0, 6) : padRight(s, 6);
+	}
+
+	/** No Operacao Silver-CS (4 chars, zero-padded). Retorna 4 espacos se nulo/NULL/vazio. */
+	static String formatOpNum(String opNum) {
+		if (opNum == null || opNum.isEmpty() || "NULL".equals(opNum)) return ESPACOS_4;
+		String s = "0000" + opNum;
+		return s.substring(s.length() - 4);
+	}
+
+	/**
+	 * Regra de escrita do OP_NUM no ficheiro:
+	 *   estado "C" -> so escreve se OP_PREVISTA = "1"
+	 *   outros     -> escreve se OP_NUM nao for NULL
+	 */
+	static String formatOpNumFicheiro(String opNum, String estado, String opPrevista) {
+		if ("C".equals(estado)) {
+			return "1".equals(opPrevista) ? formatOpNum(opNum) : ESPACOS_4;
+		}
+		return formatOpNum(opNum);
+	}
+
+	/** Converte tempo "HH:mm:ss" em decimal Silver-CS 15 chars. Zeros se invalido. */
+	static String formatTempo(Object value, int total) {
+		if (value == null) return ZEROS_15;
+		String[] p = value.toString().split(":");
+		if (p.length < 3 || "aN".equals(p[0])) return ZEROS_15;
+		try {
+			double h = Double.parseDouble(p[0])
+					 + Double.parseDouble(p[1]) / 60.0
+					 + Double.parseDouble(p[2]) / 3600.0;
+			h = Math.max(0.0, h / total);
+			// remove separadores decimais (virgula em PT, ponto em EN, $ em alguns locales)
+			String f = String.format("%.4f", h).replace(",", "").replace(".", "").replace("$", "");
+			return padZeroLeft(f, 15);
+		} catch (NumberFormatException e) {
+			return ZEROS_15;
+		}
+	}
+
+	/** Converte decimal ("NN.DDD") em campo numerico Silver-CS sem ponto, zero-padded. */
+	static String formatQuantidade(Object value, int length) {
+		if (value == null) return ZEROS_15.substring(0, length);
+		return padZeroLeft(value.toString().replace(".", ""), length);
+	}
+
+	/**
+	 * Linha de producao Silver-CS (4 chars).
+	 * Esconde (espacos) quando OP_PREVISTA=1, estado=M/A, ou estado2=A.
+	 */
+	static String ligneProduction(Object opCodOrig, boolean novaEtq,
+			String opPrevista, String estado, String estado2) {
+		if (novaEtq) return padRight(opCodOrig, 4);
+		boolean esconder = "1".equals(opPrevista)
+				|| "M".equals(estado) || "A".equals(estado) || "A".equals(estado2);
+		return esconder ? ESPACOS_4 : padRight(opCodOrig, 4);
+	}
+
+	/**
+	 * Constroi o cabecalho comum Silver-CS (87 chars) partilhado pelos registos A, Q e R.
+	 *
+	 * Posicoes (1-indexed):
+	 *   [1-10]  Societe
+	 *   [11-18] Date suivi
+	 *   [19-27] No sequencia
+	 *   [28-31] Ligne de production
+	 *   [32]    Type No OF
+	 *   [33-42] No OF
+	 *   [43]    Type operation
+	 *   [44-47] No Operation
+	 *   [48]    Position S12
+	 *   [49-58] Code section
+	 *   [59-68] Code sous-section
+	 *   [69-70] No equipe
+	 *   [71-74] Type ressource
+	 *   [75-84] Code ressource
+	 *   [85-87] No etablissement
+	 */
+	static String buildCabecalho(
+			String dataTracking, String sequencia,
+			String linhaProd, String numOf,
+			String tipoOp, String opNum4,
+			String posicao, String seccao, String subseccao,
+			Object equipa, String tipoRecurso, String codigoRecurso) {
+
+		StringBuilder sb = new StringBuilder(87);
+		sb.append(SOCIEDADE);
+		sb.append(formatDate(dataTracking));
+		sb.append(sequencia);
+		sb.append(linhaProd);
+		sb.append("1");
+		sb.append(padRight(numOf, 10));
+		sb.append(tipoOp);
+		sb.append(opNum4);
+		sb.append(posicao);
+		sb.append(padRight(seccao, 10));
+		sb.append(padRight(subseccao, 10));
+		sb.append(equipa != null ? equipa.toString() : "01");
+		sb.append(padRight(tipoRecurso, 4));
+		sb.append(padRight(codigoRecurso, 10));
+		// [85-87] No etablissement incluido pelos callers em "   A/Q/R/C"
+		return sb.toString();
+	}
+	// ─────────────────────────────────────────────────────────────────────────
+	// Helpers de acesso a BD
+	// ─────────────────────────────────────────────────────────────────────────
+
+	private boolean isPostoMatrix(Integer idOfCabOrigem) {
+		@SuppressWarnings("unchecked")
+		List<?> r = entityManager.createNativeQuery(
+				"SELECT a.ID_OF_CAB FROM RP_OF_CAB a"
+				+ " INNER JOIN DOC_DIC_POSTOS b ON a.IP_POSTO = b.IP_POSTO"
+				+ " INNER JOIN PR_DIC_MAQUINAS_MATRIX c ON b.ID_MAQUINA = b.ID_MAQUINA"
+				+ " WHERE a.ID_OF_CAB = :id AND b.TIPO_POSTO = 'ETIQUETAS_MATRIX'"
+				+ " AND a.MAQ_NUM = c.MAQUINA_SILVER")
+				.setParameter("id", idOfCabOrigem).getResultList();
+		return !r.isEmpty();
+	}
+
+	private boolean isTrabalhoMuro(Integer idOfCabOrigem) {
+		@SuppressWarnings("unchecked")
+		List<Object> r = entityManager
+				.createNativeQuery("SELECT ETIQUETA FROM RP_OF_CAB WHERE ID_OF_CAB = :id")
+				.setParameter("id", idOfCabOrigem).getResultList();
+		if (r.isEmpty() || r.get(0) == null) return false;
+		return !r.get(0).toString().trim().isEmpty();
+	}
+
+	/** Retorna [path, path2, patherro, path_error]. */
+	private String[] carregarCaminhos(String nomeFicheiro, String nomeFicheiro2) {
+		@SuppressWarnings("unchecked")
+		List<Object[]> rows = entityManager
+				.createNativeQuery("SELECT TOP 1 * FROM GER_PARAMETROS").getResultList();
+		if (rows.isEmpty()) return new String[]{"","","",""};
+		Object[] p = rows.get(0);
+		return new String[]{
+			p[1] + nomeFicheiro, p[1] + nomeFicheiro2,
+			p[17] + nomeFicheiro, p[17] + nomeFicheiro2
+		};
+	}
+
+	/**
+	 * Verifica no inicio de criarFicheiro se a combinacao OF_NUM+OP_COD_ORIGEM
+	 * ja foi registada em RP_OF_OP_PREVISTA (ou seja, se a operacao prevista
+	 * ja foi enviada ao Silver numa terminacao anterior).
+	 * Retorna "1" se ja existe, ou o valor actual de OP_PREVISTA da BD se nao existe.
+	 */
+	private String resolverOpPrevistaParaFicheiro(Integer idOfCabOrigem, String ofNum) {
+		@SuppressWarnings("unchecked")
+		List<Object[]> rows = entityManager.createNativeQuery(
+				"SELECT OP_PREVISTA, OP_COD_ORIGEM FROM RP_OF_CAB WHERE ID_OF_CAB = :id")
+				.setParameter("id", idOfCabOrigem)
+				.getResultList();
+		if (rows.isEmpty()) return "1";
+		Object[] row = rows.get(0);
+		String opPrevista  = row[0] != null ? row[0].toString() : "1";
+		String opCodOrigem = row[1] != null ? row[1].toString() : null;
+		if (!"2".equals(opPrevista) || opCodOrigem == null) return opPrevista;
+		// OP_PREVISTA=2: verificar se ja existe na tabela de controlo
+		@SuppressWarnings("unchecked")
+		List<?> existe = entityManager.createNativeQuery(
+				"SELECT 1 FROM RP_OF_OP_PREVISTA WHERE OF_NUM = :of AND OP_COD = :op")
+				.setParameter("of", ofNum)
+				.setParameter("op", opCodOrigem)
+				.getResultList();
+		return existe.isEmpty() ? "2" : "1";
+	}
+
 	private List<Object[]> verificaPecasRecuperacaoInternal(Integer id) {
 		@SuppressWarnings("unchecked")
-		List<Object[]> dados = entityManager.createNativeQuery("select count(*) total, null text from RP_OF_CAB a "
-				+ "inner join RP_CONF_OP_RECUPERACAO_PECAS b on a.OP_COD_ORIGEM = b.ID_OP "
-				+ "where a.ID_OF_CAB = :id")
+		List<Object[]> dados = entityManager.createNativeQuery(
+				"SELECT COUNT(*) total, NULL text FROM RP_OF_CAB a"
+				+ " INNER JOIN RP_CONF_OP_RECUPERACAO_PECAS b ON a.OP_COD_ORIGEM = b.ID_OP"
+				+ " WHERE a.ID_OF_CAB = :id")
 				.setParameter("id", id).getResultList();
 		return dados;
 	}
+
+	private String buscarNomeImpressora(String ipPosto) {
+		if (ipPosto == null) return "";
+		@SuppressWarnings("unchecked")
+		List<Object> rows = entityManager.createNativeQuery(
+				"SELECT TOP 1 NOME_IMPRESSORA_SILVER FROM GER_POSTOS WHERE IP_POSTO = :ip")
+				.setParameter("ip", ipPosto).getResultList();
+		return rows.isEmpty() || rows.get(0) == null ? "" : rows.get(0).toString();
+	}
+
+	private String buscarEtiquetasCaixas(Integer idOfCab, String refNum) {
+		@SuppressWarnings("unchecked")
+		List<Object> rows = entityManager.createNativeQuery(
+				"SELECT ETQNUM FROM RP_CAIXAS_INCOMPLETAS WHERE ID_OF_CAB = :id AND REF_NUM = :ref")
+				.setParameter("id", idOfCab).setParameter("ref", refNum).getResultList();
+		StringBuilder sb = new StringBuilder();
+		for (Object row : rows) sb.append(row).append(";");
+		return sb.toString();
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// criarFicheiro — metodo principal
+	// ─────────────────────────────────────────────────────────────────────────
+
 	public void criarFicheiro(Integer id, Integer ficheiro, String nome_ficheiro, String tipo, String of,
 			Integer id_origem, Integer id_etiqueta, String estado, String nome_ficheiro2, String OP_NUM,
 			String ID_OP_LIN, Boolean cria_pausa, Integer total, Boolean ficheirosdownload, String nomezip,
-			String novaetiqueta, String estado2, Boolean manual, String ip_posto) throws IOException, ParseException {
+			String novaetiqueta, String estado2, Boolean manual, String ip_posto,
+			String opPrevistaFicheiro) throws IOException, ParseException {
 
-		// Verificar se é trabalho do Muro (campo ETIQUETA não nulo e não vazio)
-		Boolean isMuro = false;
-		Query queryMuro = entityManager.createNativeQuery("select ETIQUETA from RP_OF_CAB where ID_OF_CAB = ?1")
-				.setParameter(1, id_origem);
-		List<?> dadosMuro = queryMuro.getResultList();
-		if (!dadosMuro.isEmpty() && dadosMuro.get(0) != null) {
-			String etiquetaMuro = dadosMuro.get(0).toString().trim();
-			isMuro = !etiquetaMuro.isEmpty();
+		if ("COMP".equals(tipo) && isPostoMatrix(id_origem)) return;
+
+		// Se nao foi passado explicitamente, determinar da BD
+		if (opPrevistaFicheiro == null) {
+			opPrevistaFicheiro = resolverOpPrevistaParaFicheiro(id_origem, of);
 		}
 
-		// Variável para acumular pausas quando for Muro
-		String pausasMuro = "";
+		boolean isMuro = isTrabalhoMuro(id_origem);
+		if (novaetiqueta == null) novaetiqueta = "0";
+		if ("A".equals(estado) || "A".equals(estado2)) nome_ficheiro2 = "anulacao_" + nome_ficheiro2;
 
-		if (tipo == "COMP") {
-			Query query_matrix = entityManager.createNativeQuery("select a.ID_OF_CAB,a.OF_NUM from RP_OF_CAB a "
-					+ "inner join DOC_DIC_POSTOS b on a.IP_POSTO = b.IP_POSTO "
-					+ "inner join PR_DIC_MAQUINAS_MATRIX c on b.ID_MAQUINA = b.ID_MAQUINA "
-					+ "where a.ID_OF_CAB = :id and b.TIPO_POSTO = 'ETIQUETAS_MATRIX' "
-					+ "and a.MAQ_NUM = c.MAQUINA_SILVER").setParameter("id", id_origem);
+		MaquinaConfig cfg = MaquinaConfig.para(ficheiro, manual);
+		String sinal = ("A".equals(estado) || "A".equals(estado2)) ? "-" : cfg.SINAL;
 
-			List<Object[]> dados_matrix = query_matrix.getResultList();
+		String[] caminhos = carregarCaminhos(nome_ficheiro, nome_ficheiro2);
+		String path = caminhos[0], path2 = caminhos[1], patherro = caminhos[2], path_error = caminhos[3];
+		String sequencia = "P".equals(estado) ? "000000000" : sequencia(id.toString());
 
-			if (dados_matrix.size() > 0) {
-				return;
+		boolean existeMaquina = false, lider = true, atualiza = true, primeiraLinha = true;
+		boolean houvAlteracoes = false;
+		String conteudo = "", dadosMaquina = "", pausasMuro = "";
+		Map<String, String> linhaUtz = new HashMap<>(), linhaUtzInicio = new HashMap<>();
+
+		// ── Query Registo A ───────────────────────────────────────────────────
+		@SuppressWarnings("unchecked")
+		List<Object[]> registosA = entityManager.createNativeQuery(
+				"SELECT a.OF_NUM, c.ID_UTZ_CRIA, a.OP_NUM, a.SEC_NUM, a.MAQ_NUM_ORIG,"
+				+ " c." + cfg.DATA_INI + ", c." + cfg.HORA_INI + ", c." + cfg.DATA_FIM + ", c." + cfg.HORA_FIM
+				+ ", b." + cfg.TEMPO_PREP_TOTAL + " AS prep, b." + cfg.TEMPO_EXEC_TOTAL + " AS exec_"
+				+ ", a.OP_PREVISTA, a.OP_COD_ORIGEM"
+				+ ", (SELECT ID_TURNO FROM RP_CONF_TURNO WHERE CAST(c." + cfg.HORA_INI + " AS time) BETWEEN HORA_INICIO AND HORA_FIM) AS turno"
+				+ ", CASE WHEN (c.DATA_INI_M2 != c.DATA_INI_M1 OR c.HORA_INI_M1 != c.HORA_INI_M2"
+				+ "   OR c.DATA_FIM_M2 != c.DATA_FIM_M1 OR c.HORA_FIM_M1 != c.HORA_FIM_M2"
+				+ "   OR b.TEMPO_EXEC_TOTAL_M1 != b.TEMPO_EXEC_TOTAL_M2"
+				+ "   OR b.TEMPO_PREP_TOTAL_M1 != b.TEMPO_PREP_TOTAL_M2) THEN 1 ELSE 1 END AS alterado"
+				+ ", (SELECT REF_NUM FROM RP_OF_OP_LIN WHERE ID_OP_LIN = " + ID_OP_LIN + "), a.ID_OF_CAB"
+				+ " FROM RP_OF_CAB a"
+				+ " INNER JOIN RP_OF_OP_CAB b ON b.ID_OP_CAB IN"
+				+ "   (SELECT x.ID_OP_CAB FROM RP_OF_OP_CAB x WHERE x.ID_OF_CAB = :ido)"
+				+ " INNER JOIN RP_OF_OP_FUNC c ON c.ID_OP_CAB IN"
+				+ "   (SELECT x.ID_OP_CAB FROM RP_OF_OP_CAB x WHERE x.ID_OF_CAB = :ido2)"
+				+ "   AND b.ID_OP_CAB = c.ID_OP_CAB"
+				+ " WHERE a.ID_OF_CAB = :id")
+				.setParameter("ido", id_origem).setParameter("ido2", id_origem).setParameter("id", id)
+				.getResultList();
+
+		for (Object[] row : registosA) {
+			if (row[QA_DATA_INI] == null || row[QA_HORA_INI] == null
+					|| row[QA_DATA_FIM] == null || row[QA_HORA_FIM] == null) {
+				LOG.warning("DATA_INI/FIM nulo id_origem=" + id_origem + " — registo ignorado");
+				continue;
+			}
+			boolean novaEtq = "1".equals(novaetiqueta);
+			String tipoOp = ("A".equals(estado) || "M".equals(estado)) && !novaEtq ? "1" : opPrevistaFicheiro;
+			String maqOrig = row[QA_MAQ_NUM_ORIG] != null ? row[QA_MAQ_NUM_ORIG].toString() : "000";
+
+			String posicao;
+			if ("000".equals(maqOrig)) { posicao = primeiraLinha ? "1" : "2"; primeiraLinha = false; }
+			else posicao = "2";
+
+			boolean incluiTempos = "PF".equals(tipo) && !"M".equals(estado) && !"P".equals(estado);
+			boolean incluiTemposAlt = "PF".equals(tipo) && "1".equals(row[QA_ALTERADO] != null ? row[QA_ALTERADO].toString() : "0") && !"P".equals(estado);
+			if (incluiTemposAlt) houvAlteracoes = true;
+
+			String cab = buildCabecalho(
+					row[QA_DATA_INI].toString(), sequencia,
+					ligneProduction(row[QA_OP_COD_ORIG], novaEtq, opPrevistaFicheiro, estado, estado2),
+					of, tipoOp, formatOpNumFicheiro(OP_NUM, estado, opPrevistaFicheiro),
+					posicao, row[QA_SEC_NUM] != null ? row[QA_SEC_NUM].toString() : "",
+					maqOrig, row[QA_TURNO], "MO",
+					row[QA_UTZ_CRIA] != null ? row[QA_UTZ_CRIA].toString() : "");
+
+			StringBuilder ra = new StringBuilder(cab);
+			ra.append("   A");
+			ra.append(formatDate(row[QA_DATA_INI]));
+			ra.append(formatTime(row[QA_HORA_INI]));
+			ra.append(formatDate(row[QA_DATA_FIM]));
+			ra.append(formatTime(row[QA_HORA_FIM]));
+			ra.append("04002");
+			ra.append((incluiTempos || incluiTemposAlt) ? formatTempo(row[QA_TEMPO_PREP], total) : ZEROS_15);
+			ra.append(sinal).append("22");
+			ra.append((incluiTempos || incluiTemposAlt) ? formatTempo(row[QA_TEMPO_EXEC], total) : ZEROS_15);
+			ra.append(sinal).append("22         ").append(CRLF);
+
+			String linhaA = ra.toString();
+
+			if (lider && !"000".equals(maqOrig)) {
+				existeMaquina = true;
+				StringBuffer buf = new StringBuffer(linhaA);
+				buf.replace(70, 84, "              "); buf.replace(47, 48, "1");
+				double tp = getTempos(cfg.DATA_INI, cfg.HORA_INI, cfg.DATA_FIM, cfg.HORA_FIM, cfg.MOMENTO_PARAGEM, id_origem, "P");
+				double te = getTempos(cfg.DATA_INI, cfg.HORA_INI, cfg.DATA_FIM, cfg.HORA_FIM, cfg.MOMENTO_PARAGEM, id_origem, "E");
+				buf.replace(121, 136, padZeroLeft(String.format("%.4f", tp).replace(",", "").replace(".", "").replace("$", ""), 15));
+				buf.replace(139, 154, padZeroLeft(String.format("%.4f", te).replace(",", "").replace(".", "").replace("$", ""), 15));
+				dadosMaquina = buf.toString();
+				lider = false;
+			}
+
+			if ("2".equals(opPrevistaFicheiro) && ("C".equals(estado) || "M".equals(estado)) && atualiza && ficheiro != 1) {
+				Integer idT = id_etiqueta != null ? id_etiqueta : id;
+				String tipoT = id_etiqueta != null ? "C" : "PF";
+				atualizatabela_AUX(
+						row[QA_UTZ_CRIA] != null ? row[QA_UTZ_CRIA].toString() : "",
+						row[QA_DATA_INI].toString(),
+						row[QA_REF_NUM] != null ? row[QA_REF_NUM].toString() : "",
+						of,
+						row[QA_OP_COD_ORIG] != null ? row[QA_OP_COD_ORIG].toString() : "",
+						idT, tipoT, row[QA_HORA_INI].toString());
+				atualiza = false;
+			}
+
+			conteudo += linhaA;
+			if (cria_pausa || isMuro) {
+				String utz = row[QA_UTZ_CRIA] != null ? row[QA_UTZ_CRIA].toString() : "";
+				linhaUtz.put(utz, linhaA);
+				linhaUtzInicio.put(utz, linhaA.substring(0, 87));
 			}
 		}
 
-		String DATA_INI, HORA_INI, DATA_FIM, HORA_FIM, SINAL, QUANT_BOAS_TOTAL, QUANT_BOAS, QUANT_DEF, TEMPO_PREP_TOTAL,
-				TIPO_PARAGEM, MOMENTO_PARAGEM, TEMPO_EXEC_TOTAL = "";
+		// conteudoParaPausas = maquina + pessoas (equivalente ao data_maquina original)
+		String conteudoParaPausas = (existeMaquina && "PF".equals(tipo))
+				? dadosMaquina + conteudo : conteudo;
+		if (existeMaquina && "PF".equals(tipo)) conteudo = dadosMaquina + conteudo;
 
-		if (novaetiqueta == null)
-			novaetiqueta = "0";
-		if (estado.equals("A") || estado2.equals("A")) {
-			nome_ficheiro2 = "anulacao_" + nome_ficheiro2;
+		// ── Pausas (Registo B) ────────────────────────────────────────────────
+		if (cria_pausa || (isMuro && !"P".equals(estado))) {
+			pausasMuro = processarPausas(id, id_origem, cfg, sinal, estado, estado2,
+					ficheiro, tipo, existeMaquina, isMuro, dadosMaquina, conteudoParaPausas,
+					path2, path_error, ficheirosdownload, nome_ficheiro2, nomezip,
+					linhaUtz, linhaUtzInicio);
+		}
+		if (isMuro && !pausasMuro.isEmpty()) conteudo += pausasMuro;
+
+		// ── Quantidades (Q) e Defeitos (R) ────────────────────────────────────
+		if (!"P".equals(estado) && !"M".equals(estado)) {
+			conteudo += buildRegistosQ(id, id_origem, id_etiqueta, tipo, of, OP_NUM,
+					estado, estado2, novaetiqueta, sequencia, sinal, ip_posto, cfg, ID_OP_LIN, opPrevistaFicheiro);
+			boolean[] fa = {houvAlteracoes};
+			conteudo += buildRegistosR(id, id_origem, id_etiqueta, tipo, of, OP_NUM,
+					estado, estado2, novaetiqueta, sequencia, sinal, cfg, fa, ID_OP_LIN, opPrevistaFicheiro);
+			houvAlteracoes = fa[0];
+		} else if ("M".equals(estado) && !"COMP".equals(tipo)) {
+			conteudo += crialinhareferencia(cfg.DATA_INI, cfg.HORA_INI, cfg.DATA_FIM, cfg.HORA_FIM,
+					cfg.QUANT_BOAS_TOTAL, cfg.QUANT_BOAS, cfg.QUANT_DEF, ID_OP_LIN,
+					id_origem, id, sequencia, OP_NUM, estado, estado2, novaetiqueta, sinal, tipo, of);
 		}
 
-		Boolean alteracoes = false;
-
-		if (ficheiro == 1) {
-
-			DATA_INI = "DATA_INI_M1";
-			HORA_INI = "HORA_INI_M1";
-			DATA_FIM = "DATA_FIM_M1";
-			HORA_FIM = "HORA_FIM_M1";
-			SINAL = "-";
-			QUANT_BOAS_TOTAL = "QUANT_BOAS_TOTAL_M1";
-			QUANT_BOAS = "QUANT_BOAS_M1";
-			QUANT_DEF = "QUANT_DEF_M1";
-			TEMPO_PREP_TOTAL = "TEMPO_PREP_TOTAL_M1";
-			TEMPO_EXEC_TOTAL = "TEMPO_EXEC_TOTAL_M1";
-			TIPO_PARAGEM = "TIPO_PARAGEM_M1";
-			MOMENTO_PARAGEM = "MOMENTO_PARAGEM_M1";
-
-		} else {
-			if (manual) {
-				DATA_INI = "DATA_INI";
-				HORA_INI = "HORA_INI";
-				DATA_FIM = "DATA_FIM";
-				HORA_FIM = "HORA_FIM";
-				SINAL = "+";
-				QUANT_BOAS_TOTAL = "QUANT_BOAS_TOTAL";
-				QUANT_BOAS = "QUANT_BOAS";
-				QUANT_DEF = "QUANT_DEF";
-				TEMPO_PREP_TOTAL = "TEMPO_PREP_TOTAL";
-				TEMPO_EXEC_TOTAL = "TEMPO_EXEC_TOTAL";
-				TIPO_PARAGEM = "TIPO_PARAGEM";
-				MOMENTO_PARAGEM = "MOMENTO_PARAGEM";
-			} else {
-				DATA_INI = "DATA_INI_M2";
-				HORA_INI = "HORA_INI_M2";
-				DATA_FIM = "DATA_FIM_M2";
-				HORA_FIM = "HORA_FIM_M2";
-				SINAL = "+";
-				QUANT_BOAS_TOTAL = "QUANT_BOAS_TOTAL_M2";
-				QUANT_BOAS = "QUANT_BOAS_M2";
-				QUANT_DEF = "QUANT_DEF_M2";
-				TEMPO_PREP_TOTAL = "TEMPO_PREP_TOTAL_M2";
-				TEMPO_EXEC_TOTAL = "TEMPO_EXEC_TOTAL_M2";
-				TIPO_PARAGEM = "TIPO_PARAGEM_M2";
-				MOMENTO_PARAGEM = "MOMENTO_PARAGEM_M2";
-			}
-		}
-
-		if (estado.equals("A") || estado2.equals("A")) {
-			SINAL = "-";
-		}
-
-		BufferedWriter bw = null;
-		SimpleDateFormat formate = new SimpleDateFormat("yyyyMMdd");
-		String data_atual = formate.format(new Date());
-		FileWriter fw = null;
-		String sequencia = "000000000";
-		String path = "";
-		String path2 = "";
-		String path_error = "";
-		String patherro = "";
-		String data = "";
-		String data_maquina = "";
-		boolean existe_maquina = false;
-		boolean lider = true;
-		boolean atualiza = true;
-		boolean primeira_linha = true;
-		String data_inicio = "";
-
-		HashMap<String, String> linha_utz = new HashMap<String, String>();
-		HashMap<String, String> linha_utz_inicio = new HashMap<String, String>();
-
-		Query query_folder = entityManager.createNativeQuery("select top 1 * from GER_PARAMETROS a");
-
-		List<Object[]> dados_folder = query_folder.getResultList();
-
-		for (Object[] content : dados_folder) {
-			path = content[1] + nome_ficheiro;
-			path2 = content[1] + nome_ficheiro2;
-			patherro = content[17] + nome_ficheiro;
-			path_error = content[17] + nome_ficheiro2;
-		}
-
-		if (!estado.equals("P"))
-			sequencia = sequencia(id.toString());
-
-		try {
-
-			Query query = entityManager
-					.createNativeQuery("select a.OF_NUM,c.ID_UTZ_CRIA,a.OP_NUM,a.SEC_NUM,a.MAQ_NUM_ORIG,c." + DATA_INI
-							+ ",c." + HORA_INI + ",c." + DATA_FIM + ",c." + HORA_FIM + ", " + "b." + TEMPO_PREP_TOTAL
-							+ " as Decimalprep,b." + TEMPO_EXEC_TOTAL + " as Decimalexec "
-							+ ",a.OP_PREVISTA,a.OP_COD_ORIGEM, (select ID_TURNO from RP_CONF_TURNO where CAST(c."
-							+ HORA_INI + "  as time) between HORA_INICIO and HORA_FIM ) as turno, "
-							+ "CASE when (c.DATA_INI_M2 != c.DATA_INI_M1 or c.HORA_INI_M1 != c.HORA_INI_M2 or c.DATA_FIM_M2 != c.DATA_FIM_M1 or c.HORA_FIM_M1 != c.HORA_FIM_M2 or "
-							+ "b.TEMPO_EXEC_TOTAL_M1 != b.TEMPO_EXEC_TOTAL_M2 or b.TEMPO_PREP_TOTAL_M1 != b.TEMPO_PREP_TOTAL_M2  ) then 1 else 1 END as alterado "
-							+ ", (select REF_NUM from RP_OF_OP_LIN where ID_OP_LIN = " + ID_OP_LIN + " ),a.ID_OF_CAB "
-							+ " from RP_OF_CAB a "
-							+ "inner join RP_OF_OP_CAB b on  b.ID_OP_CAB in (select x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
-							+ id_origem + ")"
-							+ "inner join RP_OF_OP_FUNC c on c.ID_OP_CAB in  (select x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
-							+ id_origem + ") and b.ID_OP_CAB = c.ID_OP_CAB " + "where a.ID_OF_CAB = " + id);
-
-			List<Object[]> dados = query.getResultList();
-
-			for (Object[] content : dados) {
-				String data_A = "";
-				// System.out.println(content[0]);
-				data_A += "01        ";// Soci�t�
-				data_A += content[5].toString().replaceAll("-", ""); // Date
-																		// suivi
-				data_A += sequencia; // N� s�quence
-
-				if (novaetiqueta.equals("1")) {
-					data_A += (content[12] + "    ").substring(0, 4);
-				} else {
-					if (content[11].toString().equals("1") || estado.equals("M") || estado.equals("A")
-							|| estado2.equals("A")) {
-						data_A += "    ";// + Ligne de production
-					} else {
-						data_A += (content[12] + "    ").substring(0, 4);// +
-																			// Ligne
-																			// de
-																			// production
-					}
-				}
-
-				data_A += "1";// Type N� OF
-				data_A += (of + "         ").substring(0, 10); // N� OF
-
-				if ((estado.equals("A") || (estado.equals("M"))) && !novaetiqueta.equals("1")) {
-					data_A += "1";// Type op�ration
-				} else {
-					data_A += content[11];// Type op�ration
-				}
-
-				// OP_NUM
-				if (estado.equals("C")) {
-					if (content[11].toString().equals("1") && !OP_NUM.equals("NULL")) {
-						data_A += ("0000" + OP_NUM).substring(("0000" + OP_NUM).length() - 4,
-								("0000" + OP_NUM).length()); // N� Op�ration
-					} else {
-						data_A += ("    ").substring(0, 4);// N� Op�ration
-					}
-				} else {
-					if (!OP_NUM.equals("NULL")) {
-						data_A += ("0000" + OP_NUM).substring(("0000" + OP_NUM).length() - 4,
-								("0000" + OP_NUM).length()); // N�
-																// Op�ration
-					} else {
-						data_A += ("    ").substring(0, 4);// N� Op�ration
-					}
-				}
-
-				// if (!content[4].toString().equals("000")) {
-				if (content[4].toString().equals("000")) {
-					if (primeira_linha) {
-						data_A += "1";// Position ( S12 )
-						primeira_linha = false;
-					} else {
-						data_A += "2";// Position ( S12 )
-					}
-				} else {
-					data_A += "2";// Position ( S12 )
-				}
-
-				data_A += (content[3] + "         ").substring(0, 10);// Code
-																		// section
-				data_A += (content[4] + "         ").substring(0, 10); // Code
-																		// sous-section
-				if (content[13] != null) {
-					data_A += content[13]; // N� d'�quipe
-				} else {
-					data_A += "01";
-				}
-
-				// Type de ressource
-				data_A += ("MO" + "         ").substring(0, 4);
-
-				// Code ressource
-				data_A += (content[1] + "         ").substring(0, 10);
-
-				data_A += "   A"; // N� �tablissement + Type d'�l�ment A
-				if (content[5] == null || content[6] == null || content[7] == null || content[8] == null) {
-					LOGGER.warning("DATA_INI/FIM null para id_origem=" + id_origem + " - race condition, ficheiro nao gerado");
-					continue;
-				}
-				data_A += content[5].toString().replaceAll("-", ""); // Date debut
-				data_A += content[6].toString().replace(":", "").substring(0, 6); // Heure debut
-				data_A += content[7].toString().replaceAll("-", ""); // Date fin
-				data_A += content[8].toString().replace(":", "").substring(0, 6); // Heure fin
-				data_A += "04002"; // Nombre de postes + Origine temps pr�pa.
-
-				// Temps de pr�paration
-
-				String temp_pre = "000000000000000";
-				double number = 0;
-				if (content[9] != null) {
-					String[] parts = content[9].toString().split(":");
-					if (!parts[0].equals("aN")) {
-						number = Double.parseDouble(parts[0]) + (Double.parseDouble(parts[1]) / 60)
-								+ (Double.parseDouble(parts[2]) / 3600);
-						number = number / total;
-						number = (number > 0) ? number : 0;
-						String parts_prep = String.format("%.4f", number).replace(",", "");
-						String size = temp_pre + parts_prep.replace("$", "");
-						temp_pre = (size).substring(size.length() - 15, size.length());
-					}
-				}
-
-				if (tipo.equals("PF") && !estado.equals("M") && !estado.equals("P")) {
-					data_A += temp_pre;
-
-				} else if (tipo.equals("PF") && content[14].toString().equals("1") && !estado.equals("P")) {
-					data_A += temp_pre;
-					alteracoes = true;
-				} else {
-					data_A += "000000000000000";
-				}
-
-				data_A += SINAL; // Signe
-				data_A += "22"; // Arr�ts compris + Origine temps ex�cution
-
-				// Temps d'ex�cution
-				String temp_exec = "000000000000000";
-				double number2 = 0;
-				if (content[10] != null) {
-					String[] parts2 = content[10].toString().split(":");
-					if (!parts2[0].equals("aN")) {
-						number2 = Double.parseDouble(parts2[0]) + (Double.parseDouble(parts2[1]) / 60)
-								+ (Double.parseDouble(parts2[2]) / 3600);
-						number2 = number2 / total;
-						number2 = (number2 > 0) ? number2 : 0;
-						String parts_exec = String.format("%.4f", number2).replace(",", "");
-						String size = temp_exec + parts_exec.replace("$", "");
-						temp_exec = (size).substring(size.length() - 15, size.length());
-					}
-				}
-				if (tipo.equals("PF") && !estado.equals("M") && !estado.equals("P")) {
-					data_A += temp_exec;
-				} else if (tipo.equals("PF") && content[14].toString().equals("1") && !estado.equals("P")) {
-					data_A += temp_exec;
-				} else {
-					data_A += "000000000000000";
-				}
-
-				data_A += SINAL; // Signe
-				data_A += "22         \r\n"; // Arr�ts compris + Etat op�ration
-												// +
-												// N�lot V�rif
-				if (lider) {
-					if (!content[4].toString().equals("000")) {
-						// System.out.println(content[4]);
-						existe_maquina = true;
-						StringBuffer buf = new StringBuffer(data_A);
-						buf.replace(70, 84, "              ");
-						buf.replace(47, 48, "1");
-
-						String temp_exec2 = "000000000000000";
-						String temp_pre2 = "000000000000000";
-						double tempprep = getTempos(DATA_INI, HORA_INI, DATA_FIM, HORA_FIM, MOMENTO_PARAGEM, id_origem,
-								"P");
-						double tempexec = getTempos(DATA_INI, HORA_INI, DATA_FIM, HORA_FIM, MOMENTO_PARAGEM, id_origem,
-								"E");
-
-						// tempprep = number - tempprep;
-
-						String parts_exec = String.format("%.4f", tempprep).replace(",", "");
-						String size = temp_exec2 + parts_exec.replace("$", "");
-						temp_exec2 = (size).substring(size.length() - 15, size.length());
-
-						// tempexec = number2 - tempexec;
-
-						String parts_prep = String.format("%.4f", tempexec).replace(",", "");
-						String size2 = temp_pre2 + parts_prep.replace("$", "");
-						temp_pre2 = (size2).substring(size2.length() - 15, size2.length());
-
-						buf.replace(121, 136, temp_exec2);
-						buf.replace(139, 154, temp_pre2);
-						data_maquina = buf.toString();
-						lider = false;
-					}
-					data_inicio = data_A.substring(0, 87);
-
-					if (content[11].toString().equals("2") && (estado.equals("C") || estado.equals("M")) && atualiza
-							&& ficheiro != 1) {
-						Integer id_t = id_etiqueta;
-						String tipo_t = "C";
-						if (id_etiqueta == null) {
-							id_t = id;
-							tipo_t = "PF";
-						}
-						atualizatabela_AUX(content[1].toString(), content[5].toString(), content[15].toString(), of,
-								content[12].toString(), id_t, tipo_t, content[6].toString());
-						atualiza = false;
-
-					}
-				}
-
-				data += data_A;
-				// if (estado.equals("P")) {
-				// Preencher linha_utz quando cria_pausa=true OU quando for Muro (para usar nas
-				// pausas)
-				if (cria_pausa || isMuro) {
-					linha_utz.put(content[1].toString(), data_A);
-					linha_utz_inicio.put(content[1].toString(), data_A.substring(0, 87));
-				}
-
-			}
-
-			if (existe_maquina && tipo.equals("PF") /* && !estado.equals("P") */) {
-				data_maquina += data;
-				data = data_maquina;
-			}
-
-			// PAUSA
-			// Para Muro: processar pausas quando estado != "P" (quando o ficheiro vai ser
-			// escrito)
-			// Para não-Muro: processar apenas quando cria_pausa=true (comportamento
-			// original)
-			if (cria_pausa || (isMuro && !estado.equals("P"))) {
-				Boolean criou_PAUSA = false;
-				Query query2 = entityManager.createNativeQuery("select c." + DATA_INI + ",c." + HORA_INI + ",c."
-						+ DATA_FIM + ",c." + HORA_FIM + ", " + "cast((DATEDIFF(second,DATEADD(DAY, DATEDIFF(DAY, c."
-						+ HORA_INI + ", c." + DATA_INI + " ), CAST(c." + HORA_INI
-						+ " AS DATETIME)), DATEADD(DAY, DATEDIFF(DAY, c." + HORA_FIM + ", c." + DATA_FIM + " ), CAST(c."
-						+ HORA_FIM + " AS DATETIME)))/3600.00) as decimal(18,4)) as timediff, " + "c." + TIPO_PARAGEM
-						+ ",c." + MOMENTO_PARAGEM + ",c.ID_UTZ_CRIA as utz1,a.ID_UTZ_CRIA as utz2, "
-						+ "CASE when (c.MOMENTO_PARAGEM_M2 != c.MOMENTO_PARAGEM_M1 or c.TIPO_PARAGEM_M2 != c.TIPO_PARAGEM_M1 or c.DATA_INI_M2 != c.DATA_INI_M1 or c.HORA_INI_M1 != c.HORA_INI_M2 or c.DATA_FIM_M2 != c.DATA_FIM_M1 or c.HORA_FIM_M1 != c.HORA_FIM_M2 ) then 1 else 1 END as alterado, "
-						+ "CASE when (c.DATA_INI_M1 is null or c.HORA_INI_M1 is null or c.DATA_FIM_M1 is null or c.HORA_FIM_M1 is null ) then 1 else 0 END as novo "
-						+ "from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
-						+ "inner join RP_OF_PARA_LIN c on c.ID_OP_CAB = b.ID_OP_CAB " + "where a.ID_OF_CAB = " + id
-						+ " and  c." + DATA_INI + " is not null and  c." + DATA_FIM + " is not null ");
-
-				List<Object[]> dados2 = query2.getResultList();
-
-				Integer count = 0;
-				for (Object[] content2 : dados2) {
-					count++;
-					String data_pausa = "";
-					String data_pausa_p = "";
-					data_pausa += "B"; // Type d'�l�ment B
-					data_pausa += ((content2[0] != null) ? content2[0] : "").toString().replaceAll("-", ""); // Date
-					// d�but
-					data_pausa += ((content2[1] != null) ? content2[1] : "      ").toString().replace(":", "")
-							.substring(0, 6); // Heure
-					// d�but
-					data_pausa += ((content2[2] != null) ? content2[2] : "").toString().replaceAll("-", ""); // Date
-					// fin
-					data_pausa += ((content2[3] != null) ? content2[3] : "      ").toString().replace(":", "")
-							.substring(0, 6); // Heure
-					// fin
-
-					data_pausa += (content2[5] + "    ").substring(0, 4);// Code
-																			// section
-
-					data_pausa += "3"; // Origine arr�t pr�pa.
-
-					// Temps d'arr�t/pr�pa.
-
-					String temp_pre = "000000000000000";
-					if (content2[6] != null && content2[6].toString().equals("P")) {
-						String parts_prep = (((content2[4] != null) ? content2[4] : "").toString()).replace(".", "");
-						String size = temp_pre + parts_prep;
-						temp_pre = (size).substring(size.length() - 15, size.length());
-					}
-					data_pausa += temp_pre;
-					data_pausa += SINAL; // Signe
-					data_pausa += "3"; // Origine arr�t ex�cution
-
-					// Temps d'arr�t/ex�cution
-					String temp_exec = "000000000000000";
-					if (content2[6] != null && content2[6].toString().equals("E")) {
-						String parts_exec = ((content2[4] != null) ? content2[4] : "").toString().replace(".", "");
-						String size = temp_exec + parts_exec;
-						temp_exec = (size).substring(size.length() - 15, size.length());
-					}
-					data_pausa += temp_exec;
-					data_pausa += SINAL; // Signe
-					data_pausa += "                                       \r\n"; // Texte
-																					// libre
-
-					StringBuffer buf3 = new StringBuffer(linha_utz.get(content2[7].toString()));
-					String seq = sequencia(id.toString());
-
-					if (!isMuro) {
-						buf3.replace(18, 27, seq);
-					}
-
-					String linha3 = buf3.toString();
-					if (!existe_maquina) {
-						if (isMuro) {
-						} else {
-							data_pausa_p += linha3;
-						}
-					}
-
-					String linha_A_MAQUINA = "";
-					if (existe_maquina) {
-						// linha A MAQ e PESSOAS
-						BufferedReader bufReader = new BufferedReader(new StringReader(data_maquina));
-
-						String line = null;
-						while ((line = bufReader.readLine()) != null) {
-
-							StringBuffer buf6 = new StringBuffer(line);
-							if (!isMuro)
-								buf6.replace(18, 27, seq);
-							buf6.replace(121, 136, "000000000000000");
-							buf6.replace(139, 154, "000000000000000");
-							String linha6 = buf6.toString();
-							if (buf6.substring(74, 84).trim().equals(content2[7].toString())
-									|| buf6.substring(74, 84).equals("          ")) {
-								data_pausa_p += linha6 + "\r\n";
-							}
-							if (buf6.lastIndexOf("MO") == -1) {
-								linha_A_MAQUINA = linha6 + "\r\n";
-							}
-						}
-
-					}
-
-					if (existe_maquina && tipo.equals("PF")
-							&& (content2[7].toString().equals(content2[8].toString()))) {
-						StringBuffer buf2 = new StringBuffer(data_maquina);
-						if (!isMuro)
-							buf2.replace(18, 27, seq);
-						String linha2 = buf2.toString();
-						// data_pausa_p += linha2.substring(0, 87) + data_pausa;
-
-						if (!criou_PAUSA) {
-							/*
-							 * Integer totalprep = 0; Integer totalexecucao = 0;
-							 * 
-							 * Query querytotal = entityManager
-							 * .createNativeQuery("select  (select count(*) from RP_OF_OP_FUNC a " +
-							 * "inner join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB " +
-							 * "inner join RP_OF_PREP_LIN c on a.ID_OP_CAB = c.ID_OP_CAB " +
-							 * "where ID_OF_CAB = " + id + " and c." + DATA_INI + " is not null and c." +
-							 * DATA_FIM +
-							 * " is not null ) as totalprep, (select count(*) from RP_OF_OP_FUNC a " +
-							 * "inner join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB " +
-							 * "left join RP_OF_PREP_LIN c on a.ID_OP_CAB = c.ID_OP_CAB " +
-							 * "where ID_OF_CAB = " + id + " and " + " ((cast(a." + DATA_FIM +
-							 * " as datetime) + cast(a." + HORA_FIM + " as datetime)) > (cast(c." + DATA_FIM
-							 * + " as datetime) + cast(c." + HORA_FIM + " as datetime))" +
-							 * "or c.HORA_INI_M2 is null)) as totalexecucao ");
-							 * 
-							 * List<Object[]> dadostotal = querytotal.getResultList();
-							 * 
-							 * for (Object[] contenttotal : dadostotal) { totalexecucao =
-							 * Integer.parseInt(contenttotal[1].toString()); totalprep =
-							 * Integer.parseInt(contenttotal[0].toString()); }
-							 */
-
-							// criar pausas maquina estado preparacao
-
-							// if (totalprep > 0)
-
-							if (!estado2.equals("M")
-									|| (estado2.equals("M") /*
-															 * && content2[9].toString(). equals("1")
-															 */)) {
-
-								CRIAPAUSASMAQUINA(DATA_INI, HORA_INI, DATA_FIM, HORA_FIM, MOMENTO_PARAGEM, TIPO_PARAGEM,
-										SINAL, linha2.substring(0, 87), linha_A_MAQUINA, path2, ficheirosdownload,
-										nome_ficheiro2, nomezip, id, "P", path_error);
-
-								// criar pausas maquina estado execucao
-								// if (totalexecucao > 0)
-								CRIAPAUSASMAQUINA(DATA_INI, HORA_INI, DATA_FIM, HORA_FIM, MOMENTO_PARAGEM, TIPO_PARAGEM,
-										SINAL, linha2.substring(0, 87), linha_A_MAQUINA, path2, ficheirosdownload,
-										nome_ficheiro2, nomezip, id, "E", path_error);
-
-								criou_PAUSA = true;
-							}
-						}
-
-					}
-
-					StringBuffer buf = new StringBuffer(linha_utz_inicio.get(content2[7].toString()));
-					if (!isMuro)
-						buf.replace(18, 27, seq);
-					String linha = buf.toString();
-					data_pausa_p += linha + data_pausa;
-
-					// Verificar se deve criar ficheiro de pausa
-					boolean deveCriarPausa = false;
-					if (estado2.equals("M") && content2[9].toString().equals("1")
-							&& !content2[10].toString().equals("1") && Float.parseFloat(content2[4].toString()) > 0) {
-						deveCriarPausa = true;
-					} else if (estado2.equals("M") && content2[10].toString().equals("1") && ficheiro == 2
-							&& ((content2[4] != null) ? Float.parseFloat(content2[4].toString()) : 0) > 0) {
-						deveCriarPausa = true;
-					} else if (!estado2.equals("M") && Float.parseFloat(content2[4].toString()) > 0) {
-						deveCriarPausa = true;
-					}
-
-					if (deveCriarPausa) {
-						if (isMuro) {
-							// Se for Muro, acumula as pausas para concatenar ao ficheiro normal
-							pausasMuro += data_pausa_p;
-						} else {
-							// Caso contrário, cria ficheiro separado
-							criar_ficheiro_Pausa(data_pausa_p, path2, count, ficheirosdownload, nome_ficheiro2, nomezip,
-									path_error);
-						}
-					}
-
-				}
-			}
-
-			// Se for Muro, concatenar as pausas ao ficheiro normal
-			if (isMuro && !pausasMuro.isEmpty()) {
-				data += pausasMuro;
-			}
-
-			if (!estado.equals("P") && !estado.equals("M")) {
-				String data3 = "";
-
-				// data3 = " ,CASE when (c.QUANT_BOAS_TOTAL_M1 != c.QUANT_BOAS_TOTAL_M2 or
-				// e.QUANT_BOAS_M1 != e.QUANT_BOAS_M2 ) then 1 else 0 END as alterado ";
-				data3 = " ,1 as alterado ";
-
-				Query query3 = entityManager.createNativeQuery(
-						"Select a.ID_OF_CAB_ORIGEM,a.OF_NUM,e.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,d."
-								+ DATA_INI + ",d." + HORA_INI + ",d." + DATA_FIM + ",d." + HORA_FIM
-								+ ",d.ID_UTZ_CRIA,c.REF_IND,cast(c." + QUANT_BOAS_TOTAL
-								+ " as decimal(18,4)) as qtd1,cast(e." + QUANT_BOAS + " as decimal(18,4)) as qtd2 "
-								+ ", a.OP_PREVISTA, c.OBS_REF, (select ID_TURNO from RP_CONF_TURNO where CAST( d."
-								+ HORA_INI + "  as time) between HORA_INICIO and HORA_FIM ) as turno, a.OP_COD_ORIGEM "
-								+ data3 + " from RP_OF_CAB a "
-								+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
-								+ "inner join RP_OF_OP_LIN c on  c.ID_OP_LIN = " + ID_OP_LIN + " "
-								+ "inner join RP_OF_OP_FUNC d on d.ID_OP_CAB = b.ID_OP_CAB and d.ID_OP_CAB in (select top 1 x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
-								+ id_origem + " ) " + "left join RP_OF_OP_ETIQUETA e on e.ID_OP_LIN = c.ID_OP_LIN "
-								+ "where a.ID_OF_CAB = " + id
-								+ " and (a.OF_NUM is not null or e.OF_NUM_ORIGEM is not null) ");
-
-				Query query3_COMP = entityManager.createNativeQuery(
-						"Select a.ID_OF_CAB_ORIGEM,a.OF_NUM,e.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,d."
-								+ DATA_INI + ",d." + HORA_INI + ",d." + DATA_FIM + ",d." + HORA_FIM
-								+ ",d.ID_UTZ_CRIA,c.REF_IND,cast(c." + QUANT_BOAS_TOTAL
-								+ " as decimal(18,4)) as qtd1,cast(e." + QUANT_BOAS + " as decimal(18,4)) as qtd2 "
-								+ ", a.OP_PREVISTA, c.OBS_REF, (select ID_TURNO from RP_CONF_TURNO where CAST( d."
-								+ HORA_INI + "  as time) between HORA_INICIO and HORA_FIM ) as turno,a.OP_COD_ORIGEM "
-								+ data3 + " from RP_OF_CAB a "
-								+ "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
-								+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
-								+ "inner join RP_OF_OP_FUNC d on d.ID_OP_CAB = (select top 1 x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
-								+ id_origem + " ) " + "left join RP_OF_OP_ETIQUETA e on e.ID_OP_LIN = c.ID_OP_LIN "
-								+ "where a.ID_OF_CAB = " + id
-								+ " and (a.OF_NUM is not null or e.OF_NUM_ORIGEM is not null)  and e.ID_REF_ETIQUETA ="
-								+ id_etiqueta);
-
-				List<Object[]> dados3;
-
-				if (tipo.equals("COMP")) {
-					dados3 = query3_COMP.getResultList();
-				} else {
-					dados3 = query3.getResultList();
-				}
-
-				for (Object[] content3 : dados3) {
-					// alteracoes = true;
-					String data_quantidades = "";
-
-					data_quantidades += "01        ";// Soci�t�
-					data_quantidades += content3[10].toString().replaceAll("-", "");
-					// Date suivi
-
-					data_quantidades += sequencia; // N� s�quence
-
-					if (novaetiqueta.equals("1")) {
-						data_quantidades += (content3[21] + "    ").substring(0, 4);
-					} else {
-						if (content3[18].toString().equals("1") || estado.equals("M") || estado.equals("A")
-								|| estado2.equals("A")) {
-							data_quantidades += "    ";// + Ligne de production
-						} else {
-							data_quantidades += (content3[21] + "    ").substring(0, 4);// +
-																						// Ligne
-																						// de
-							// production
-						}
-					}
-					data_quantidades += "1";// Type N� OF
-
-					if (content3[0] == null) {
-						data_quantidades += (content3[1] + "         ").substring(0, 10); // N�
-																							// OF
-					} else {
-						data_quantidades += (content3[2] + "         ").substring(0, 10); // N�
-																							// OF
-					}
-
-					if ((estado.equals("A") || estado.equals("M")) && !novaetiqueta.equals("1")) {
-						data_quantidades += "1";// Type op�ration
-					} else {
-						data_quantidades += content3[18];// Type op�ration
-					}
-
-					// OP_NUM
-					if (estado.equals("C")) {
-						if (content3[18].toString().equals("1") && !OP_NUM.equals("NULL")) {
-							data_quantidades += ("0000" + OP_NUM).substring(("0000" + OP_NUM).length() - 4,
-									("0000" + OP_NUM).length()); // N� Op�ration
-						} else {
-							data_quantidades += ("    ").substring(0, 4);// N�
-																			// Op�ration
-						}
-					} else {
-						if (!OP_NUM.equals("NULL")) {
-							data_quantidades += ("0000" + OP_NUM).substring(("0000" + OP_NUM).length() - 4,
-									("0000" + OP_NUM).length()); // N� Op�ration
-						} else {
-							data_quantidades += ("    ").substring(0, 4);// N�
-																			// Op�ration
-						}
-					}
-
-					data_quantidades += "1";// Position ( S12 )
-
-					data_quantidades += (content3[9] + "         ").substring(0, 10);// Code
-					// section
-					data_quantidades += (content3[8] + "         ").substring(0, 10); // Code
-					// sous-section
-
-					if (content3[20] != null) {
-						data_quantidades += content3[20]; // N� d'�quipe
-					} else {
-						data_quantidades += "01";
-					}
-
-					// Type de ressource
-					if (content3[0] == null) {
-						if (content3[8].toString().equals("000")) {
-							data_quantidades += ("MO" + "         ").substring(0, 4);
-						} else {
-							data_quantidades += "    ";
-						}
-					} else {
-						data_quantidades += ("MO" + "         ").substring(0, 4);
-					}
-
-					// Code ressource
-					if (content3[0] == null) {
-						if (content3[8].toString().equals("000")) {
-							data_quantidades += (content3[14] + "         ").substring(0, 10);
-						} else {
-							data_quantidades += "          ";
-						}
-					} else {
-						data_quantidades += (content3[14] + "         ").substring(0, 10);
-					}
-
-					data_quantidades += "   Q"; // N� �tablissement + Type
-												// d'�l�ment
-												// Q
-
-					data_quantidades += content3[10].toString().replaceAll("-", ""); // Date
-																						// d�but
-					data_quantidades += content3[11].toString().replace(":", "").substring(0, 6); // Heure
-					// d�but
-					data_quantidades += content3[12].toString().replaceAll("-", ""); // Date
-					// fin
-					data_quantidades += content3[13].toString().replace(":", "").substring(0, 6); // Heure
-					// fin
-
-					// R�f�rence produit
-					data_quantidades += (content3[4] + "                 ").substring(0, 17);
-					// Variante (1)
-					data_quantidades += (((content3[5] != null) ? content3[5] : "") + "                 ").substring(0,
-							10);
-					// Variante (2)
-					data_quantidades += (((content3[6] != null) ? content3[6] : "") + "                 ").substring(0,
-							10);
-					// Indice produit
-					data_quantidades += (((content3[15] != null) ? content3[15] : "") + "                 ")
-							.substring(0, 10);
-					// N� enreg. Produit
-					if (content3[7] != null) {
-						data_quantidades += ("000000000" + content3[7]).substring(
-								("000000000" + content3[7]).length() - 9, ("000000000" + content3[7]).length());
-					} else {
-						data_quantidades += "000000000";
-					}
-
-					data_quantidades += "1";// PType quantit�
-
-					// Quantit� bonne
-					String quantidades = "000000000000000";
-
-					if (content3[0] == null) {
-						if (content3[16] != null) {
-							String parts = content3[16].toString().replace(".", "");
-							String size = quantidades + parts;
-							quantidades = (size).substring(size.length() - 15, size.length());
-						}
-					} else {
-						if (content3[17] != null) {
-							String parts = content3[17].toString().replace(".", "");
-							String size = quantidades + parts;
-							quantidades = (size).substring(size.length() - 15, size.length());
-						}
-
-					}
-
-					if (estado.equals("M")) {
-						if (content3[22].toString().equals("0")) {
-							quantidades = "000000000000000";
-							data_quantidades += quantidades + "  ";
-						} else {
-							data_quantidades += quantidades + "  ";
-							alteracoes = true;
-						}
-
-					} else {
-						data_quantidades += quantidades + "  ";
-					}
-
-					data_quantidades += SINAL; // Signe
-					data_quantidades += "    "; // Unit�
-					data_quantidades += "000000000000000"; // Qt� bonne (US2)
-					// N� d'�tiquette suivie
-					data_quantidades += "          ";
-					// N� enreg. �tiquette
-					data_quantidades += "         ";
-					// Lieu (entr�e )
-					data_quantidades += "          ";
-					// + Emplacement ( entr�e )
-					// data_quantidades += " ";
-					// R�f�rence du lot ( entr�e )
-					data_quantidades += "          ";
-					if (!tipo.equals("COMP")) {
-						data_quantidades += (of + "                                   ").substring(0, 35);
-					} else {
-						data_quantidades += (/* content3[2] + */"                                   ").substring(0, 35);
-					}
-					data_quantidades += "          ";
-					// N� d'�tiquette ( entr�e )
-					// data_quantidades += " ";
-					// +Texte libre
-					// String obs = (content3[19] != null) ?
-					// content3[19].toString() : "";
-					String obs = "";
-					obs += id_origem;
-					if (!tipo.equals("COMP") && ip_posto != null) {
-						String nomeimpressora = "";
-						String ipimpressora = "";
-						Boolean imprime = true;
-
-						Query query_impressora = entityManager.createNativeQuery(
-								"select top 1  NOME_IMPRESSORA_SILVER,IP_IMPRESSORA from GER_POSTOS b where IP_POSTO ='"
-										+ ip_posto + "'");
-						List<Object[]> dados_impressora = query_impressora.getResultList();
-						for (Object[] content2 : dados_impressora) {
-							if (content2[0] != null)
-								nomeimpressora = content2[0].toString();
-							if (content2[1] != null) {
-								ipimpressora = content2[1].toString();
-							}
-							imprime = true;
-						}
-						if (imprime)
-							obs += "@" + nomeimpressora;
-					}
-					data_quantidades += (obs + "                                         ").substring(0, 40);
-
-					String etiquetas = "";
-					if (!tipo.equals("COMP")) {
-						Query query_caixa = entityManager
-								.createNativeQuery("select ETQNUM,REF_NUM from RP_CAIXAS_INCOMPLETAS where ID_OF_CAB = "
-										+ id_origem + " and REF_NUM = '" + content3[4] + "'");
-						List<Object[]> dados_caixas = query_caixa.getResultList();
-						for (Object[] contentcax : dados_caixas) {
-							etiquetas += contentcax[0] + ";";
-						}
-
-						// etiquetas =
-						// "1234567890;1234567890;1234567890;1234567890;1234567890;";
-					}
-					data_quantidades += (etiquetas + "                                                      ")
-							.substring(0, 54);
-					data_quantidades += "\r\n";
-					data += data_quantidades;
-					/*
-					 * StringBuffer buf = new StringBuffer(data_quantidades); buf.replace(70, 84,
-					 * "              "); data_maquina = buf.toString(); data += data_maquina;
-					 */
-
-				}
-			} else if (estado.equals("M") && !tipo.equals("COMP")) {
-				data += crialinhareferencia(DATA_INI, HORA_INI, DATA_FIM, HORA_FIM, QUANT_BOAS_TOTAL, QUANT_BOAS,
-						QUANT_DEF, ID_OP_LIN, id_origem, id, sequencia, OP_NUM, estado, estado2, novaetiqueta, SINAL,
-						tipo, of);
-			}
-
-			if (!estado.equals("P")) {
-
-				String data4 = "";
-
-				if (estado.equals("M")) {
-					if (ficheiro == 1) {
-						if (tipo.equals("COMP")) {
-							// data4 = " and (d.QUANT_DEF_M1 != d.QUANT_DEF_M2 and d.QUANT_DEF_M1 != 0 or
-							// f.APAGADO = 1)";
-						} else {
-							// data4 = " and (d.QUANT_DEF_M1 != d.QUANT_DEF_M2 and d.QUANT_DEF_M1 != 0) ";
-						}
-
-					} else {
-						// data4 = " and (d.QUANT_DEF_M1 != d.QUANT_DEF_M2 and d.QUANT_DEF_M2 != 0) ";
-					}
-
-				}
-				Boolean pecasRecuperacao = false;
-				if (tipo.equals("COMP")) {
-					List<Object[]> resultado = verificaPecasRecuperacaoInternal(id_origem);
-					if (resultado != null && !resultado.isEmpty()) {
-						Object[] linha = resultado.get(0);
-						Number count = (Number) linha[0];
-						if (count != null && count.intValue() > 0) {
-							pecasRecuperacao = true;
-						}
-					}
-				}
-
-				if (pecasRecuperacao) {
-					return;
-				}
-
-				if (pecasRecuperacao) {
-					data4 = " AND (CAST(d.QUANT_DEF_ORIGINAL AS decimal(18,4)) <> (CAST(d.QUANT_DEF_ORIGINAL AS decimal(18,4)) - CAST(d."
-							+ QUANT_DEF + " AS decimal(18,4))))";
-				}
-
-				Query query4 = entityManager.createNativeQuery("Select d.COD_DEF,cast(d." + QUANT_DEF
-						+ " as decimal(18,4)),a.ID_OF_CAB_ORIGEM,a.OF_NUM,f.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,e."
-						+ DATA_INI + ",e." + HORA_INI + ",e." + DATA_FIM + ",e." + HORA_FIM + ", "
-						+ "d.ID_UTZ_CRIA,c.REF_IND,c." + QUANT_BOAS_TOTAL + ",f." + QUANT_BOAS + " ,d.OBS_DEF "
-						+ ", a.OP_PREVISTA , (select ID_TURNO from RP_CONF_TURNO where CAST( e." + HORA_INI
-						+ "  as time) between HORA_INICIO and HORA_FIM ) as turno,a.OP_COD_ORIGEM "
-						+ "from RP_OF_CAB a " + "inner join RP_OF_OP_LIN c on  c.ID_OP_LIN = " + ID_OP_LIN + " "
-						+ "inner join RP_OF_DEF_LIN d on d.ID_OP_LIN = c.ID_OP_LIN "
-						+ "inner join RP_OF_OP_FUNC e on e.ID_OP_CAB = (select top 1 x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
-						+ id_origem + " ) "
-						+ "left join RP_OF_OP_ETIQUETA f on f.ID_OP_LIN = c.ID_OP_LIN and f.ID_REF_ETIQUETA = d.ID_REF_ETIQUETA "
-						+ "where a.ID_OF_CAB = " + id + data4 + " order by c.REF_NUM,d.COD_DEF");
-
-				Query query4_COMP = entityManager.createNativeQuery("Select d.COD_DEF,cast(d." + QUANT_DEF
-						+ " as decimal(18,4)),a.ID_OF_CAB_ORIGEM,a.OF_NUM,f.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,e."
-						+ DATA_INI + ",e." + HORA_INI + ",e." + DATA_FIM + ",e." + HORA_FIM + ", "
-						+ "d.ID_UTZ_CRIA,c.REF_IND,c." + QUANT_BOAS_TOTAL + ",f." + QUANT_BOAS + " ,d.OBS_DEF "
-						+ ", a.OP_PREVISTA , (select ID_TURNO from RP_CONF_TURNO where CAST( e." + HORA_INI
-						+ "  as time) between HORA_INICIO and HORA_FIM ) as turno, a.OP_COD_ORIGEM  "
-						+ "from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
-						+ "inner join RP_OF_OP_LIN c on  b.ID_OP_CAB = c.ID_OP_CAB "
-						+ "inner join RP_OF_DEF_LIN d on d.ID_OP_LIN = c.ID_OP_LIN "
-						+ "inner join RP_OF_OP_FUNC e on e.ID_OP_CAB = (select top 1 x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
-						+ id_origem + " ) "
-						+ "left join RP_OF_OP_ETIQUETA f on f.ID_OP_LIN = c.ID_OP_LIN and f.ID_REF_ETIQUETA = d.ID_REF_ETIQUETA "
-						+ "where a.ID_OF_CAB = " + id + data4 + " and d.ID_REF_ETIQUETA = " + id_etiqueta
-						+ " order by c.REF_NUM,d.COD_DEF");
-
-				List<Object[]> dados4;
-
-				if (tipo.equals("COMP")) {
-					dados4 = query4_COMP.getResultList();
-				} else {
-					dados4 = query4.getResultList();
-				}
-
-				for (Object[] content4 : dados4) {
-					alteracoes = true;
-					String data_defeitos = "";
-					data_defeitos += "01        ";// Soci�t�
-					data_defeitos += content4[12].toString().replaceAll("-", ""); // Date
-																					// suivi
-
-					data_defeitos += sequencia; // N� s�quence
-
-					if (novaetiqueta.equals("1")) {
-						data_defeitos += (content4[23] + "    ").substring(0, 4);
-					} else {
-						if (content4[21].toString().equals("1") || estado.equals("M") || estado.equals("A")
-								|| estado2.equals("A")) {
-							data_defeitos += "    ";// + Ligne de production
-						} else {
-							data_defeitos += (content4[23] + "    ").substring(0, 4);// +
-																						// Ligne
-																						// de
-							// production
-						}
-					}
-					data_defeitos += "1";// Type N� OF
-
-					if (content4[2] == null) {
-						data_defeitos += (content4[3] + "         ").substring(0, 10); // N�
-																						// OF
-					} else {
-						data_defeitos += (content4[4] + "         ").substring(0, 10); // N�
-																						// OF
-					}
-
-					if ((estado.equals("A") || estado.equals("M")) && !novaetiqueta.equals("1")) {
-						data_defeitos += "1";// Type op�ration
-					} else {
-						data_defeitos += content4[21];// Type op�ration
-					}
-
-					// OP_NUM
-					if (estado.equals("C")) {
-						if (content4[21].toString().equals("1") && !OP_NUM.equals("NULL")) {
-							data_defeitos += ("0000" + OP_NUM).substring(("0000" + OP_NUM).length() - 4,
-									("0000" + OP_NUM).length()); // N� Op�ration
-						} else {
-							data_defeitos += ("    ").substring(0, 4);// N�
-																		// Op�ration
-						}
-					} else {
-						if (!OP_NUM.equals("NULL")) {
-							data_defeitos += ("0000" + OP_NUM).substring(("0000" + OP_NUM).length() - 4,
-									("0000" + OP_NUM).length()); // N� Op�ration
-						} else {
-							data_defeitos += ("    ").substring(0, 4);// N�
-						}
-					}
-
-					data_defeitos += "1";// Position ( S12 )
-
-					data_defeitos += (content4[11] + "         ").substring(0, 10);// Code
-					// section
-					data_defeitos += (content4[10] + "         ").substring(0, 10); // Code
-					// sous-section
-					if (content4[22] != null) {
-						data_defeitos += content4[22]; // N� d'�quipe
-					} else {
-						data_defeitos += "01";
-					}
-
-					// Type de ressource
-					if (content4[2] == null) {
-						if (content4[10].toString().equals("000")) {
-							data_defeitos += ("MO" + "         ").substring(0, 4);
-						} else {
-							data_defeitos += "    ";
-						}
-					} else {
-						data_defeitos += ("MO" + "         ").substring(0, 4);
-					}
-
-					// Code ressource
-					if (content4[2] == null) {
-						if (content4[10].toString().equals("000")) {
-							data_defeitos += (content4[16] + "         ").substring(0, 10);
-						} else {
-							data_defeitos += "          ";
-						}
-					} else {
-						data_defeitos += (content4[16] + "         ").substring(0, 10);
-					}
-
-					data_defeitos += "   R"; // N� �tablissement + Type
-												// d'�l�ment Q
-
-					data_defeitos += content4[12].toString().replaceAll("-", ""); // Date
-																					// d�but
-					data_defeitos += content4[13].toString().replace(":", "").substring(0, 6); // Heure
-					// d�but
-					data_defeitos += content4[14].toString().replaceAll("-", ""); // Date
-					// fin
-					data_defeitos += content4[15].toString().replace(":", "").substring(0, 6); // Heure
-					// fin
-
-					// R�f�rence produit
-					data_defeitos += (content4[6] + "                 ").substring(0, 17);
-					// Variante (1)
-					data_defeitos += (((content4[7] != null) ? content4[7] : "") + "                 ").substring(0,
-							10);
-					// Variante (2)
-					data_defeitos += (((content4[8] != null) ? content4[8] : "") + "                 ").substring(0,
-							10);
-					// Indice produit
-					data_defeitos += (((content4[17] != null) ? content4[17] : "") + "                 ").substring(0,
-							10);
-					// N� enreg. Produit
-					if (content4[9] != null) {
-						data_defeitos += ("000000000" + content4[9]).substring(("000000000" + content4[9]).length() - 9,
-								("000000000" + content4[9]).length());
-					} else {
-						data_defeitos += "000000000";
-					}
-
-					// Code rebut
-					data_defeitos += (content4[0] + "    ").substring(0, 4);
-
-					data_defeitos += "1"; // Type quantit�
-
-					// Quantit� rebut�e
-					String quantidades = "000000000000000";
-
-					if (content4[1] != null) {
-						String parts = content4[1].toString().replace(".", "");
-						String size = quantidades + parts;
-						quantidades = (size).substring(size.length() - 15, size.length());
-					}
-
-					data_defeitos += quantidades + "  ";
-
-					if (pecasRecuperacao) {
-						if (SINAL.equals("+")) {
-							data_defeitos += "-";
-						} else {
-							data_defeitos += "+";
-						}
-					} else {
-						data_defeitos += SINAL; // Signe
-					}
-
-					data_defeitos += "                                                                                                       ";
-					String obs = (content4[20] != null) ? content4[20].toString() : "";
-
-					data_defeitos += (obs + "                                        ").substring(0, 39); // Texte
-																											// libre
-					data_defeitos += "\r\n";
-					data += data_defeitos;
-					/*
-					 * StringBuffer buf = new StringBuffer(data_defeitos); buf.replace(70, 84,
-					 * "              "); data_maquina = buf.toString(); data += data_maquina;
-					 */
-				}
-			}
-
-			/// String data = "Campo1: \r\n" + "Campo2:\r\n" + "Campo3:\r\n" +
-			/// "Campo4:";
-			if (!ficheirosdownload) {
-				if (!estado.equals("M") && !estado.equals("P")) {
-					File file = new File(path);
-
-					// if file doesnt exists, then create it
-
-					try {
-						file.createNewFile();
-					} catch (IOException e2) {
-						// TODO Auto-generated catch block
-						String[] keyValuePairs = {
-								"TEXTO_ERRO ::" + e2.getMessage() + " " + file.getAbsolutePath() + "", };
-						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "", null);
-						criarfileerro(estado, patherro, data, alteracoes);
-						e2.printStackTrace();
-						return;
-					}
-
-					// true = append file
-					// fw = new FileWriter(file.getAbsoluteFile(), true);
-					try {
-						fw = new FileWriter(file.getAbsoluteFile(), true);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					bw = new BufferedWriter(fw);
-
-					bw.write(data);
-				} else if (estado.equals("M") && alteracoes && !estado.equals("P")) {
-					File file = new File(path);
-
-					// if file doesnt exists, then create it
-
-					try {
-						file.createNewFile();
-					} catch (IOException e2) {
-						// TODO Auto-generated catch block
-						String[] keyValuePairs = {
-								"TEXTO_ERRO ::" + e2.getMessage() + " " + file.getAbsolutePath() + "", };
-						if (file.getAbsolutePath() != null)
-							verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "", null);
-						criarfileerro(estado, patherro, data, alteracoes);
-						e2.printStackTrace();
-						return;
-					}
-
-					// true = append file
-					// fw = new FileWriter(file.getAbsoluteFile(), true);
-					try {
-						fw = new FileWriter(file.getAbsoluteFile(), true);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-
-						e.printStackTrace();
-					}
-					bw = new BufferedWriter(fw);
-
-					bw.write(data);
-				}
-			} else {
-
-				// if (!estado.equals("M") && !estado.equals("P")) {
-				if (!estado.equals("P")) {
-					Map<String, String> env = new HashMap<>();
-					env.put("create", "true");
-					java.nio.file.Path pathh = Paths.get("c:/sgiid/temp_files/" + nomezip + ".zip");
-					URI uri = URI.create("jar:" + pathh.toUri());
-					try (FileSystem fs = FileSystems.newFileSystem(uri, env)) {
-						java.nio.file.Path nf = fs.getPath(nome_ficheiro);
-						try (Writer writer = Files.newBufferedWriter(nf, StandardCharsets.UTF_8,
-								StandardOpenOption.CREATE)) {
-							writer.write(data);
-						}
-					}
-				}
-			}
-
-		} catch (IOException e) {
-			String[] keyValuePairs = { "TEXTO_ERRO ::" + e.getMessage() + "", };
-			verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "", null);
-			criarfileerro(estado, patherro, data, alteracoes);
-			e.printStackTrace();
-			return;
-		} finally {
-
+		// ── Escrita ───────────────────────────────────────────────────────────
+		if (!"P".equals(estado) && (!"M".equals(estado) || houvAlteracoes)) {
 			try {
-
-				if (bw != null) {
-					bw.close();
+				if (ficheirosdownload) {
+					escreverZip(conteudo, nome_ficheiro, nomezip);
+				} else {
+					escreverLocal(conteudo, path);
 				}
-				if (fw != null) {
-					fw.close();
-				}
-
-			} catch (IOException ex) {
-				String[] keyValuePairs = { "TEXTO_ERRO ::" + ex.getMessage() + "", };
-				verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "", null);
-				criarfileerro(estado, patherro, data, alteracoes);
-				ex.printStackTrace();
-				return;
+			} catch (IOException e) {
+				notificarErro(e.getMessage());
+				criarfileerro(estado, patherro, conteudo, houvAlteracoes);
+				LOG.severe("Erro ao escrever ficheiro: " + e.getMessage());
 			}
 		}
 	}
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// Pausas — Registo B
+	// ─────────────────────────────────────────────────────────────────────────
+
+	private String processarPausas(
+			Integer id, Integer id_origem, MaquinaConfig cfg, String sinal,
+			String estado, String estado2, Integer ficheiro, String tipo,
+			boolean existeMaquina, boolean isMuro, String dadosMaquina, String conteudoParaPausas,
+			String path2, String path_error, Boolean ficheirosdownload,
+			String nome_ficheiro2, String nomezip,
+			Map<String, String> linhaUtz, Map<String, String> linhaUtzInicio)
+			throws IOException, ParseException {
+
+		String pausasMuro = "";
+
+		@SuppressWarnings("unchecked")
+		List<Object[]> pausas = entityManager.createNativeQuery(
+				"SELECT c." + cfg.DATA_INI + ", c." + cfg.HORA_INI
+				+ ", c." + cfg.DATA_FIM + ", c." + cfg.HORA_FIM
+				+ ", CAST((DATEDIFF(second,"
+				+ "  DATEADD(DAY, DATEDIFF(DAY, c." + cfg.HORA_INI + ", c." + cfg.DATA_INI + "), CAST(c." + cfg.HORA_INI + " AS DATETIME)),"
+				+ "  DATEADD(DAY, DATEDIFF(DAY, c." + cfg.HORA_FIM + ", c." + cfg.DATA_FIM + "), CAST(c." + cfg.HORA_FIM + " AS DATETIME))"
+				+ ") / 3600.00) AS decimal(18,4)) AS timediff"
+				+ ", c." + cfg.TIPO_PARAGEM + ", c." + cfg.MOMENTO_PARAGEM
+				+ ", c.ID_UTZ_CRIA AS utz1, a.ID_UTZ_CRIA AS utz2"
+				+ ", CASE WHEN (c.MOMENTO_PARAGEM_M2 != c.MOMENTO_PARAGEM_M1 OR c.TIPO_PARAGEM_M2 != c.TIPO_PARAGEM_M1"
+				+ "   OR c.DATA_INI_M2 != c.DATA_INI_M1 OR c.HORA_INI_M1 != c.HORA_INI_M2"
+				+ "   OR c.DATA_FIM_M2 != c.DATA_FIM_M1 OR c.HORA_FIM_M1 != c.HORA_FIM_M2) THEN 1 ELSE 1 END AS alterado"
+				+ ", CASE WHEN (c.DATA_INI_M1 IS NULL OR c.HORA_INI_M1 IS NULL"
+				+ "   OR c.DATA_FIM_M1 IS NULL OR c.HORA_FIM_M1 IS NULL) THEN 1 ELSE 0 END AS novo"
+				+ " FROM RP_OF_CAB a"
+				+ " INNER JOIN RP_OF_OP_CAB b ON b.ID_OF_CAB = a.ID_OF_CAB"
+				+ " INNER JOIN RP_OF_PARA_LIN c ON c.ID_OP_CAB = b.ID_OP_CAB"
+				+ " WHERE a.ID_OF_CAB = :id"
+				+ "   AND c." + cfg.DATA_INI + " IS NOT NULL AND c." + cfg.DATA_FIM + " IS NOT NULL")
+				.setParameter("id", id).getResultList();
+
+		int count = 0;
+		boolean criouPausa = false;
+
+		for (Object[] p : pausas) {
+			count++;
+			String utz = p[7] != null ? p[7].toString() : "";
+
+			StringBuilder rb = new StringBuilder();
+			rb.append("B");
+			rb.append(formatDate(p[0])); rb.append(formatTime(p[1]));
+			rb.append(formatDate(p[2])); rb.append(formatTime(p[3]));
+			rb.append(padRight(p[5], 4)).append("3");
+
+			String tPrep = "P".equals(p[6] != null ? p[6].toString() : "") ? formatQuantidade(p[4], 15) : ZEROS_15;
+			rb.append(tPrep).append(sinal).append("3");
+			String tExec = "E".equals(p[6] != null ? p[6].toString() : "") ? formatQuantidade(p[4], 15) : ZEROS_15;
+			rb.append(tExec).append(sinal);
+			rb.append(padRight("", 39)).append(CRLF);
+
+			String seq = sequencia(id.toString());
+			String linhaAUtz   = linhaUtz.containsKey(utz) ? linhaUtz.get(utz) : "";
+			String linhaAInicio = linhaUtzInicio.containsKey(utz) ? linhaUtzInicio.get(utz) : "";
+
+			StringBuffer bufA = new StringBuffer(linhaAUtz);
+			if (!isMuro && bufA.length() > 27) bufA.replace(18, 27, seq);
+
+			String conteudoPausa = "";
+			String linhaAMaquina = "";
+
+			if (!existeMaquina) {
+				if (!isMuro) conteudoPausa += bufA.toString();
+			} else {
+				try (BufferedReader br = new BufferedReader(new StringReader(conteudoParaPausas))) {
+					String line;
+					while ((line = br.readLine()) != null) {
+						StringBuffer b6 = new StringBuffer(line);
+						if (!isMuro && b6.length() > 27) b6.replace(18, 27, seq);
+						if (b6.length() >= 154) { b6.replace(121, 136, ZEROS_15); b6.replace(139, 154, ZEROS_15); }
+						String l6 = b6.toString();
+						String recurso = b6.length() >= 84 ? b6.substring(74, 84).trim() : "";
+						if (recurso.equals(utz) || recurso.isEmpty()) conteudoPausa += l6 + CRLF;
+						if (!l6.contains("MO")) linhaAMaquina = l6 + CRLF;
+					}
+				}
+				String utz2 = p[8] != null ? p[8].toString() : "";
+				if ("PF".equals(tipo) && utz.equals(utz2) && !criouPausa) {
+					StringBuffer bufM = new StringBuffer(dadosMaquina);
+					if (!isMuro && bufM.length() > 27) bufM.replace(18, 27, seq);
+					String lm = bufM.toString();
+					String cab87 = lm.length() >= 87 ? lm.substring(0, 87) : lm;
+					CRIAPAUSASMAQUINA(cfg.DATA_INI, cfg.HORA_INI, cfg.DATA_FIM, cfg.HORA_FIM,
+							cfg.MOMENTO_PARAGEM, cfg.TIPO_PARAGEM, sinal,
+							cab87, linhaAMaquina, path2, ficheirosdownload,
+							nome_ficheiro2, nomezip, id, "P", path_error);
+					CRIAPAUSASMAQUINA(cfg.DATA_INI, cfg.HORA_INI, cfg.DATA_FIM, cfg.HORA_FIM,
+							cfg.MOMENTO_PARAGEM, cfg.TIPO_PARAGEM, sinal,
+							cab87, linhaAMaquina, path2, ficheirosdownload,
+							nome_ficheiro2, nomezip, id, "E", path_error);
+					criouPausa = true;
+				}
+			}
+
+			StringBuffer bufI = new StringBuffer(linhaAInicio);
+			if (!isMuro && bufI.length() > 27) bufI.replace(18, 27, seq);
+			conteudoPausa += bufI.toString() + rb.toString();
+
+			float diff = p[4] != null ? Float.parseFloat(p[4].toString()) : 0f;
+			String alterado = p[9] != null ? p[9].toString() : "0";
+			String novo = p[10] != null ? p[10].toString() : "0";
+			boolean criarPausa =
+				("M".equals(estado2) && "1".equals(alterado) && !"1".equals(novo) && diff > 0)
+				|| ("M".equals(estado2) && "1".equals(novo) && ficheiro == 2 && diff > 0)
+				|| (!"M".equals(estado2) && diff > 0);
+
+			if (criarPausa) {
+				if (isMuro) pausasMuro += conteudoPausa;
+				else criar_ficheiro_Pausa(conteudoPausa, path2, count, ficheirosdownload, nome_ficheiro2, nomezip, path_error);
+			}
+		}
+		return pausasMuro;
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// Registo Q — Quantidades boas
+	// ─────────────────────────────────────────────────────────────────────────
+
+	private String buildRegistosQ(Integer id, Integer id_origem, Integer id_etiqueta,
+			String tipo, String of, String OP_NUM, String estado, String estado2,
+			String novaetiqueta, String sequencia, String sinal, String ip_posto,
+			MaquinaConfig cfg, String ID_OP_LIN, String opPrevistaFicheiro) {
+
+		String sqlCols = "SELECT a.ID_OF_CAB_ORIGEM, a.OF_NUM, e.OF_NUM_ORIGEM, a.OP_NUM, c.REF_NUM,"
+			+ " c.REF_VAR1, c.REF_VAR2, c.REF_INDNUMENR, a.MAQ_NUM_ORIG, a.SEC_NUM,"
+			+ " d." + cfg.DATA_INI + ", d." + cfg.HORA_INI + ", d." + cfg.DATA_FIM + ", d." + cfg.HORA_FIM
+			+ ", d.ID_UTZ_CRIA, c.REF_IND,"
+			+ " CAST(c." + cfg.QUANT_BOAS_TOTAL + " AS decimal(18,4)) AS qtd1,"
+			+ " CAST(e." + cfg.QUANT_BOAS + " AS decimal(18,4)) AS qtd2,"
+			+ " a.OP_PREVISTA, c.OBS_REF,"
+			+ " (SELECT ID_TURNO FROM RP_CONF_TURNO WHERE CAST(d." + cfg.HORA_INI + " AS time) BETWEEN HORA_INICIO AND HORA_FIM) AS turno,"
+			+ " a.OP_COD_ORIGEM, 1 AS alterado FROM RP_OF_CAB a"
+			+ " INNER JOIN RP_OF_OP_CAB b ON b.ID_OF_CAB = a.ID_OF_CAB";
+
+		@SuppressWarnings("unchecked")
+		List<Object[]> rows = "COMP".equals(tipo)
+			? entityManager.createNativeQuery(sqlCols
+				+ " INNER JOIN RP_OF_OP_LIN c ON b.ID_OP_CAB = c.ID_OP_CAB"
+				+ " INNER JOIN RP_OF_OP_FUNC d ON d.ID_OP_CAB ="
+				+ "   (SELECT TOP 1 x.ID_OP_CAB FROM RP_OF_OP_CAB x WHERE x.ID_OF_CAB = :ido)"
+				+ " LEFT JOIN RP_OF_OP_ETIQUETA e ON e.ID_OP_LIN = c.ID_OP_LIN"
+				+ " WHERE a.ID_OF_CAB = :id AND (a.OF_NUM IS NOT NULL OR e.OF_NUM_ORIGEM IS NOT NULL)"
+				+ "   AND e.ID_REF_ETIQUETA = :etq")
+				.setParameter("ido", id_origem).setParameter("id", id).setParameter("etq", id_etiqueta)
+				.getResultList()
+			: (ID_OP_LIN == null || "NULL".equals(ID_OP_LIN)) ? new java.util.ArrayList<>()
+			: entityManager.createNativeQuery(sqlCols
+				+ " INNER JOIN RP_OF_OP_LIN c ON c.ID_OP_LIN = :oplin"
+				+ " INNER JOIN RP_OF_OP_FUNC d ON d.ID_OP_CAB = b.ID_OP_CAB"
+				+ "   AND d.ID_OP_CAB IN (SELECT TOP 1 x.ID_OP_CAB FROM RP_OF_OP_CAB x WHERE x.ID_OF_CAB = :ido)"
+				+ " LEFT JOIN RP_OF_OP_ETIQUETA e ON e.ID_OP_LIN = c.ID_OP_LIN"
+				+ " WHERE a.ID_OF_CAB = :id AND (a.OF_NUM IS NOT NULL OR e.OF_NUM_ORIGEM IS NOT NULL)")
+				.setParameter("oplin", Long.parseLong(ID_OP_LIN))
+				.setParameter("ido", id_origem).setParameter("id", id)
+				.getResultList();
+
+		StringBuilder sb = new StringBuilder();
+		for (Object[] row : rows)
+			sb.append(buildRegistoQ(row, of, OP_NUM, estado, estado2, novaetiqueta,
+					sequencia, sinal, tipo, ip_posto, id_origem, opPrevistaFicheiro));
+		return sb.toString();
+	}
+
+	private String buildRegistoQ(Object[] row, String of, String OP_NUM,
+			String estado, String estado2, String novaetiqueta,
+			String sequencia, String sinal, String tipo, String ip_posto, Integer id_origem,
+			String opPrevistaFicheiro) {
+
+		boolean novaEtq = "1".equals(novaetiqueta);
+		String tipoOp = ("A".equals(estado) || "M".equals(estado)) && !novaEtq ? "1" : opPrevistaFicheiro;
+		boolean isCabOrig = row[QQ_ID_CAB_ORIG] == null;
+		boolean secPrinc  = "000".equals(row[QQ_MAQ_NUM_ORIG] != null ? row[QQ_MAQ_NUM_ORIG].toString() : "");
+		boolean moAtivo   = isCabOrig ? secPrinc : true;
+
+		String cab = buildCabecalho(
+				row[QQ_DATA_INI] != null ? row[QQ_DATA_INI].toString() : "", sequencia,
+				ligneProduction(row[QQ_OP_COD_ORIG], novaEtq, opPrevistaFicheiro, estado, estado2),
+				isCabOrig ? padRight(row[QQ_OF_NUM], 10) : padRight(row[QQ_OF_NUM_ORIG], 10),
+				tipoOp, formatOpNumFicheiro(OP_NUM, estado, opPrevistaFicheiro), "1",
+				row[QQ_SEC_NUM] != null ? row[QQ_SEC_NUM].toString() : "",
+				row[QQ_MAQ_NUM_ORIG] != null ? row[QQ_MAQ_NUM_ORIG].toString() : "",
+				row[QQ_TURNO],
+				moAtivo ? "MO  " : ESPACOS_4,
+				moAtivo ? padRight(row[QQ_UTZ_CRIA], 10) : ESPACOS_10);
+
+		String quant = isCabOrig ? formatQuantidade(row[QQ_QUANT_TOTAL], 15) : formatQuantidade(row[QQ_QUANT], 15);
+		if ("M".equals(estado)) {
+			boolean alt = !"0".equals(row[QQ_ALTERADO] != null ? row[QQ_ALTERADO].toString() : "0");
+			quant = alt ? quant : ZEROS_15;
+		}
+
+		StringBuilder sb = new StringBuilder(cab);
+		sb.append("   Q");
+		sb.append(formatDate(row[QQ_DATA_INI])); sb.append(formatTime(row[QQ_HORA_INI]));
+		sb.append(formatDate(row[QQ_DATA_FIM])); sb.append(formatTime(row[QQ_HORA_FIM]));
+		sb.append(padRight(row[QQ_REF_NUM], 17));
+		sb.append(padRight(row[QQ_REF_VAR1], 10)); sb.append(padRight(row[QQ_REF_VAR2], 10));
+		sb.append(padRight(row[QQ_REF_IND], 10));
+		sb.append(padZeroLeft(row[QQ_REF_INDNUMENR], 9));
+		sb.append("1");
+		sb.append(quant).append("  ").append(sinal);
+		sb.append(ESPACOS_4).append(ZEROS_15);
+		sb.append(ESPACOS_10).append(ZEROS_9).append(ESPACOS_10).append(ESPACOS_10);
+		sb.append("COMP".equals(tipo) ? padRight("", 35) : padRight(of, 35));
+		sb.append(ESPACOS_10);
+		String obs = id_origem.toString();
+		if (!"COMP".equals(tipo) && ip_posto != null) obs += "@" + buscarNomeImpressora(ip_posto);
+		sb.append(padRight(obs, 40));
+		String etq = !"COMP".equals(tipo) ? buscarEtiquetasCaixas(id_origem, row[QQ_REF_NUM] != null ? row[QQ_REF_NUM].toString() : "") : "";
+		sb.append(padRight(etq, 54)).append(CRLF);
+		return sb.toString();
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// Registo R — Defeitos
+	// ─────────────────────────────────────────────────────────────────────────
+
+	private String buildRegistosR(Integer id, Integer id_origem, Integer id_etiqueta,
+			String tipo, String of, String OP_NUM, String estado, String estado2,
+			String novaetiqueta, String sequencia, String sinal, MaquinaConfig cfg, boolean[] fa,
+			String ID_OP_LIN, String opPrevistaFicheiro) {
+
+		boolean pecasRecup = false;
+		if ("COMP".equals(tipo)) {
+			List<Object[]> r = verificaPecasRecuperacaoInternal(id_origem);
+			if (!r.isEmpty()) { Number n = (Number) r.get(0)[0]; pecasRecup = n != null && n.intValue() > 0; }
+		}
+		if (pecasRecup) return "";
+
+		String sqlBase = "SELECT d.COD_DEF, CAST(d." + cfg.QUANT_DEF + " AS decimal(18,4)),"
+			+ " a.ID_OF_CAB_ORIGEM, a.OF_NUM, f.OF_NUM_ORIGEM, a.OP_NUM,"
+			+ " c.REF_NUM, c.REF_VAR1, c.REF_VAR2, c.REF_INDNUMENR,"
+			+ " a.MAQ_NUM_ORIG, a.SEC_NUM,"
+			+ " e." + cfg.DATA_INI + ", e." + cfg.HORA_INI + ", e." + cfg.DATA_FIM + ", e." + cfg.HORA_FIM
+			+ ", d.ID_UTZ_CRIA, c.REF_IND, c." + cfg.QUANT_BOAS_TOTAL + ", f." + cfg.QUANT_BOAS + ", d.OBS_DEF,"
+			+ " a.OP_PREVISTA,"
+			+ " (SELECT ID_TURNO FROM RP_CONF_TURNO WHERE CAST(e." + cfg.HORA_INI + " AS time) BETWEEN HORA_INICIO AND HORA_FIM) AS turno,"
+			+ " a.OP_COD_ORIGEM FROM RP_OF_CAB a";
+
+		@SuppressWarnings("unchecked")
+		List<Object[]> rows = "COMP".equals(tipo)
+			? entityManager.createNativeQuery(sqlBase
+				+ " INNER JOIN RP_OF_OP_CAB b ON b.ID_OF_CAB = a.ID_OF_CAB"
+				+ " INNER JOIN RP_OF_OP_LIN c ON b.ID_OP_CAB = c.ID_OP_CAB"
+				+ " INNER JOIN RP_OF_DEF_LIN d ON d.ID_OP_LIN = c.ID_OP_LIN"
+				+ " INNER JOIN RP_OF_OP_FUNC e ON e.ID_OP_CAB ="
+				+ "   (SELECT TOP 1 x.ID_OP_CAB FROM RP_OF_OP_CAB x WHERE x.ID_OF_CAB = :ido)"
+				+ " LEFT JOIN RP_OF_OP_ETIQUETA f ON f.ID_OP_LIN = c.ID_OP_LIN AND f.ID_REF_ETIQUETA = d.ID_REF_ETIQUETA"
+				+ " WHERE a.ID_OF_CAB = :id AND d.ID_REF_ETIQUETA = :etq ORDER BY c.REF_NUM, d.COD_DEF")
+				.setParameter("ido", id_origem).setParameter("id", id).setParameter("etq", id_etiqueta)
+				.getResultList()
+			: (ID_OP_LIN == null || "NULL".equals(ID_OP_LIN)) ? new java.util.ArrayList<>()
+			: entityManager.createNativeQuery(sqlBase
+				+ " INNER JOIN RP_OF_OP_LIN c ON c.ID_OP_LIN = :oplin"
+				+ " INNER JOIN RP_OF_DEF_LIN d ON d.ID_OP_LIN = c.ID_OP_LIN"
+				+ " INNER JOIN RP_OF_OP_FUNC e ON e.ID_OP_CAB ="
+				+ "   (SELECT TOP 1 x.ID_OP_CAB FROM RP_OF_OP_CAB x WHERE x.ID_OF_CAB = :ido)"
+				+ " LEFT JOIN RP_OF_OP_ETIQUETA f ON f.ID_OP_LIN = c.ID_OP_LIN AND f.ID_REF_ETIQUETA = d.ID_REF_ETIQUETA"
+				+ " WHERE a.ID_OF_CAB = :id ORDER BY c.REF_NUM, d.COD_DEF")
+				.setParameter("oplin", Long.parseLong(ID_OP_LIN))
+				.setParameter("ido", id_origem).setParameter("id", id)
+				.getResultList();
+
+		StringBuilder sb = new StringBuilder();
+		for (Object[] row : rows) {
+			fa[0] = true;
+			sb.append(buildRegistoR(row, of, OP_NUM, estado, estado2, novaetiqueta, sequencia, sinal, pecasRecup, opPrevistaFicheiro));
+		}
+		return sb.toString();
+	}
+
+	private String buildRegistoR(Object[] row, String of, String OP_NUM,
+			String estado, String estado2, String novaetiqueta,
+			String sequencia, String sinalOrig, boolean pecasRecup, String opPrevistaFicheiro) {
+
+		boolean novaEtq = "1".equals(novaetiqueta);
+		String tipoOp = ("A".equals(estado) || "M".equals(estado)) && !novaEtq ? "1" : opPrevistaFicheiro;
+		boolean isCabOrig = row[QR_ID_CAB_ORIG] == null;
+		boolean secPrinc  = "000".equals(row[QR_MAQ_NUM_ORIG] != null ? row[QR_MAQ_NUM_ORIG].toString() : "");
+		boolean moAtivo   = isCabOrig ? secPrinc : true;
+
+		String cab = buildCabecalho(
+				row[QR_DATA_INI] != null ? row[QR_DATA_INI].toString() : "", sequencia,
+				ligneProduction(row[QR_OP_COD_ORIG], novaEtq, opPrevistaFicheiro, estado, estado2),
+				isCabOrig ? padRight(row[QR_OF_NUM], 10) : padRight(row[QR_OF_NUM_ORIG], 10),
+				tipoOp, formatOpNumFicheiro(OP_NUM, estado, opPrevistaFicheiro), "1",
+				row[QR_SEC_NUM] != null ? row[QR_SEC_NUM].toString() : "",
+				row[QR_MAQ_NUM_ORIG] != null ? row[QR_MAQ_NUM_ORIG].toString() : "",
+				row[QR_TURNO],
+				moAtivo ? "MO  " : ESPACOS_4,
+				moAtivo ? padRight(row[QR_UTZ_CRIA], 10) : ESPACOS_10);
+
+		String sinal = pecasRecup ? ("+".equals(sinalOrig) ? "-" : "+") : sinalOrig;
+
+		StringBuilder sb = new StringBuilder(cab);
+		sb.append("   R");
+		sb.append(formatDate(row[QR_DATA_INI])); sb.append(formatTime(row[QR_HORA_INI]));
+		sb.append(formatDate(row[QR_DATA_FIM])); sb.append(formatTime(row[QR_HORA_FIM]));
+		sb.append(padRight(row[QR_REF_NUM], 17));
+		sb.append(padRight(row[QR_REF_VAR1], 10)); sb.append(padRight(row[QR_REF_VAR2], 10));
+		sb.append(padRight(row[QR_REF_IND], 10));
+		sb.append(padZeroLeft(row[QR_REF_INDNUMENR], 9));
+		sb.append(padRight(row[QR_COD_DEF], 4)).append("1");
+		sb.append(formatQuantidade(row[QR_QUANT_DEF], 15)).append("  ").append(sinal);
+		sb.append(padRight("", 103));  // campos reservados Silver-CS tipo R
+		sb.append(padRight(row[QR_OBS_DEF] != null ? row[QR_OBS_DEF].toString() : "", 39));
+		sb.append(CRLF);
+		return sb.toString();
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// crialinhareferencia
+	// ─────────────────────────────────────────────────────────────────────────
 
 	public String crialinhareferencia(String DATA_INI, String HORA_INI, String DATA_FIM, String HORA_FIM,
 			String QUANT_BOAS_TOTAL, String QUANT_BOAS, String QUANT_DEF, String ID_OP_LIN, Integer id_origem,
 			Integer id, String sequencia, String OP_NUM, String estado, String estado2, String novaetiqueta,
 			String SINAL, String tipo, String of) {
-		String data3 = "";
 
-		data3 = " ,1 as alterado ";
+		@SuppressWarnings("unchecked")
+		List<Object[]> rows = entityManager.createNativeQuery(
+				"SELECT a.ID_OF_CAB_ORIGEM, a.OF_NUM, e.OF_NUM_ORIGEM, a.OP_NUM, c.REF_NUM,"
+				+ " c.REF_VAR1, c.REF_VAR2, c.REF_INDNUMENR, a.MAQ_NUM_ORIG, a.SEC_NUM,"
+				+ " d." + DATA_INI + ", d." + HORA_INI + ", d." + DATA_FIM + ", d." + HORA_FIM
+				+ ", d.ID_UTZ_CRIA, c.REF_IND,"
+				+ " CAST(c." + QUANT_BOAS_TOTAL + " AS decimal(18,4)) AS qtd1,"
+				+ " CAST(e." + QUANT_BOAS + " AS decimal(18,4)) AS qtd2,"
+				+ " a.OP_PREVISTA, c.OBS_REF,"
+				+ " (SELECT ID_TURNO FROM RP_CONF_TURNO WHERE CAST(d." + HORA_INI + " AS time) BETWEEN HORA_INICIO AND HORA_FIM) AS turno,"
+				+ " a.OP_COD_ORIGEM, 1 AS alterado"
+				+ " FROM RP_OF_CAB a"
+				+ " INNER JOIN RP_OF_OP_CAB b ON b.ID_OF_CAB = a.ID_OF_CAB"
+				+ " INNER JOIN RP_OF_OP_LIN c ON c.ID_OP_LIN = :oplin"
+				+ " INNER JOIN RP_OF_OP_FUNC d ON d.ID_OP_CAB = b.ID_OP_CAB"
+				+ "   AND d.ID_OP_CAB IN (SELECT TOP 1 x.ID_OP_CAB FROM RP_OF_OP_CAB x WHERE x.ID_OF_CAB = :ido)"
+				+ " LEFT JOIN RP_OF_OP_ETIQUETA e ON e.ID_OP_LIN = c.ID_OP_LIN"
+				+ " WHERE a.ID_OF_CAB = :id AND (a.OF_NUM IS NOT NULL OR e.OF_NUM_ORIGEM IS NOT NULL)")
+				.setParameter("oplin", id_origem)
+				.setParameter("ido", id_origem)
+				.setParameter("id", id)
+				.getResultList();
 
-		Query query3 = entityManager.createNativeQuery(
-				"Select a.ID_OF_CAB_ORIGEM,a.OF_NUM,e.OF_NUM_ORIGEM,a.OP_NUM,c.REF_NUM,c.REF_VAR1,c.REF_VAR2,c.REF_INDNUMENR, a.MAQ_NUM_ORIG,a.SEC_NUM,d."
-						+ DATA_INI + ",d." + HORA_INI + ",d." + DATA_FIM + ",d." + HORA_FIM
-						+ ",d.ID_UTZ_CRIA,c.REF_IND,cast(c." + QUANT_BOAS_TOTAL + " as decimal(18,4)) as qtd1,cast(e."
-						+ QUANT_BOAS + " as decimal(18,4)) as qtd2 "
-						+ ", a.OP_PREVISTA, c.OBS_REF, (select ID_TURNO from RP_CONF_TURNO where CAST( d." + HORA_INI
-						+ "  as time) between HORA_INICIO and HORA_FIM ) as turno, a.OP_COD_ORIGEM " + data3
-						+ " from RP_OF_CAB a " + "inner join RP_OF_OP_CAB b on  b.ID_OF_CAB = a.ID_OF_CAB "
-						+ "inner join RP_OF_OP_LIN c on  c.ID_OP_LIN = " + ID_OP_LIN + " "
-						+ "inner join RP_OF_OP_FUNC d on d.ID_OP_CAB = b.ID_OP_CAB and d.ID_OP_CAB in (select top 1 x.ID_OP_CAB from RP_OF_OP_CAB x where x.ID_OF_CAB = "
-						+ id_origem + " ) " + "left join RP_OF_OP_ETIQUETA e on e.ID_OP_LIN = c.ID_OP_LIN "
-						+ "where a.ID_OF_CAB = " + id + " and (a.OF_NUM is not null or e.OF_NUM_ORIGEM is not null) ");
-
-		List<Object[]> dados3;
-
-		dados3 = query3.getResultList();
-
-		String data_quantidades = "";
-
-		for (Object[] content3 : dados3) {
-			// alteracoes = true;
-
-			data_quantidades += "01        ";// Soci�t�
-			data_quantidades += content3[10].toString().replaceAll("-", "");
-			// Date suivi
-
-			data_quantidades += sequencia; // N� s�quence
-
-			if (novaetiqueta.equals("1")) {
-				data_quantidades += (content3[21] + "    ").substring(0, 4);
-			} else {
-				if (content3[18].toString().equals("1") || estado.equals("M") || estado.equals("A")
-						|| estado2.equals("A")) {
-					data_quantidades += "    ";// + Ligne de production
-				} else {
-					data_quantidades += (content3[21] + "    ").substring(0, 4);// +
-																				// Ligne
-																				// de
-					// production
-				}
-			}
-
-			data_quantidades += "1";// Type N� OF
-
-			if (content3[0] == null) {
-				data_quantidades += (content3[1] + "         ").substring(0, 10); // N�
-																					// OF
-			} else {
-				data_quantidades += (content3[2] + "         ").substring(0, 10); // N�
-																					// OF
-			}
-
-			if ((estado.equals("A") || estado.equals("M")) && !novaetiqueta.equals("1")) {
-				data_quantidades += "1";// Type op�ration
-			} else {
-				data_quantidades += content3[18];// Type op�ration
-			}
-
-			// OP_NUM
-			if (estado.equals("C")) {
-				if (content3[18].toString().equals("1") && !OP_NUM.equals("NULL")) {
-					data_quantidades += ("0000" + OP_NUM).substring(("0000" + OP_NUM).length() - 4,
-							("0000" + OP_NUM).length()); // N� Op�ration
-				} else {
-					data_quantidades += ("    ").substring(0, 4);// N�
-																	// Op�ration
-				}
-			} else {
-				if (!OP_NUM.equals("NULL")) {
-					data_quantidades += ("0000" + OP_NUM).substring(("0000" + OP_NUM).length() - 4,
-							("0000" + OP_NUM).length()); // N� Op�ration
-				} else {
-					data_quantidades += ("    ").substring(0, 4);// N�
-																	// Op�ration
-				}
-			}
-
-			data_quantidades += "1";// Position ( S12 )
-
-			data_quantidades += (content3[9] + "         ").substring(0, 10);// Code
-			// section
-			data_quantidades += (content3[8] + "         ").substring(0, 10); // Code
-			// sous-section
-
-			if (content3[20] != null) {
-				data_quantidades += content3[20]; // N� d'�quipe
-			} else {
-				data_quantidades += "01";
-			}
-
-			// Type de ressource
-			if (content3[0] == null) {
-				if (content3[8].toString().equals("000")) {
-					data_quantidades += ("MO" + "         ").substring(0, 4);
-				} else {
-					data_quantidades += "    ";
-				}
-			} else {
-				data_quantidades += ("MO" + "         ").substring(0, 4);
-			}
-
-			// Code ressource
-			if (content3[0] == null) {
-				if (content3[8].toString().equals("000")) {
-					data_quantidades += (content3[14] + "         ").substring(0, 10);
-				} else {
-					data_quantidades += "          ";
-				}
-			} else {
-				data_quantidades += (content3[14] + "         ").substring(0, 10);
-			}
-
-			data_quantidades += "   Q"; // N� �tablissement + Type
-										// d'�l�ment
-										// Q
-
-			data_quantidades += content3[10].toString().replaceAll("-", ""); // Date
-																				// d�but
-			data_quantidades += content3[11].toString().replace(":", "").substring(0, 6); // Heure
-			// d�but
-			data_quantidades += content3[12].toString().replaceAll("-", ""); // Date
-			// fin
-			data_quantidades += content3[13].toString().replace(":", "").substring(0, 6); // Heure
-			// fin
-
-			// R�f�rence produit
-			data_quantidades += (content3[4] + "                 ").substring(0, 17);
-			// Variante (1)
-			data_quantidades += (((content3[5] != null) ? content3[5] : "") + "                 ").substring(0, 10);
-			// Variante (2)
-			data_quantidades += (((content3[6] != null) ? content3[6] : "") + "                 ").substring(0, 10);
-			// Indice produit
-			data_quantidades += (((content3[15] != null) ? content3[15] : "") + "                 ").substring(0, 10);
-			// N� enreg. Produit
-			if (content3[7] != null) {
-				data_quantidades += ("000000000" + content3[7]).substring(("000000000" + content3[7]).length() - 9,
-						("000000000" + content3[7]).length());
-			} else {
-				data_quantidades += "000000000";
-			}
-
-			data_quantidades += "1";// PType quantit�
-
-			/*
-			 * if (estado.equals("M")) { if (content3[22].toString().equals("0")) {
-			 */
-			String quantidades = "000000000000000";
-			data_quantidades += quantidades + "  ";
-			/*
-			 * } else { data_quantidades += quantidades + "  "; alteracoes = true; }
-			 * 
-			 * } else { data_quantidades += quantidades + "  "; }
-			 */
-
-			data_quantidades += SINAL; // Signe
-			data_quantidades += "    "; // Unit�
-			data_quantidades += "000000000000000"; // Qt� bonne (US2)
-			// N� d'�tiquette suivie
-			data_quantidades += "          ";
-			// N� enreg. �tiquette
-			data_quantidades += "         ";
-			// Lieu (entr�e )
-			data_quantidades += "          ";
-			// + Emplacement ( entr�e )
-			// data_quantidades += " ";
-			// R�f�rence du lot ( entr�e )
-			data_quantidades += "          ";
-			if (!tipo.equals("COMP")) {
-				data_quantidades += (of + "                                   ").substring(0, 35);
-			} else {
-				data_quantidades += (/* content3[2] + */"                                   ").substring(0, 35);
-			}
-			data_quantidades += "          ";
-			// N� d'�tiquette ( entr�e )
-			// data_quantidades += " ";
-			// +Texte libre
-			// String obs = (content3[19] != null) ?
-			// content3[19].toString() : "";
-			String obs = "";
-			obs += id_origem;
-			/*
-			 * if (!tipo.equals("COMP") && ip_posto != null) { String nomeimpressora = "";
-			 * String ipimpressora = ""; Boolean imprime = true;
-			 * 
-			 * Query query_impressora = entityManager.createNativeQuery(
-			 * "select top 1  NOME_IMPRESSORA_SILVER,IP_IMPRESSORA from GER_POSTOS b where IP_POSTO ='"
-			 * + ip_posto + "'"); List<Object[]> dados_impressora =
-			 * query_impressora.getResultList(); for (Object[] content2 : dados_impressora)
-			 * { nomeimpressora = content2[0].toString(); if (content2[1] != null) {
-			 * ipimpressora = content2[1].toString(); } imprime = true; } if (imprime) obs
-			 * += "@" + nomeimpressora; }
-			 */
-			data_quantidades += (obs + "                                         ").substring(0, 40);
-
-			String etiquetas = "";
-			/*
-			 * if (!tipo.equals("COMP")) { Query query_caixa = entityManager
-			 * .createNativeQuery("select ETQNUM,REF_NUM from RP_CAIXAS_INCOMPLETAS where ID_OF_CAB = "
-			 * + id_origem + " and REF_NUM = '" + content3[4] + "'"); List<Object[]>
-			 * dados_caixas = query_caixa.getResultList(); for (Object[] contentcax :
-			 * dados_caixas) { etiquetas += contentcax[0] + ";"; }
-			 * 
-			 * 
-			 * }
-			 */
-
-			data_quantidades += (etiquetas + "                                                      ").substring(0, 54);
-			data_quantidades += "\r\n";
-
+		StringBuilder sb = new StringBuilder();
+		for (Object[] row : rows) {
+			String opPrevRow = row[QQ_OP_PREVISTA] != null ? row[QQ_OP_PREVISTA].toString() : "1";
+			sb.append(buildRegistoQ(row, of, OP_NUM, estado, estado2, novaetiqueta,
+					sequencia, SINAL, tipo, null, id_origem, opPrevRow));
 		}
-		return data_quantidades;
+		return sb.toString();
 	}
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// criarFicheiroConsumo — Registo C
+	// ─────────────────────────────────────────────────────────────────────────
 
 	public void criarFicheiroConsumo(Integer id_of_cab, Boolean ficheirosdownload, String nomezip,
 			Boolean primeira_OPENUM) throws IOException {
 
-		if (primeira_OPENUM == false)
-			return;
+		if (!primeira_OPENUM) return;
+		if (isPostoMatrix(id_of_cab)) return;
 
-		Query query_matrix = entityManager.createNativeQuery("select a.ID_OF_CAB,a.OF_NUM from RP_OF_CAB a "
-				+ "inner join DOC_DIC_POSTOS b  with(nolock) on a.IP_POSTO = b.IP_POSTO "
-				+ "inner join PR_DIC_MAQUINAS_MATRIX c  with(nolock) on b.ID_MAQUINA = b.ID_MAQUINA "
-				+ "where a.ID_OF_CAB = :id and b.TIPO_POSTO = 'ETIQUETAS_MATRIX' " + "and a.MAQ_NUM = c.MAQUINA_SILVER")
-				.setParameter("id", id_of_cab);
+		Date agora = new Date();
+		String dataAtual = new SimpleDateFormat("yyyyMMdd").format(agora);
+		String horaAtual = new SimpleDateFormat("HHmmss").format(agora);
+		String nomeFicheiro = dataAtual + horaAtual + "_ETIQUETA_PRODUCAO_STOCK_ID" + id_of_cab + ".txt";
 
-		List<Object[]> dados_matrix = query_matrix.getResultList();
+		@SuppressWarnings("unchecked")
+		List<Object[]> cfg = entityManager.createNativeQuery(
+				"SELECT TOP 1 PASTA_FICHEIRO, PASTA_ETIQUETAS, MODELO_REPORT, PASTA_DESTINO_ERRO FROM GER_PARAMETROS")
+				.getResultList();
+		if (cfg.isEmpty()) return;
+		String path      = cfg.get(0)[0] + nomeFicheiro;
+		String pathErro  = cfg.get(0)[3] + nomeFicheiro;
 
-		if (dados_matrix.size() > 0) {
-			return;
-		}
+		String sequencia = sequencia(id_of_cab.toString());
+		String url = getURL();
 
-		java.util.Date datacria = new java.util.Date();
-		SimpleDateFormat formate = new SimpleDateFormat("yyyyMMdd");
-		SimpleDateFormat horaformate = new SimpleDateFormat("HHmmss");
-		String datatual = formate.format(datacria);
-		String horatual = horaformate.format(datacria);
+		// NOTA: DECLARE @var = :param não é suportado em SQL Server prepared statements
+		// id_of_cab é Integer (não user input), concatenação é segura
+		@SuppressWarnings("unchecked")
+		List<Object[]> rows = entityManager.createNativeQuery(
+				"DECLARE @ID_OF_CAB int = " + id_of_cab + "; "
+				+ "SELECT t.ETQNUM, e.OF_NUM, e.OP_NUM, e.OP_COD_ORIGEM, e.MAQ_NUM_ORIG,"
+				+ " m.DATA_INI_M2, m.HORA_INI_M2, m.DATA_FIM_M2, m.HORA_FIM_M2,"
+				+ " (SELECT ID_TURNO FROM RP_CONF_TURNO WHERE m.HORA_INI_M2 > HORA_INICIO AND m.HORA_INI_M2 < HORA_FIM) N_EQUIPA,"
+				+ " t.PROREF, t.VA1REF, t.VA2REF, t.INDREF, t.INDNUMENR, t.UNICOD,"
+				+ " t.LIECOD, t.EMPCOD, t.ETQORILOT1, t.ETQNUMENR,"
+				+ " (d.QUANT_BOAS_M2 + CASE WHEN TIPO_PECA IN ('COM','COMS') THEN 0 ELSE d.QUANT_DEF_M2 END) QUANT,"
+				+ " t.LOTNUMENR"
+				+ " FROM RP_OF_CAB a WITH(NOLOCK)"
+				+ " INNER JOIN RP_OF_OP_CAB b WITH(NOLOCK) ON a.ID_OF_CAB = b.ID_OF_CAB"
+				+ " INNER JOIN RP_OF_OP_LIN c WITH(NOLOCK) ON b.ID_OP_CAB = c.ID_OP_CAB"
+				+ " INNER JOIN RP_OF_OP_ETIQUETA d WITH(NOLOCK) ON c.ID_OP_LIN = d.ID_OP_LIN"
+				+ " LEFT JOIN (SELECT ETQNUM, st.PROREF, VA1REF, VA2REF, INDREF, st.INDNUMENR, UNICOD,"
+				+ "   LIECOD, EMPCOD, ETQORILOT1, ETQNUMENR, sl.LOTNUMENR"
+				+ "   FROM SILVER.dbo.SETQDE st WITH(NOLOCK)"
+				+ "   LEFT JOIN SILVER.dbo.STOLOT sl WITH(NOLOCK) ON st.INDNUMENR = sl.INDNUMENR AND st.ETQORILOT1 = sl.LOTREF"
+				+ "   WHERE ETQNUM IN (SELECT RIGHT('000'+CAST(td.REF_ETIQUETA AS varchar(10)),10)"
+				+ "     FROM RP_OF_CAB ta INNER JOIN RP_OF_OP_CAB tb WITH(NOLOCK) ON ta.ID_OF_CAB = tb.ID_OF_CAB"
+				+ "     INNER JOIN RP_OF_OP_LIN tc ON tb.ID_OP_CAB = tc.ID_OP_CAB"
+				+ "     INNER JOIN RP_OF_OP_ETIQUETA td WITH(NOLOCK) ON tc.ID_OP_LIN = td.ID_OP_LIN)"
+				+ " ) t ON RIGHT('000'+CAST(d.REF_ETIQUETA AS varchar(10)),10) = t.ETQNUM"
+				+ " LEFT JOIN (SELECT * FROM RP_OF_CAB WITH(NOLOCK) WHERE ID_OF_CAB = @ID_OF_CAB) e ON a.ID_OF_CAB_ORIGEM = e.ID_OF_CAB"
+				+ " LEFT JOIN (SELECT g.ID_OF_CAB, h.* FROM RP_OF_CAB f WITH(NOLOCK)"
+				+ "   INNER JOIN RP_OF_OP_CAB g WITH(NOLOCK) ON f.ID_OF_CAB = g.ID_OF_CAB"
+				+ "   INNER JOIN RP_OF_OP_FUNC h WITH(NOLOCK) ON g.ID_OP_CAB = h.ID_OP_CAB AND f.ID_UTZ_CRIA = h.ID_UTZ_CRIA"
+				+ "   WHERE f.ID_OF_CAB = @ID_OF_CAB) m ON a.ID_OF_CAB_ORIGEM = m.ID_OF_CAB"
+				+ " WHERE a.ID_OF_CAB_ORIGEM = @ID_OF_CAB"
+				+ "   AND (d.QUANT_BOAS_M2 + CASE WHEN TIPO_PECA IN ('COM','COMS') THEN 0 ELSE d.QUANT_DEF_M2 END) > 0")
+				.getResultList();
 
-		List<HashMap<String, String>> lista = null;
-		final ConnectProgress connectionProgress = new ConnectProgress();
+		StringBuilder data = new StringBuilder();
+		ConnectProgress cp = new ConnectProgress();
 
-		String path = "";
-		String path_error = "";
-
-		Query query_folder = entityManager.createNativeQuery(
-				"select top 1  PASTA_FICHEIRO,PASTA_ETIQUETAS,MODELO_REPORT,PASTA_DESTINO_ERRO from GER_PARAMETROS a");
-		String nome_ficheiro = datatual + horatual + "_ETIQUETA_PRODUCAO_STOCK_ID" + id_of_cab + ".txt";
-		List<Object[]> dados_folder = query_folder.getResultList();
-		for (Object[] content : dados_folder) {
-			path = content[0] + nome_ficheiro;
-			path_error = content[3] + nome_ficheiro;
-		}
-
-		String sequencia = "000000000";
-		String data = "";
-
-		sequencia = sequencia(id_of_cab.toString());
-		List<Object[]> dados = null;
-
-		Query query = entityManager.createNativeQuery("DECLARE @ID_OF_CAB int = " + id_of_cab + "; "
-				+ "select t.ETQNUM,e.OF_NUM,e.OP_NUM,e.OP_COD_ORIGEM,e.MAQ_NUM_ORIG,m.DATA_INI_M2,m.HORA_INI_M2,m.DATA_FIM_M2,m.HORA_FIM_M2 "
-				+ ",(select ID_TURNO from RP_CONF_TURNO WHERE m.HORA_INI_M2 > HORA_INICIO and m.HORA_INI_M2 < HORA_FIM) N_EQUIPA,t.PROREF,t.VA1REF,t.VA2REF,t.INDREF,t.INDNUMENR,t.UNICOD, "
-				+ "t.LIECOD,t.EMPCOD,t.ETQORILOT1,t.ETQNUMENR,"
-				+ " (d.QUANT_BOAS_M2 + CASE WHEN TIPO_PECA  in ('COM','COMS') THEN 0 ELSE d.QUANT_DEF_M2 END) QUANT,t.LOTNUMENR "
-				+ "from RP_OF_CAB a  with(nolock) inner join RP_OF_OP_CAB b  with(nolock) on a.ID_OF_CAB = b.ID_OF_CAB "
-				+ "inner join RP_OF_OP_LIN c with(nolock) on b.ID_OP_CAB = c.ID_OP_CAB inner join RP_OF_OP_ETIQUETA d  with(nolock) on c.ID_OP_LIN = d.ID_OP_LIN "
-				+ "left join (select ETQNUM,st.PROREF,VA1REF,VA2REF,INDREF,st.INDNUMENR,UNICOD,LIECOD,EMPCOD,ETQORILOT1,ETQNUMENR,sl.LOTNUMENR from SILVER.dbo.SETQDE st  with(nolock) "
-				+ "left join  SILVER.dbo.STOLOT sl  with(nolock) on st.INDNUMENR = sl.INDNUMENR and st.ETQORILOT1 = sl.LOTREF "
-				+ "where ETQNUM in (select RIGHT ('000'+CAST(td.REF_ETIQUETA as varchar(10)),10) from RP_OF_CAB ta inner join RP_OF_OP_CAB tb  with(nolock) on ta.ID_OF_CAB = tb.ID_OF_CAB "
-				+ "inner join RP_OF_OP_LIN tc on tb.ID_OP_CAB = tc.ID_OP_CAB inner join RP_OF_OP_ETIQUETA td   with(nolock)on tc.ID_OP_LIN = td.ID_OP_LIN) "
-				+ ") t on RIGHT ('000'+CAST(d.REF_ETIQUETA as varchar(10)),10) = t.ETQNUM "
-				+ "left join (select * from RP_OF_CAB  with(nolock) where ID_OF_CAB = @ID_OF_CAB) e on  a.ID_OF_CAB_ORIGEM = e.ID_OF_CAB "
-				+ "left join (select g.ID_OF_CAB,h.* from RP_OF_CAB f  with(nolock) inner join RP_OF_OP_CAB g  with(nolock) on f.ID_OF_CAB = g.ID_OF_CAB "
-				+ "inner join RP_OF_OP_FUNC h  with(nolock) on g.ID_OP_CAB = h.ID_OP_CAB and f.ID_UTZ_CRIA = h.ID_UTZ_CRIA where f.ID_OF_CAB = @ID_OF_CAB) m on a.ID_OF_CAB_ORIGEM = m.ID_OF_CAB "
-				+ "where a.ID_OF_CAB_ORIGEM = @ID_OF_CAB and (d.QUANT_BOAS_M2 + CASE WHEN TIPO_PECA in ('COM','COMS') THEN 0 ELSE d.QUANT_DEF_M2 END ) > 0");
-
-		dados = query.getResultList();
-
-		for (Object[] content : dados) {
-
-			String of = content[1].toString();
-			String SECCAO = content[3].toString();
-			String SUBSECCAO = content[4].toString();
-			String REF_COMPOSTO = "";
-			String INDNUMCSE = "";
-			String NCLRANG = "";
+		for (Object[] row : rows) {
+			String of      = row[1] != null ? row[1].toString() : "";
+			String seccao  = row[3] != null ? row[3].toString() : "";
+			String subSec  = row[4] != null ? row[4].toString() : "";
+			String refComp = "", indNumCse = "", nclRang = "";
 
 			try {
-				lista = connectionProgress.getOrigineComposant(getURL(), content[10].toString(), of);
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			if (lista.size() > 0) {
-				NCLRANG = lista.get(0).get("NCLRANG");
-				REF_COMPOSTO = lista.get(0).get("PROREF");
-				INDNUMCSE = lista.get(0).get("INDNUMCSE");
-			}
-
-			data += "01        ";// Soci�t�
-			data += datatual; // Date suivi
-			data += sequencia; // N� s�quence
-
-			data += "    ";// + Ligne de production
-
-			data += "1";// Type N� OF
-			data += (of + "          ").substring(0, 10); // N� OF
-
-			data += "1";// Type op�ration
-
-			// OP_NUM
-			String OP_NUM = (content[2] == null) ? "" : content[2].toString();
-			data += ("0000" + OP_NUM).substring(("0000" + OP_NUM).length() - 4, ("0000" + OP_NUM).length());
-			// data += ("0010").substring(0, 4);// N� Op�ration
-
-			data += "1";// Position ( S12 )
-
-			// Code section
-			data += (SECCAO + "          ").substring(0, 10);
-
-			// Code sous-section
-			data += (SUBSECCAO + "          ").substring(0, 10);
-
-			// N� d'�quipe
-
-			String num_equipe = "00";
-			if (content[9] != null) {
-				String size = num_equipe + content[9];
-				num_equipe = (size).substring(size.length() - 2, size.length());
-				data += num_equipe;
-			} else {
-				data += "  ";
-			}
-
-			// Type de ressource
-			data += ("    ").substring(0, 4);
-
-			// Code ressource
-			data += ("          ").substring(0, 10);
-
-			data += "   C"; // N� �tablissement + Type d'�l�ment C
-
-			data += content[5].toString().replaceAll("-", "");
-
-			// Heure d�but
-			data += content[6].toString().replace(":", "").substring(0, 6);
-
-			// Date fin
-			data += content[7].toString().replaceAll("-", "");
-
-			// Heure fin
-			data += content[8].toString().replace(":", "").substring(0, 6);
-
-			// Origine composant
-
-			data += "0";
-
-			// R�f�rence compos�
-			data += (REF_COMPOSTO + "                 ").substring(0, 17);
-
-			// Variante compos� (1)
-			data += ("          ").substring(0, 10);
-
-			// Variante compos� (2)
-			data += ("          ").substring(0, 10);
-
-			// Indice du compos�
-			data += ("          ").substring(0, 10);
-
-			// N� enregistrement Cs�
-			String enregistrementcse = "000000000";
-			String sizecse = enregistrementcse + INDNUMCSE;
-			enregistrementcse = (sizecse).substring(sizecse.length() - 9, sizecse.length());
-			data += enregistrementcse;
-
-			// N� de rang
-
-			String rang = "00000";
-			if (NCLRANG != null) {
-				String size = rang + NCLRANG;
-				rang = (size).substring(size.length() - 5, size.length());
-				data += rang;
-			} else {
-				data += rang;
-			}
-
-			// data += (NCLRANG + " ").substring(0, 5);
-
-			// R�f�rence composant
-			data += (content[10] + "                 ").substring(0, 17);
-
-			// Variante composant (1)
-			if (content[11] != null) {
-				data += (content[11] + "          ").substring(0, 10);
-			} else {
-				data += "          ";
-			}
-
-			// Variante composant (2)
-			if (content[12] != null) {
-				data += (content[12] + "          ").substring(0, 10);
-			} else {
-				data += "          ";
-			}
-
-			// Indice du composant
-			if (content[13] != null) {
-				data += (content[13] + "          ").substring(0, 10);
-			} else {
-				data += "          ";
-			}
-
-			// N� enregistrement Cst
-
-			String enregistrement = "000000000";
-			if (content[14] != null) {
-				String size = enregistrement + content[14];
-				enregistrement = (size).substring(size.length() - 9, size.length());
-				data += enregistrement;
-			} else {
-				data += enregistrement;
-			}
-
-			// Type quantit�
-			data += "1"; // Signe
-
-			// Quantit�
-			if (content[20] != null) {
-				String result = String.format("%.3f", content[20]).replace("$", ",");
-				String[] parts = result.split(",");
-				String part1 = "00000000000";
-				String part2 = "0000";
-				if (parts.length > 0) {
-					if (parts[0] != null) {
-						String size = part1 + parts[0];
-						part1 = (size).substring(size.length() - 11, size.length());
-					}
-					if (parts.length > 1) {
-						String size = parts[1] + part2;
-						part2 = (size).substring(0, 4);
-					}
+				List<HashMap<String, String>> lista = cp.getOrigineComposant(url, row[10] != null ? row[10].toString() : "", of);
+				if (!lista.isEmpty()) {
+					nclRang    = lista.get(0).get("NCLRANG");
+					refComp    = lista.get(0).get("PROREF");
+					indNumCse  = lista.get(0).get("INDNUMCSE");
 				}
-				data += (part1 + part2 + "  ").substring(0, 17);
-			} else {
-				data += "000000000000000  ";
+			} catch (SQLException e) {
+				LOG.warning("Erro getOrigineComposant: " + e.getMessage());
 			}
 
-			data += "+"; // Signe
+			String opNum = row[2] != null ? row[2].toString() : "";
+			String equipe = row[9] != null ? padZeroLeft(row[9].toString(), 2) : "  ";
 
-			// Unit�
-			if (content[15] != null) {
-				data += (content[15] + "    ").substring(0, 4);
-			} else {
-				data += "    ";
-			}
+			String cab = buildCabecalho(
+					row[5] != null ? row[5].toString() : dataAtual, sequencia,
+					ESPACOS_4, of, "1", formatOpNum(opNum),
+					"1", seccao, subSec,
+					equipe.equals("  ") ? null : equipe,
+					ESPACOS_4, ESPACOS_10);
 
-			// Quantit� (US2)
-			data += "               ";
-
-			// Lieu origine
-			if (content[16] != null) {
-				data += (content[16] + "          ").substring(0, 10);
-			} else {
-				data += "          ";
-			}
-
-			// Emplacement origine
-			if (content[17] != null) {
-				data += (content[17] + "          ").substring(0, 10);
-			} else {
-				data += "          ";
-			}
-
-			// R�f�rence du lot
-			if (content[18] != null) {
-				data += (content[18] + "                                   ").substring(0, 35);
-			} else {
-				data += "                                   ";
-			}
-
-			// N� de lot interne
-			String lotinterne = "000000000";
-			if (content[21] != null) {
-				String size = lotinterne + content[21];
-				lotinterne = (size).substring(size.length() - 9, size.length());
-				data += lotinterne;
-			} else {
-				data += lotinterne;
-			}
-
-			// N� d'�tiquette
-			if (content[0] != null) {
-				data += (content[0] + "          ").substring(0, 10);
-			} else {
-				data += "          ";
-			}
-
-			// N� enreg. �tiquette
-			String etiquette = "000000000";
-			if (content[19] != null) {
-				String size = etiquette + content[19];
-				etiquette = (size).substring(size.length() - 9, size.length());
-				data += etiquette;
-			} else {
-				data += etiquette;
-			}
-
-			// Texte libre
-
-			data += ("                                        ").substring(0, 40);
-
-			data += "\r\n";
+			StringBuilder sb = new StringBuilder(cab);
+			sb.append("   C");
+			sb.append(formatDate(row[5])); sb.append(formatTime(row[6]));
+			sb.append(formatDate(row[7])); sb.append(formatTime(row[8]));
+			sb.append("0");
+			sb.append(padRight(refComp, 17));
+			sb.append(padRight("", 10)); sb.append(padRight("", 10)); sb.append(padRight("", 10));
+			sb.append(padZeroLeft(indNumCse, 9));
+			sb.append(padZeroLeft(nclRang != null ? nclRang : "", 5));
+			sb.append(padRight(row[10], 17));
+			sb.append(padRight(row[11], 10)); sb.append(padRight(row[12], 10));
+			sb.append(padRight(row[13], 10));
+			sb.append(padZeroLeft(row[14], 9));
+			sb.append("1");
+			// Quantite (11 inteiros + 4 decimais sem virgula + "  ")
+			sb.append(formatQuantidadeC(row[20]));
+			sb.append("+");
+			sb.append(padRight(row[15], 4));
+			sb.append(padRight("", 15));
+			sb.append(padRight(row[16], 10)); sb.append(padRight(row[17], 10));
+			sb.append(padRight(row[18], 35));
+			sb.append(padZeroLeft(row[21], 9));
+			sb.append(padRight(row[0], 10));
+			sb.append(padZeroLeft(row[19], 9));
+			sb.append(padRight("", 40));
+			sb.append(CRLF);
+			data.append(sb);
 		}
 
 		if (data.length() > 0) {
-			if (!ficheirosdownload) {
-				criar_ficheiro(data, path, path_error, false, "");
-			} else {
-				Map<String, String> env = new HashMap<>();
-				env.put("create", "true");
-				java.nio.file.Path pathh = Paths.get("c:/sgiid/temp_files/" + nomezip + ".zip");
-				URI uri = URI.create("jar:" + pathh.toUri());
-				try (FileSystem fs = FileSystems.newFileSystem(uri, env)) {
-					java.nio.file.Path nf = fs.getPath(nome_ficheiro);
-					try (Writer writer = Files.newBufferedWriter(nf, StandardCharsets.UTF_8,
-							StandardOpenOption.CREATE)) {
-						writer.write(data);
-					}
-				}
+			if (!ficheirosdownload) criar_ficheiro(data.toString(), path, pathErro, false, "");
+			else escreverZip(data.toString(), nomeFicheiro, nomezip);
+		}
+	}
 
+	private static String formatQuantidadeC(Object value) {
+		if (value == null) return "000000000000000  ";
+		try {
+			String[] p = String.format("%.3f", Double.parseDouble(value.toString())).replace(",", ".").split("\\.");
+			String intPart = padZeroLeft(p[0], 11);
+			String decPart = p.length > 1 ? (p[1] + "0000").substring(0, 4) : "0000";
+			return (intPart + decPart + "  ").substring(0, 17);
+		} catch (NumberFormatException e) {
+			return "000000000000000  ";
+		}
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// Escrita de ficheiros
+	// ─────────────────────────────────────────────────────────────────────────
+
+	private void escreverLocal(String conteudo, String path) throws IOException {
+		File f = new File(path);
+		f.createNewFile();
+		try (FileWriter fw = new FileWriter(f, true); BufferedWriter bw = new BufferedWriter(fw)) {
+			bw.write(conteudo);
+		}
+	}
+
+	private void escreverZip(String conteudo, String nomeFicheiro, String nomezip) throws IOException {
+		Map<String, String> env = new HashMap<>();
+		env.put("create", "true");
+		java.nio.file.Path zipPath = Paths.get("c:/sgiid/temp_files/" + nomezip + ".zip");
+		URI uri = URI.create("jar:" + zipPath.toUri());
+		try (FileSystem fs = FileSystems.newFileSystem(uri, env)) {
+			java.nio.file.Path nf = fs.getPath(nomeFicheiro);
+			try (Writer w = Files.newBufferedWriter(nf, StandardCharsets.UTF_8, StandardOpenOption.CREATE)) {
+				w.write(conteudo);
 			}
 		}
-
 	}
 
 	public static boolean isFileExists(File file) {
 		return file.exists() && !file.isDirectory();
 	}
 
-	public void criar_ficheiro(String data, String path, String path_error, Boolean error, String err) {
-		File file2 = new File(path);
-		// if (file2.delete())
-		// if file doesnt exists, then create it
-		if (!isFileExists(file2)) {
-			try {
-				file2.createNewFile();
-			} catch (IOException e2) {
-				String[] keyValuePairs = { "TEXTO_ERRO ::" + e2.getMessage() + " " + file2.getAbsolutePath() + "", };
-				verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "", null);
-				e2.printStackTrace();
-			}
-		}
-		BufferedWriter bw2 = null;
-		FileWriter fw2 = null;
-		// true = append file
-		try {
-			fw2 = new FileWriter(file2.getAbsoluteFile(), true);
-		} catch (IOException e) {
-
-			if (!error)
-				criar_ficheiro(data, path_error, path_error, true, e.getMessage() + " " + file2.getAbsolutePath());
-			e.printStackTrace();
-		}
-		if (fw2 != null) {
-			bw2 = new BufferedWriter(fw2);
-			try {
-				bw2.write(data);
-				if (bw2 != null) {
-					bw2.close();
-				}
-				if (fw2 != null) {
-					fw2.close();
-				}
-			} catch (IOException e) {
-				if (bw2 != null) {
-					try {
-						bw2.close();
-					} catch (IOException e1) {
-						String[] keyValuePairs = {
-								"TEXTO_ERRO ::" + e1.getMessage() + " " + file2.getAbsolutePath() + "", };
-						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "", null);
-						e1.printStackTrace();
-					}
-				}
-				if (fw2 != null) {
-					try {
-						fw2.close();
-					} catch (IOException e1) {
-						String[] keyValuePairs = {
-								"TEXTO_ERRO ::" + e1.getMessage() + " " + file2.getAbsolutePath() + "", };
-						verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "", null);
-						e1.printStackTrace();
-					}
-				}
-				e.printStackTrace();
-			}
-		}
-		if (error)
-
-		{
-			String[] keyValuePairs = { "TEXTO_ERRO ::" + err + "", };
-			verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", path_error, null);
-		}
-	}
-
-	public void criarfileerro(String estado, String path, String data, Boolean alteracoes) {
-		FileWriter fw = null;
-		BufferedWriter bw = null;
-		try {
-
-			if (!estado.equals("M") && !estado.equals("P")) {
-				File file = new File(path);
-
-				// if file doesnt exists, then create it
-
-				try {
-					file.createNewFile();
-				} catch (IOException e2) {
-					// TODO Auto-generated catch block
-
-					e2.printStackTrace();
-				}
-
-				// true = append file
-				// fw = new FileWriter(file.getAbsoluteFile(), true);
-				try {
-					fw = new FileWriter(file.getAbsoluteFile(), true);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				bw = new BufferedWriter(fw);
-
-				try {
-					bw.write(data);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} else if (estado.equals("M") && alteracoes && !estado.equals("P")) {
-				File file = new File(path);
-
-				// if file doesnt exists, then create it
-
-				try {
-					file.createNewFile();
-				} catch (IOException e2) {
-					// TODO Auto-generated catch block
-
-					e2.printStackTrace();
-				}
-
-				// true = append file
-				// fw = new FileWriter(file.getAbsoluteFile(), true);
-				try {
-					fw = new FileWriter(file.getAbsoluteFile(), true);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-
-					e.printStackTrace();
-				}
-				bw = new BufferedWriter(fw);
-
-				try {
-					bw.write(data);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-
-		} finally {
-
-			try {
-
-				if (bw != null) {
-					bw.close();
-				}
-				if (fw != null) {
-					fw.close();
-				}
-
-			} catch (IOException ex) {
+	public void criar_ficheiro(String conteudo, String path, String pathErro, boolean isErro, String msg) {
+		File f = new File(path);
+		if (!isFileExists(f)) {
+			try { f.createNewFile(); }
+			catch (IOException e) {
+				notificarErro(e.getMessage() + " " + f.getAbsolutePath());
+				if (!isErro) criar_ficheiro(conteudo, pathErro, pathErro, true, e.getMessage());
 				return;
 			}
 		}
-	}
-
-	public void criar_ficheiro_PausaMAQUINA(Object[] content2, String SINAL, String linha_inicial,
-			String linha_A_MAQUINA, String path2, Boolean ficheirosdownload, String nome_ficheiro2, String nomezip,
-			Integer count, String estado, String path_error, String id) throws ParseException {
-
-		SimpleDateFormat f = new SimpleDateFormat("yyyyMMddHHmmss");
-		SimpleDateFormat p = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
-
-		String data_pausa = "";
-		String data_pausa_p = "";
-		String data_pausa_p2 = "";
-		data_pausa_p += linha_A_MAQUINA;
-		data_pausa += "B"; // Type d'�l�ment B
-
-		// Date d�but
-		// Heure d�but
-		data_pausa += ((content2[0] != null) ? f.format(p.parse(content2[0].toString())) : "").toString();
-
-		// Date fin
-		// Heure fin
-		data_pausa += ((content2[1] != null) ? f.format(p.parse(content2[1].toString())) : "").toString();
-
-		data_pausa += (content2[3] + "    ").substring(0, 4);// Code
-																// section
-
-		data_pausa += "3"; // Origine arr�t pr�pa.
-
-		// Temps d'arr�t/pr�pa.
-
-		String temp_pre = "000000000000000";
-		if (content2[4] != null && content2[4].toString().equals("P")) {
-			String parts_prep = (((content2[2] != null) ? content2[2] : "").toString()).replace(".", "");
-			String size = temp_pre + parts_prep;
-			temp_pre = (size).substring(size.length() - 15, size.length());
-		}
-		data_pausa += temp_pre;
-		data_pausa += SINAL; // Signe
-		data_pausa += "3"; // Origine arr�t ex�cution
-
-		// Temps d'arr�t/ex�cution
-		String temp_exec = "000000000000000";
-		if (content2[4] != null && content2[4].toString().equals("E")) {
-			String parts_exec = ((content2[2] != null) ? content2[2] : "").toString().replace(".", "");
-			String size = temp_exec + parts_exec;
-			temp_exec = (size).substring(size.length() - 15, size.length());
-		}
-
-		data_pausa += temp_exec;
-		data_pausa += SINAL; // Signe
-		data_pausa += "                                       \r\n"; // Texte
-		// libre
-
-		data_pausa_p += linha_inicial + data_pausa;
-
-		BufferedReader bufReader = new BufferedReader(new StringReader(data_pausa_p));
-
-		String seq = sequencia(id);
-		String line = null;
-		try {
-			while ((line = bufReader.readLine()) != null) {
-
-				StringBuffer buf6 = new StringBuffer(line);
-				buf6.replace(18, 27, seq);
-				String linha6 = buf6.toString();
-				data_pausa_p2 += linha6 + "\r\n";
-
-			}
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-
-		try {
-			Float num = (float) 0;
-			if (content2[2] != null) {
-				num = Float.parseFloat(content2[2].toString());
-			}
-			if (num > 0)
-				criar_ficheiro_Pausa(data_pausa_p2, path2 + "_MAQ_" + estado, count, ficheirosdownload,
-						nome_ficheiro2 + "_MAQ_" + estado, nomezip, path_error);
+		try (FileWriter fw = new FileWriter(f, true); BufferedWriter bw = new BufferedWriter(fw)) {
+			bw.write(conteudo);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			notificarErro(e.getMessage() + " " + f.getAbsolutePath());
+		}
+		if (isErro) notificarErro(msg);
+	}
+
+	public void criarfileerro(String estado, String path, String conteudo, boolean houvAlteracoes) {
+		boolean deve = (!"M".equals(estado) && !"P".equals(estado))
+				|| ("M".equals(estado) && houvAlteracoes);
+		if (!deve) return;
+		File f = new File(path);
+		try { f.createNewFile(); } catch (IOException ignored) {}
+		try (FileWriter fw = new FileWriter(f, true); BufferedWriter bw = new BufferedWriter(fw)) {
+			bw.write(conteudo);
+		} catch (IOException e) {
+			LOG.warning("Erro criarfileerro: " + e.getMessage());
 		}
 	}
+
+	public void criar_ficheiro_Pausa(String conteudo, String path2, Integer count,
+			boolean ficheirosdownload, String nomeFicheiro, String nomezip, String pathErro) throws IOException {
+		if (!ficheirosdownload) {
+			File f = new File(path2 + "_" + count + ".txt");
+			try { f.createNewFile(); }
+			catch (IOException e) {
+				notificarErro(e.getMessage() + " " + f.getAbsolutePath());
+				criar_ficheiro_Pausa(conteudo, pathErro, count, false, nomeFicheiro, nomezip, pathErro);
+				return;
+			}
+			try (FileWriter fw = new FileWriter(f, true); BufferedWriter bw = new BufferedWriter(fw)) {
+				bw.write(conteudo);
+			}
+		} else {
+			escreverZip(conteudo, nomeFicheiro + "_" + count + ".txt", nomezip);
+		}
+	}
+
+	public void criar_ficheiro_PausaMAQUINA(Object[] pausa, String sinal, String linhaInicial,
+			String linhaAMaquina, String path2, Boolean ficheirosdownload, String nomeFicheiro2,
+			String nomezip, Integer count, String estado, String pathErro, String id)
+			throws ParseException, IOException {
+
+		SimpleDateFormat fmtOut = new SimpleDateFormat("yyyyMMddHHmmss");
+		SimpleDateFormat fmtIn  = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
+
+		StringBuilder rb = new StringBuilder("B");
+		rb.append(pausa[0] != null ? fmtOut.format(fmtIn.parse(pausa[0].toString())) : "");
+		rb.append(pausa[1] != null ? fmtOut.format(fmtIn.parse(pausa[1].toString())) : "");
+		rb.append(padRight(pausa[3], 4)).append("3");
+		rb.append("P".equals(pausa[4] != null ? pausa[4].toString() : "") ? formatQuantidade(pausa[2], 15) : ZEROS_15);
+		rb.append(sinal).append("3");
+		rb.append("E".equals(pausa[4] != null ? pausa[4].toString() : "") ? formatQuantidade(pausa[2], 15) : ZEROS_15);
+		rb.append(sinal).append(padRight("", 39)).append(CRLF);
+
+		String conteudo = linhaAMaquina + linhaInicial + rb.toString();
+		String seq = sequencia(id);
+		StringBuilder resultado = new StringBuilder();
+		try (BufferedReader br = new BufferedReader(new StringReader(conteudo))) {
+			String line;
+			while ((line = br.readLine()) != null) {
+				StringBuffer buf = new StringBuffer(line);
+				if (buf.length() > 27) buf.replace(18, 27, seq);
+				resultado.append(buf).append(CRLF);
+			}
+		}
+		float dur = pausa[2] != null ? Float.parseFloat(pausa[2].toString()) : 0f;
+		if (dur > 0) {
+			criar_ficheiro_Pausa(resultado.toString(), path2 + "_MAQ_" + estado,
+					count, ficheirosdownload, nomeFicheiro2 + "_MAQ_" + estado, nomezip, pathErro);
+		}
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// CRIAPAUSASMAQUINA e getTempos — T-SQL com cursor (mantido verbatim).
+	// NOTA: DATA_INI/HORA_INI sao nomes de colunas SQL (nao valores), por isso
+	//       nao podem ser parametrizados. ID_OF_CAB e um Integer validado.
+	// ─────────────────────────────────────────────────────────────────────────
+
+
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// sequencia, atualizatabela_AUX, verficaEventos, utilitarios
+	// ─────────────────────────────────────────────────────────────────────────
+
+	public String sequencia(String id) {
+		@SuppressWarnings("unchecked")
+		List<Object> rows = entityManager.createNativeQuery(
+				"SELECT TOP 1 NUMERO_SEQUENCIA FROM GER_SEQUENCIA_FICHEIRO"
+				+ " WHERE DATA_SEQUENCIA = CONVERT(date, GETDATE())")
+				.getResultList();
+
+		if (!rows.isEmpty()) {
+			int val = Integer.parseInt(rows.get(0).toString()) + 1;
+			entityManager.createNativeQuery(
+					"UPDATE GER_SEQUENCIA_FICHEIRO SET NUMERO_SEQUENCIA = :v"
+					+ " WHERE DATA_SEQUENCIA = CONVERT(date, GETDATE())")
+					.setParameter("v", val).executeUpdate();
+			String s = "000000000" + val + id;
+			return s.substring(s.length() - 9);
+		}
+
+		entityManager.createNativeQuery(
+				"INSERT INTO GER_SEQUENCIA_FICHEIRO (DATA_SEQUENCIA, NUMERO_SEQUENCIA) VALUES (GETDATE(), 1)")
+				.executeUpdate();
+		String s = "000000001" + id;
+		return s.substring(s.length() - 9);
+	}
+
+	public void atualizatabela_AUX(String rescod, String datdeb, String proref, String ofnum,
+			String opecod, Integer idOfCab, String tipo, String heudeb) {
+		entityManager.createNativeQuery(
+				"BEGIN IF NOT EXISTS (SELECT * FROM RP_AUX_OPNUM"
+				+ " WHERE RESCOD = :rescod AND PROREF = :proref AND OFNUM = :ofnum"
+				+ " AND OPECOD = :opecod AND ID_CAMPO = :idCampo AND TIPO = :tipo)"
+				+ " BEGIN INSERT INTO RP_AUX_OPNUM"
+				+ "   (RESCOD, DATDEB, PROREF, OFNUM, OPECOD, DATA_CRIACAO, DATA_MODIFICACAO, ID_CAMPO, ESTADO, TIPO, HEUDEB)"
+				+ "   VALUES (:rescod, :datdeb, :proref, :ofnum, :opecod, GETDATE(), GETDATE(), :idCampo, 0, :tipo, :heudeb)"
+				+ " END END")
+				.setParameter("rescod",  rescod)
+				.setParameter("datdeb",  datdeb)
+				.setParameter("proref",  proref)
+				.setParameter("ofnum",   ofnum)
+				.setParameter("opecod",  opecod)
+				.setParameter("idCampo", idOfCab)
+				.setParameter("tipo",    tipo)
+				.setParameter("heudeb",  heudeb)
+				.executeUpdate();
+	}
+
+	public void verficaEventos(String[] keyValuePairs, String momento, String filePath, String para) {
+		@SuppressWarnings("unchecked")
+		List<GER_EVENTOS_CONF> confs = entityManager.createQuery(
+				"SELECT a FROM GER_EVENTOS_CONF a WHERE a.MODULO = 4 AND a.MOMENTO = :m"
+				+ " AND a.PAGINA = 'INTERNO' AND a.ESTADO != 0", GER_EVENTOS_CONF.class)
+				.setParameter("m", momento).getResultList();
+
+		for (GER_EVENTOS_CONF conf : confs) {
+			String mensagem = conf.getEMAIL_MENSAGEM();
+			String assunto  = conf.getEMAIL_ASSUNTO();
+			for (String par : keyValuePairs) {
+				String[] e = par.split("::");
+				String chave = e[0].trim(), valor = e.length > 1 ? e[1].trim() : "";
+				mensagem = mensagem.replace("{" + chave + "}", valor);
+				assunto  = assunto.replace("{" + chave + "}", valor);
+			}
+			String emailPara = concatenateWithComma(para, conf.getEMAIL_PARA());
+			new SendEmail().enviarEmail("alertas.it.doureca@gmail.com", emailPara, assunto, mensagem, null);
+		}
+	}
+
+	private void notificarErro(String mensagem) {
+		verficaEventos(new String[]{"TEXTO_ERRO ::" + mensagem}, "ERROS REGISTOS PRODUCAO", "", null);
+	}
+
+	public static String concatenateWithComma(String... strings) {
+		StringBuilder sb = new StringBuilder();
+		for (String s : strings) {
+			if (s != null && !s.isEmpty()) {
+				if (sb.length() > 0) sb.append(",");
+				sb.append(s);
+			}
+		}
+		return sb.toString();
+	}
+
+	private String getURL() {
+		@SuppressWarnings("unchecked")
+		List<Object[]> rows = entityManager
+				.createNativeQuery("SELECT TOP 1 * FROM GER_PARAMETROS").getResultList();
+		return rows.isEmpty() || rows.get(0)[2] == null ? "" : rows.get(0)[2].toString();
+	}
+
+
+
+	// CRIAPAUSASMAQUINA e getTempos mantidos verbatim (T-SQL com cursor)
 
 	public void CRIAPAUSASMAQUINA(String DATA_INI, String HORA_INI, String DATA_FIM, String HORA_FIM,
 			String MOMENTO_PARAGEM, String TIPO_PARAGEM, String SINAL, String linha_inicial, String linha_A_MAQUINA,
@@ -2113,176 +1392,135 @@ public class CriarFicheiroService {
 			try {
 				criar_ficheiro_PausaMAQUINA(content2, SINAL, linha_inicial, linha_A_MAQUINA, path2, ficheirosdownload,
 						nome_ficheiro2, nomezip, count, ESTADO, path_error, ID_OF_CAB.toString());
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
+			} catch (ParseException | IOException e) {
 				e.printStackTrace();
 			}
 		}
 
 	}
 
-	public void criar_ficheiro_Pausa(String data, String path2, Integer count, Boolean ficheirosdownload,
-			String nomeficheiro, String nomezip, String path_error) throws IOException {
-		if (!ficheirosdownload) {
-			File file2 = new File(path2 + "_" + count + ".txt");
 
-			// if file doesnt exists, then create it
+	public double getTempos(String DATA_INI, String HORA_INI, String DATA_FIM, String HORA_FIM, String MOMENTO_PARAGEM,
+			Integer ID_OF_CAB, String ESTADO) {
+		double number = 0;
+		Query query2 = entityManager.createNativeQuery("declare @parents table " + "(Data_inicio datetime, "
+				+ "Data_fim datetime, " + "ID int) " + "DECLARE @ID_UTZ_CRIA NVARCHAR(6) "
+				+ "DECLARE @ESTADO NVARCHAR(6) = '" + ESTADO + "' " + "DECLARE @Data_inicio datetime  "
+				+ "DECLARE @Data_fim datetime " + "DECLARE @Data_fim2 datetime " + "DECLARE @ID INT "
+				+ "DECLARE @ID2 INT " + "DECLARE @ID_RESULTADO INT " + "DECLARE @COUNT INT = 1 "
+				+ "DECLARE @COUNT1 INT = 0 " + "DECLARE @TOTAL INT = 0 " + "DECLARE @ID_OF_CAB INT = " + ID_OF_CAB + " "
+				+ "DECLARE @getid CURSOR " + "DECLARE @getid2 CURSOR " + "SET @getid = CURSOR FOR SELECT ID_PARA_LIN  "
+				+ "FROM  RP_OF_PARA_LIN  "
+				+ "where ID_OP_CAB in (select  ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB)  " + "and "
+				+ MOMENTO_PARAGEM + " = @ESTADO " + "and  (cast(" + DATA_INI + " as datetime) + cast(" + HORA_INI
+				+ " as datetime)) <> (cast(" + DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime)) "
+				+ "order by (cast(" + DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) " + "OPEN @getid "
+				+ "FETCH NEXT " + "FROM @getid INTO @ID " + "WHILE @@FETCH_STATUS = 0 " + "BEGIN  " + "SET @COUNT1= 0 "
+				+ "SELECT @Data_inicio =  (cast(" + DATA_INI + " as datetime) + cast(" + HORA_INI
+				+ " as datetime)),@ID_UTZ_CRIA = ID_UTZ_CRIA  " + ",@Data_fim =  (cast(" + DATA_FIM
+				+ " as datetime) + cast(" + HORA_FIM + " as datetime)) "
+				+ "FROM  RP_OF_PARA_LIN where ID_PARA_LIN = @ID " + "IF @ESTADO = 'E' " + "BEGIN "
+				+ "select @TOTAL = count(*) from RP_OF_OP_FUNC a "
+				+ "inner join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB "
+				+ "left join RP_OF_PREP_LIN c on a.ID_OP_CAB = c.ID_OP_CAB " + "where ID_OF_CAB = @ID_OF_CAB and  "
+				+ "((cast(a." + DATA_FIM + " as datetime) + cast(a." + HORA_FIM + " as datetime)) > (cast(c." + DATA_FIM
+				+ " as datetime) + cast(c." + HORA_FIM + " as datetime)) " + "or c." + HORA_INI
+				+ " is null) and ((cast(c." + DATA_FIM + " as datetime) + cast(c." + HORA_FIM
+				+ " as datetime)) <= @Data_inicio or ( " + "(cast(a." + DATA_INI + " as datetime) + cast(a." + HORA_INI
+				+ " as datetime)) <= @Data_inicio and c." + HORA_INI + " is null	)) " + "and(cast(a." + DATA_FIM
+				+ " as datetime) + cast(a." + HORA_FIM + " as datetime)) >= @Data_inicio  " + "END " + "ELSE "
+				+ "BEGIN " + "select @TOTAL =  count(*) from RP_OF_OP_FUNC a "
+				+ "inner join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB "
+				+ "inner join RP_OF_PREP_LIN c on a.ID_OP_CAB = c.ID_OP_CAB "
+				+ "where ID_OF_CAB = @ID_OF_CAB and c.DATA_INI_M2 is not null " + "and (cast(c." + DATA_FIM
+				+ " as datetime) + cast(c." + HORA_FIM + " as datetime)) > @Data_fim " + " and (cast(c." + DATA_INI
+				+ "  as datetime) + cast(c." + HORA_INI + " as datetime)) <= @Data_inicio " + "END "
+				+ "WHILE (@COUNT1  = 0) " + "BEGIN " + "IF EXISTS (SELECT * FROM RP_OF_PARA_LIN where  " + "(cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) < @Data_fim and " + "(cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI
+				+ " as datetime)) > @Data_inicio and  ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and ID_UTZ_CRIA <> @ID_UTZ_CRIA) AND   @COUNT <> @TOTAL "
+				+ "BEGIN " + "SET @getid2 = CURSOR FOR (SELECT ID_PARA_LIN FROM RP_OF_PARA_LIN where  " + "(cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) < @Data_fim and " + "(cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) > @Data_inicio  "
+				+ "and  ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and ID_UTZ_CRIA <> @ID_UTZ_CRIA) "
+				+ "order by (cast(" + DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) "
+				+ "OPEN @getid2 " + "FETCH NEXT " + "FROM @getid2 INTO @ID2 " + "WHILE @@FETCH_STATUS = 0 " + "BEGIN "
+				+ "SELECT TOP 1 @ID_RESULTADO=ID_PARA_LIN, @Data_inicio =  (cast(" + DATA_INI + " as datetime) + cast("
+				+ HORA_INI + " as datetime)), " + "@Data_fim =  (cast(" + DATA_FIM + " as datetime) + cast(" + HORA_FIM
+				+ " as datetime)), @ID_UTZ_CRIA = ID_UTZ_CRIA  " + "FROM  RP_OF_PARA_LIN  "
+				+ "where ID_PARA_LIN = @ID2 " + "IF @ESTADO = 'E' " + "BEGIN "
+				+ "select @TOTAL = count(*) from RP_OF_OP_FUNC a "
+				+ "inner join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB "
+				+ "left join RP_OF_PREP_LIN c on a.ID_OP_CAB = c.ID_OP_CAB " + "where ID_OF_CAB = @ID_OF_CAB and  "
+				+ "((cast(a." + DATA_FIM + " as datetime) + cast(a." + HORA_FIM + " as datetime)) > (cast(c." + DATA_FIM
+				+ " as datetime) + cast(c." + HORA_FIM + " as datetime)) " + "or c." + HORA_INI
+				+ " is null) and ((cast(c." + DATA_FIM + " as datetime) + cast(c." + HORA_FIM
+				+ " as datetime)) <= @Data_inicio or ( " + "(cast(a." + DATA_INI + " as datetime) + cast(a." + HORA_INI
+				+ " as datetime)) <= @Data_inicio and c." + HORA_INI + " is null	)) " + "and(cast(a." + DATA_FIM
+				+ " as datetime) + cast(a." + HORA_FIM + " as datetime)) >= @Data_inicio  " + "END " + "ELSE "
+				+ "BEGIN " + "select @TOTAL =  count(*) from RP_OF_OP_FUNC a "
+				+ "inner join RP_OF_OP_CAB b on a.ID_OP_CAB = b.ID_OP_CAB "
+				+ "inner join RP_OF_PREP_LIN c on a.ID_OP_CAB = c.ID_OP_CAB "
+				+ "where ID_OF_CAB = @ID_OF_CAB and c.DATA_INI_M2 is not null " + "and (cast(c." + DATA_FIM
+				+ " as datetime) + cast(c." + HORA_FIM + " as datetime)) > @Data_fim " + " and (cast(c." + DATA_INI
+				+ "  as datetime) + cast(c." + HORA_INI + " as datetime)) <= @Data_inicio " + "END "
+				+ "SET @COUNT= @COUNT+1 " + "IF(@COUNT = @TOTAL) " + "BEGIN " + "SELECT TOP 1  @Data_fim = MIN((cast("
+				+ DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime))), "
+				+ "@Data_fim2 = (select MIN((cast(" + DATA_INI + " as datetime) + cast(" + HORA_INI
+				+ " as datetime)))  "
+				+ "from  RP_OF_OP_FUNC where ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and (cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) >= @Data_inicio and (cast(" + DATA_INI
+				+ " as datetime) + cast(" + HORA_INI + " as datetime)) <= @Data_fim) " + "FROM  RP_OF_PARA_LIN  "
+				+ "where ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and  (cast("
+				+ DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime)) <= @Data_fim " + "AND (cast("
+				+ DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime)) > @Data_inicio "
+				+ "IF(@ID_RESULTADO is null) SET @ID_RESULTADO=@ID "
+				+ "IF(@Data_fim2 is not null) SET @Data_fim=@Data_fim2 "
+				+ "insert into @parents (Data_inicio,Data_fim,ID) values (@Data_inicio,@Data_fim,@ID_RESULTADO)	 "
+				+ "set @COUNT = 1	 " + "IF(@Data_fim2 is not null) SET @COUNT = @TOTAL " + "END "
+				+ "IF not EXISTS (SELECT * FROM RP_OF_PARA_LIN where  +" + "(cast( " + DATA_INI
+				+ " as datetime) + cast(" + HORA_INI + " as datetime)) < @Data_fim and + (cast( " + DATA_INI
+				+ " as datetime) + cast(" + HORA_INI
+				+ " as datetime)) > @Data_inicio and  ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and ID_UTZ_CRIA <> @ID_UTZ_CRIA) AND   @COUNT <> @TOTAL "
+				+ "BEGIN SET @COUNT= 1 END" + " FETCH NEXT " + "FROM @getid2 INTO @ID2 " + "END " + "END " + "ELSE "
+				+ "BEGIN " + "IF(@COUNT = @TOTAL) " + "BEGIN " + "SELECT TOP 1  @Data_fim = MIN((cast(" + DATA_FIM
+				+ " as datetime) + cast(" + HORA_FIM + " as datetime))), " + "@Data_fim2 = (select MIN((cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)))  "
+				+ "from  RP_OF_OP_FUNC where ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and (cast("
+				+ DATA_INI + " as datetime) + cast(" + HORA_INI + " as datetime)) >= @Data_inicio and (cast(" + DATA_INI
+				+ " as datetime) + cast(" + HORA_INI + " as datetime)) <= @Data_fim) " + "FROM  RP_OF_PARA_LIN  "
+				+ "where ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) and  (cast("
+				+ DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime)) <= @Data_fim " + "AND (cast("
+				+ DATA_FIM + " as datetime) + cast(" + HORA_FIM + " as datetime)) > @Data_inicio "
+				+ "IF(@ID_RESULTADO is null) SET @ID_RESULTADO=@ID "
+				+ "IF(@Data_fim2 is not null) SET @Data_fim=@Data_fim2 "
+				+ "insert into @parents (Data_inicio,Data_fim,ID) values (@Data_inicio,@Data_fim,@ID_RESULTADO)	 "
+				+ "set @COUNT = 1	 " + "END " + "SET @COUNT1= @COUNT1+1 " + "END " + "END " + "FETCH NEXT "
+				+ "FROM @getid INTO @ID " + "set @COUNT = 1	 " + "END "
+				+ "IF @ESTADO = 'P' BEGIN select (cast((DATEDIFF(second, (cast(" + DATA_INI + " as datetime) + cast("
+				+ HORA_INI + " as datetime)),  (cast(" + DATA_FIM + " as datetime) + cast(" + HORA_FIM
+				+ " as datetime)))/3600.00) as decimal(18,4)) - "
+				+ "(select  COALESCE(SUM( cast((DATEDIFF(second,a.Data_inicio, a.Data_fim)/3600.00) as decimal(18,4))),0) from @parents a inner join RP_OF_PARA_LIN b on a.ID = b.ID_PARA_LIN ) ),'' as dfs "
+				+ "from RP_OF_PREP_LIN where ID_OP_CAB in (select TOP 1 ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) END ELSE BEGIN "
+				+ "select (cast((DATEDIFF(second, (cast(a." + DATA_INI + " as datetime) + cast(a." + HORA_INI
+				+ " as datetime)),  (cast(a." + DATA_FIM + " as datetime) + cast(a." + HORA_FIM
+				+ " as datetime)))/3600.00) as decimal(18,4)) - "
+				+ "( select COALESCE( SUM(  cast((DATEDIFF(second,a.Data_inicio, a.Data_fim)/3600.00) as decimal(18,4))),0) from @parents a inner join RP_OF_PARA_LIN b on a.ID = b.ID_PARA_LIN "
+				+ ") ) - COALESCE((cast((DATEDIFF(second, (cast(b." + DATA_INI + " as datetime) + cast(b." + HORA_INI
+				+ " as datetime)),  (cast(b." + DATA_FIM + " as datetime) + cast(b." + HORA_FIM
+				+ " as datetime)))/3600.00) as decimal(18,4))),0) "
+				+ ",'' as df from RP_OF_OP_FUNC a left join RP_OF_PREP_LIN b on  a.ID_OP_CAB = b.ID_OP_CAB where a.ID_OP_CAB in (select TOP 1 ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB  = @ID_OF_CAB) END");
 
-			try {
-				file2.createNewFile();
-			} catch (IOException e2) {
-				// TODO Auto-generated catch block
-				String[] keyValuePairs = { "TEXTO_ERRO ::" + e2.getMessage() + " " + file2.getAbsolutePath() + "", };
-				if (file2.getAbsolutePath() != null)
-					verficaEventos(keyValuePairs, "ERROS REGISTOS PRODUCAO", "", null);
-				criar_ficheiro_Pausa(data, path_error, count, false, nomeficheiro, nomezip, path_error);
-				e2.printStackTrace();
-				return;
-			}
-			BufferedWriter bw2 = null;
-			FileWriter fw2 = null;
-			// true = append file
-			try {
-				fw2 = new FileWriter(file2.getAbsoluteFile(), true);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
+		List<Object[]> dados2 = query2.getResultList();
 
-				e.printStackTrace();
-			}
-			bw2 = new BufferedWriter(fw2);
-			try {
-				bw2.write(data);
-				if (bw2 != null) {
-					bw2.close();
-				}
-				if (fw2 != null) {
-					fw2.close();
-				}
-			} catch (IOException e) {
-				if (bw2 != null) {
-					try {
-						bw2.close();
-					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-				}
-				if (fw2 != null) {
-					try {
-						fw2.close();
-					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-				}
-				e.printStackTrace();
-			}
-		} else {
-			Map<String, String> env = new HashMap<>();
-			env.put("create", "true");
-			java.nio.file.Path pathh = Paths.get("c:/sgiid/temp_files/" + nomezip + ".zip");
-			URI uri = URI.create("jar:" + pathh.toUri());
-			try (FileSystem fs = FileSystems.newFileSystem(uri, env)) {
-				java.nio.file.Path nf = fs.getPath(nomeficheiro + "_" + count + ".txt");
-				try (Writer writer = Files.newBufferedWriter(nf, StandardCharsets.UTF_8, StandardOpenOption.CREATE)) {
-					writer.write(data);
-				}
-			}
+		Integer count = 0;
+		for (Object[] content2 : dados2) {
+			count++;
+			number = (content2[0] != null) ? Double.parseDouble(content2[0].toString()) : 0;
 		}
+		if (number < 0)
+			number = 0;
+		return number;
 	}
 
-	public String sequencia(String id) {
-		String sequencia = "000000000";
-		Query query_seq = entityManager.createNativeQuery(
-				"select top 1 NUMERO_SEQUENCIA,DATA_SEQUENCIA from GER_SEQUENCIA_FICHEIRO where DATA_SEQUENCIA = CONVERT (date, GETDATE())");
-
-		List<Object[]> dados_seq = query_seq.getResultList();
-		if (dados_seq.size() > 0) {
-			Integer val = 1;
-			for (Object[] contentseq : dados_seq) {
-				val = Integer.parseInt(contentseq[0].toString()) + 1;
-				sequencia = ("000000000" + val + id).substring(("000000000" + val + id).length() - 9,
-						("000000000" + val + id).length());
-			}
-			entityManager.createNativeQuery("UPDATE GER_SEQUENCIA_FICHEIRO SET NUMERO_SEQUENCIA = " + val
-					+ " where DATA_SEQUENCIA = CONVERT (date, GETDATE())").executeUpdate();
-		} else {
-			sequencia = ("000000001" + id).substring(("000000001" + id).length() - 9, ("000000001" + id).length());
-			entityManager
-					.createNativeQuery(
-							"INSERT INTO GER_SEQUENCIA_FICHEIRO (DATA_SEQUENCIA,NUMERO_SEQUENCIA) VALUES (GETDATE(),1)")
-					.executeUpdate();
-		}
-		return sequencia;
-	}
-
-	public void atualizatabela_AUX(String RESCOD, String DATDEB, String PROREF, String OFNUM, String OPECOD,
-			Integer ID_OF_CAB, String TIPO, String HEUDEB) {
-		entityManager.createNativeQuery("BEGIN IF NOT EXISTS  ( SELECT * FROM RP_AUX_OPNUM WHERE RESCOD = " + RESCOD
-				+ " /*and DATDEB = '" + DATDEB + "'*/ and PROREF = '" + PROREF + "' and OFNUM = '" + OFNUM
-				+ "' and OPECOD = '" + OPECOD + "' and ID_CAMPO = " + ID_OF_CAB + " and TIPO = '" + TIPO
-				+ "' /*and HEUDEB = '" + HEUDEB + "'*/)"
-				+ "BEGIN INSERT INTO RP_AUX_OPNUM (RESCOD,DATDEB,PROREF,OFNUM,OPECOD,DATA_CRIACAO,DATA_MODIFICACAO,ID_CAMPO,ESTADO,TIPO,HEUDEB) VALUES ("
-				+ " '" + RESCOD + "','" + DATDEB + "','" + PROREF + "','" + OFNUM + "','" + OPECOD
-				+ "',GETDATE(),GETDATE()," + ID_OF_CAB + ",0,'" + TIPO + "','" + HEUDEB + "') " + "END END")
-				.executeUpdate();
-	}
-
-	public void verficaEventos(String[] keyValuePairs, String momento, String fgilepath, String para) {
-
-		List<String> x = new ArrayList<>();
-
-		Query query3 = entityManager.createQuery("Select a from GER_EVENTOS_CONF a where MODULO = 4 and MOMENTO = '"
-				+ momento + "' " + "and PAGINA = 'INTERNO' and ESTADO  != 0");
-		List<GER_EVENTOS_CONF> dados = query3.getResultList();
-
-		for (GER_EVENTOS_CONF borderTypes : dados) {
-
-			// System.out.println(borderTypes.getEMAIL_ASSUNTO());
-			EMAIL email = new EMAIL();
-			// email.setASSUNTO(borderTypes.getEMAIL_ASSUNTO());
-			email.setDE("alertas.it.doureca@gmail.com");
-
-			String s1 = para;
-			String s2 = borderTypes.getEMAIL_PARA();
-			String email_para = concatenateWithComma(s1, s2);
-
-			email.setPARA(email_para);
-			String mensagem = borderTypes.getEMAIL_MENSAGEM();
-			String assunto = borderTypes.getEMAIL_ASSUNTO();
-
-			for (String pair : keyValuePairs) {
-				String[] entry = pair.split("::");
-				mensagem = mensagem.replace("{" + entry[0].trim() + "}", (entry.length > 1) ? entry[1].trim() : "");
-				assunto = assunto.replace("{" + entry[0].trim() + "}", (entry.length > 1) ? entry[1].trim() : "");
-			}
-			email.setASSUNTO(assunto);
-			email.setMENSAGEM(mensagem);
-			new SendEmail().enviarEmail(email.getDE(), email.getPARA(), email.getASSUNTO(), email.getMENSAGEM(), email.getNOME_FICHEIRO());
-
-		}
-	}
-
-	public static String concatenateWithComma(String... strings) {
-		StringBuilder sb = new StringBuilder();
-		for (String str : strings) {
-			if (str != null) {
-				if (sb.length() > 0) {
-					sb.append(",");
-				}
-				sb.append(str);
-			}
-		}
-		return sb.toString();
-	}
-
-	private String getURL() {
-		String url = "";
-		Query query_folder = entityManager.createNativeQuery("select top 1 * from GER_PARAMETROS a");
-		List<Object[]> dados_folder = query_folder.getResultList();
-		for (Object[] content : dados_folder) {
-			url = content[2].toString();
-		}
-		return url;
-	}
 }
