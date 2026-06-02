@@ -124,6 +124,9 @@ import pt.example.entity.VERSAO_APP;
 public class SIIP {
 
 	private static final Logger LOGGER = Logger.getLogger(SIIP.class.getName());
+	
+	@Inject
+	private pt.example.bootstrap.AtualizarReferenciasService atualizarReferenciasService;
 
 	@PersistenceContext(unitName = "persistenceUnit")
 	protected EntityManager entityManager;
@@ -214,6 +217,21 @@ public class SIIP {
 
 	@Inject
 	private CriarFicheiroService criarFicheiroService;
+
+
+	@POST
+	@Path("/atualizarReferencias/{id_of_cab}")
+	@Produces("application/json")
+	public Response atualizarReferencias(@PathParam("id_of_cab") Integer idOfCab,
+			@Context javax.servlet.http.HttpServletRequest request) {
+		try {
+			String ipPosto = request.getRemoteAddr();
+			Map<String, List<String>> result = atualizarReferenciasService.executar(idOfCab, ipPosto);
+			return Response.ok(result).build();
+		} catch (Exception e) {
+			return Response.serverError().entity(e.getMessage()).build();
+		}
+	}
 
 	// RP_CONF_UTZ_PERF***************************************************************
 	@POST

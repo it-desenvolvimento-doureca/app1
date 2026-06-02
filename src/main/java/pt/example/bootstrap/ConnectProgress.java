@@ -1,5 +1,6 @@
 package pt.example.bootstrap;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -577,6 +578,37 @@ public class ConnectProgress {
 			globalconnection.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
+			e.printStackTrace();
+			globalconnection.close();
+		}
+		return list;
+	}
+
+	public List<HashMap<String, String>> getSPComponentes(String OFANUMENR, String url) throws SQLException {
+
+		List<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
+
+		try (Connection connection = getConnection(url);
+				CallableStatement cs = connection.prepareCall("{call SP_Silver_SOFC_Componentes(?)}")) {
+			cs.setString(1, OFANUMENR);
+			ResultSet rs = cs.executeQuery();
+			while (rs.next()) {
+				HashMap<String, String> x = new HashMap<>();
+				x.put("PROREF", rs.getString("PROREF"));
+				x.put("PRODES1", rs.getString("PRODES1"));
+				x.put("PRODES2", rs.getString("PRODES2"));
+				x.put("PRDFAMCOD", rs.getString("PRDFAMCOD"));
+				x.put("ZPAVAL", rs.getString("ZPAVAL"));
+				x.put("GESCOD", rs.getString("GESCOD"));
+				x.put("PROQTEFMT", rs.getString("PROQTEFMT"));
+				x.put("PROTYPCOD", rs.getString("PROTYPCOD"));
+				x.put("NCLQTE", rs.getString("NCLQTE"));
+				list.add(x);
+			}
+			rs.close();
+			connection.close();
+			globalconnection.close();
+		} catch (SQLException e) {
 			e.printStackTrace();
 			globalconnection.close();
 		}
