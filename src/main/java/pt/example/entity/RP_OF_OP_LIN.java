@@ -21,7 +21,7 @@ public class RP_OF_OP_LIN {
 	private String REF_VAR1;
 	private String REF_VAR2;
 	private Integer REF_INDNUMENR;
-	private Integer QUANT_OF;
+	private Float QUANT_OF;
 	private Float QUANT_BOAS_TOTAL;
 	private Integer QUANT_DEF_TOTAL;
 	private Float PERC_OBJETIV;
@@ -81,7 +81,7 @@ public class RP_OF_OP_LIN {
 	}
 
 	@Column(name = "QUANT_OF")
-	public Integer getQUANT_OF() {
+	public Float getQUANT_OF() {
 		return QUANT_OF;
 	}
 
@@ -173,7 +173,7 @@ public class RP_OF_OP_LIN {
 		REF_INDNUMENR = rEF_INDNUMENR;
 	}
 
-	public void setQUANT_OF(Integer qUANT_OF) {
+	public void setQUANT_OF(Float qUANT_OF) {
 		QUANT_OF = qUANT_OF;
 	}
 
