@@ -28,7 +28,7 @@ public class AtualizarReferenciasService {
     private RP_CONF_FAMILIA_COMPDao familiaCompDao;
 
     @SuppressWarnings("unchecked")
-    public Map<String, List<String>> executar(Integer idOfCab) throws SQLException {
+    public Map<String, List<String>> executar(Integer idOfCab, String ipPosto) throws SQLException {
 
         // URL do ERP a partir dos parâmetros da aplicação
         String erpUrl = getURL();
@@ -157,21 +157,23 @@ public class AtualizarReferenciasService {
         List<String> addedPF = new ArrayList<>();
         for (HashMap<String, String> ref : toAddPF) {
             double perc = parseDouble(ref.get("ZPAVAL"));
-            int nclqte = parseInt(ref.get("NCLQTE"), 1);
+            double nclqte = parseDoubleOrDefault(ref.get("NCLQTE"), 1.0);
 
             // RP_OF_OP_LIN — obtém o ID gerado para criar dependências
             Query qLin = em.createNativeQuery(
                 "INSERT INTO RP_OF_OP_LIN " +
                 "(ID_OP_CAB,REF_NUM,REF_DES,REF_IND,REF_VAR1,REF_VAR2,REF_INDNUMENR," +
                 "QUANT_OF,QUANT_BOAS_TOTAL,QUANT_DEF_TOTAL,PERC_OBJETIV," +
-                "GESCOD,PROQTEFMT,TIPO_PECA,NCLQTE,VERSAO_MODIF) VALUES (" +
+                "QUANT_BOAS_TOTAL_M1,QUANT_DEF_TOTAL_M1,QUANT_BOAS_TOTAL_M2,QUANT_DEF_TOTAL_M2," +
+                "GESCOD,PROQTEFMT,TIPO_PECA,NCLQTE,VERSAO_MODIF,CONFIRMAR_ZERO) VALUES (" +
                 idOpCab + ",'" + esc(ref.get("PROREF")) + "','" +
                 esc(trim(ref.get("PRODES1")) + " " + trim(ref.get("PRODES2"))) + "'," +
                 sqlStr(ref.get("INDREF")) + "," + sqlStr(ref.get("VA1REF")) + "," +
                 sqlStr(ref.get("VA2REF")) + "," + sqlNum(ref.get("INDNUMENR")) + "," +
                 (quantOf * nclqte) + ",0,0," + perc + "," +
+                "0,0,0,0," +
                 sqlStr(ref.get("GESCOD")) + "," + boolInt(ref.get("PROQTEFMT")) + ",'" +
-                esc(ref.get("PROTYPCOD")) + "'," + nclqte + ",0); SELECT @@IDENTITY"
+                esc(ref.get("PROTYPCOD")) + "'," + nclqte + ",0,null); SELECT @@IDENTITY"
             );
             Integer idNewOpLin = ((BigDecimal) qLin.getSingleResult()).intValue();
 
@@ -223,16 +225,16 @@ public class AtualizarReferenciasService {
         List<String> addedCOMP = new ArrayList<>();
         for (HashMap<String, String> filho : toAddCOMP) {
             double perc = parseDouble(filho.get("ZPAVAL"));
-            int nclqte = parseInt(filho.get("NCLQTE"), 1);
+            double nclqte = parseDoubleOrDefault(filho.get("NCLQTE"), 1.0);
 
             // RP_OF_CAB filho
             Query qCab = em.createNativeQuery(
                 "INSERT INTO RP_OF_CAB " +
                 "(ID_OF_CAB_ORIGEM,OF_NUM,OP_COD,OP_NUM,SEC_NUM,SEC_DES,MAQ_NUM,MAQ_DES," +
-                "ID_UTZ_CRIA,NOME_UTZ_CRIA,DATA_HORA_CRIA,ESTADO,OP_COD_ORIGEM,OP_PREVISTA,MAQ_NUM_ORIG,VERSAO_MODIF) " +
+                "ID_UTZ_CRIA,NOME_UTZ_CRIA,DATA_HORA_CRIA,ESTADO,OP_COD_ORIGEM,OP_PREVISTA,MAQ_NUM_ORIG,VERSAO_MODIF,IP_POSTO) " +
                 "VALUES (" + idOfCab + ",NULL,'60','','" + esc(secNum) + "','" + esc(secDes) + "'," +
                 "'000','MAO DE OBRA','" + esc(idUtzCria) + "','" + esc(nomeUtz) + "',GETDATE()," +
-                "'" + esc(estado) + "','60','2','000',0); SELECT @@IDENTITY"
+                "'" + esc(estado) + "','60','2','000',0," + sqlStr(ipPosto) + "); SELECT @@IDENTITY"
             );
             Integer idNewOfCab = ((BigDecimal) qCab.getSingleResult()).intValue();
 
@@ -246,12 +248,14 @@ public class AtualizarReferenciasService {
             em.createNativeQuery(
                 "INSERT INTO RP_OF_OP_LIN " +
                 "(ID_OP_CAB,REF_NUM,REF_DES,QUANT_OF,QUANT_BOAS_TOTAL,QUANT_DEF_TOTAL," +
-                "PERC_OBJETIV,GESCOD,PROQTEFMT,TIPO_PECA,NCLQTE,VERSAO_MODIF) VALUES (" +
+                "PERC_OBJETIV,QUANT_BOAS_TOTAL_M1,QUANT_DEF_TOTAL_M1,QUANT_BOAS_TOTAL_M2,QUANT_DEF_TOTAL_M2," +
+                "GESCOD,PROQTEFMT,TIPO_PECA,NCLQTE) VALUES (" +
                 idNewOpCab + ",'" + esc(filho.get("PROREF")) + "','" +
                 esc(trim(filho.get("PRODES1")) + " " + trim(filho.get("PRODES2"))) + "'," +
-                (quantOf * nclqte) + ",0,0," + perc + "," +
+                (quantOf * nclqte) + ",0,0," + sqlDoubleOrNull(filho.get("ZPAVAL")) + "," +
+                "0,0,0,0," +
                 sqlStr(filho.get("GESCOD")) + "," + boolInt(filho.get("PROQTEFMT")) + ",'" +
-                esc(filho.get("PROTYPCOD")) + "'," + nclqte + ",0)"
+                esc(filho.get("PROTYPCOD")) + "'," + nclqte + ")"
             ).executeUpdate();
 
             addedCOMP.add(filho.get("PROREF"));
@@ -290,9 +294,20 @@ public class AtualizarReferenciasService {
         if (v == null || v.isEmpty()) return def;
         try { int n = Integer.parseInt(v); return n > 0 ? n : def; } catch (Exception e) { return def; }
     }
+    private double parseDoubleOrDefault(String v, double def) {
+        if (v == null || v.isEmpty()) return def;
+        try { double d = Double.parseDouble(v.replace(",", ".")); return d > 0 ? d : def; }
+        catch (Exception e) { return def; }
+    }
     private String trim(String v) { return v != null ? v.trim() : ""; }
     private String esc(String v) { return v != null ? v.replace("'", "''") : ""; }
     private String sqlStr(String v) { return (v != null && !v.isEmpty()) ? "'" + esc(v) + "'" : "NULL"; }
     private String sqlNum(String v) { return (v != null && !v.isEmpty()) ? v : "NULL"; }
     private int boolInt(String v) { return "1".equals(v) ? 1 : 0; }
+    /** Devolve o valor numérico ou NULL se ZPAVAL é null/vazio (PERC_OBJETIV deve ser NULL se não definido) */
+    private String sqlDoubleOrNull(String v) {
+        if (v == null || v.isEmpty()) return "NULL";
+        try { double d = Double.parseDouble(v.replace(",", ".")); return d == 0 ? "NULL" : String.valueOf(d); }
+        catch (Exception e) { return "NULL"; }
+    }
 }

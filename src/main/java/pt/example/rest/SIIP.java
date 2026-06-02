@@ -1980,9 +1980,11 @@ public class SIIP {
 	@POST
 	@Path("/atualizarReferencias/{id_of_cab}")
 	@Produces("application/json")
-	public Response atualizarReferencias(@PathParam("id_of_cab") Integer idOfCab) {
+	public Response atualizarReferencias(@PathParam("id_of_cab") Integer idOfCab,
+			@Context javax.servlet.http.HttpServletRequest request) {
 		try {
-			Map<String, List<String>> result = atualizarReferenciasService.executar(idOfCab);
+			String ipPosto = request.getRemoteAddr();
+			Map<String, List<String>> result = atualizarReferenciasService.executar(idOfCab, ipPosto);
 			return Response.ok(result).build();
 		} catch (Exception e) {
 			return Response.serverError().entity(e.getMessage()).build();
