@@ -22,7 +22,7 @@ public class RP_OF_OP_ETIQUETA {
 	private String REF_LOTE;
 	private String OF_NUM_ORIGEM;
 	private String OP_COD_ORIGEM;
-	private Integer QUANT_ETIQUETA;
+	private BigDecimal QUANT_ETIQUETA;
 	private BigDecimal QUANT_BOAS;
 	private Integer QUANT_DEF;
 	private String ID_UTZ_CRIA;
@@ -78,7 +78,7 @@ public class RP_OF_OP_ETIQUETA {
 	}
 
 	@Column(name = "QUANT_ETIQUETA")
-	public Integer getQUANT_ETIQUETA() {
+	public BigDecimal getQUANT_ETIQUETA() {
 		return QUANT_ETIQUETA;
 	}
 
@@ -171,7 +171,7 @@ public class RP_OF_OP_ETIQUETA {
 		OP_COD_ORIGEM = oP_COD_ORIGEM;
 	}
 
-	public void setQUANT_ETIQUETA(Integer qUANT_ETIQUETA) {
+	public void setQUANT_ETIQUETA(BigDecimal qUANT_ETIQUETA) {
 		QUANT_ETIQUETA = qUANT_ETIQUETA;
 	}
 
