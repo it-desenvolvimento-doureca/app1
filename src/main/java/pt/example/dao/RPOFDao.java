@@ -149,16 +149,16 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 				+ "inner join RP_OF_OP_FUNC c on b.ID_OP_CAB = c.ID_OP_CAB and a.ID_UTZ_CRIA = c.ID_UTZ_CRIA "
 				+ "where c.ESTADO NOT IN ('C','A','M','R') "
 				+ "and a.ID_OF_CAB in (Select a.ID_OF_CAB from RP_OF_CAB a where a.OF_NUM = '" + of_num
-				+ "' and a.OP_NUM = " + op_num + " " + "and a.OP_COD = '" + op_cod
+				+ "' and a.OP_NUM = " + op_num + " " + "and a.OP_COD_ORIGEM = '" + op_cod
 				+ "' and a.ESTADO NOT IN ('C','A','M','R'))) "
 				+ "and ID_OF_CAB in (Select a.ID_OF_CAB from RP_OF_CAB a where a.OF_NUM = '" + of_num + "' "
-				+ "and a.OP_NUM = " + op_num + " and a.OP_COD = '" + op_cod + "' and a.ESTADO NOT IN ('C','A','M','R'))");
+				+ "and a.OP_NUM = " + op_num + " and a.OP_COD_ORIGEM = '" + op_cod + "' and a.ESTADO NOT IN ('C','A','M','R'))");
 
 		query2.executeUpdate();
 
 		Query query = entityManager.createQuery("Select a,(select count(*) from RP_OF_OP_FUNC where ID_UTZ_CRIA ='"
 				+ user
-				+ "' AND ESTADO in ('P','E','S') ) from RP_OF_CAB a where a.OF_NUM = :of_num and a.OP_NUM = :op_num and a.OP_COD = :op_cod and a.ESTADO NOT IN ('C','A','M','R')");
+				+ "' AND ESTADO in ('P','E','S') ) from RP_OF_CAB a where a.OF_NUM = :of_num and a.OP_NUM = :op_num and a.OP_COD_ORIGEM = :op_cod and a.ESTADO NOT IN ('C','A','M','R')");
 		query.setParameter("of_num", of_num);
 		query.setParameter("op_cod", op_cod);
 		query.setParameter("op_num", op_num);
@@ -175,19 +175,19 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 				+ "inner join RP_OF_OP_FUNC c on b.ID_OP_CAB = c.ID_OP_CAB and a.ID_UTZ_CRIA = c.ID_UTZ_CRIA "
 				+ "where c.ESTADO NOT IN ('C','A','M','R') "
 				+ "and a.ID_OF_CAB in (Select a.ID_OF_CAB from RP_OF_CAB a where a.etiqueta = '" + etiqueta
-				+ "' and a.OP_NUM = " + op_num + " " + "and a.OP_COD = '" + op_cod
+				+ "' /*and a.OP_NUM = " + op_num + "*/ " + "and a.OP_COD_ORIGEM = '" + op_cod
 				+ "' and a.ESTADO NOT IN ('C','A','M','R'))) "
 				+ "and ID_OF_CAB in (Select a.ID_OF_CAB from RP_OF_CAB a where a.etiqueta = '" + etiqueta + "' "
-				+ "and a.OP_NUM = " + op_num + " and a.OP_COD = '" + op_cod + "' and a.ESTADO NOT IN ('C','A','M','R'))");
+				+ "and a.OP_NUM = " + op_num + " and a.OP_COD_ORIGEM = '" + op_cod + "' and a.ESTADO NOT IN ('C','A','M','R'))");
 
 		query2.executeUpdate();
-
+		/*and a.OP_NUM = :op_num*/
 		Query query = entityManager.createQuery("Select a,(select count(*) from RP_OF_OP_FUNC where ID_UTZ_CRIA ='"
 				+ user
-				+ "' AND ESTADO in ('P','E','S') ) from RP_OF_CAB a where a.ETIQUETA = :etiqueta and a.OP_NUM = :op_num and a.OP_COD = :op_cod and a.ESTADO NOT IN ('C','A','M','R')");
+				+ "' AND ESTADO in ('P','E','S') ) from RP_OF_CAB a where a.ETIQUETA = :etiqueta  and a.OP_COD_ORIGEM = :op_cod and a.ESTADO NOT IN ('C','A','M','R')");
 		query.setParameter("etiqueta", etiqueta);
 		query.setParameter("op_cod", op_cod);
-		query.setParameter("op_num", op_num);
+		//query.setParameter("op_num", op_num);
 		List<RP_OF_CAB> utz = query.getResultList();
 		return utz;
 
