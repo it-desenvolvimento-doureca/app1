@@ -1056,7 +1056,7 @@ public class CriarFicheiroService {
 	private static String formatQuantidadeC(Object value) {
 		if (value == null) return "000000000000000  ";
 		try {
-			String[] p = String.format("%.3f", Double.parseDouble(value.toString())).replace(",", ".").split("\\.");
+			String[] p = String.format("%.3f", Double.parseDouble(value.toString())).replace(",", ".").replace("$", ".").split("\\.");
 			String intPart = padZeroLeft(p[0], 11);
 			String decPart = p.length > 1 ? (p[1] + "0000").substring(0, 4) : "0000";
 			return (intPart + decPart + "  ").substring(0, 17);
