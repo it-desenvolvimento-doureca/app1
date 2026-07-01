@@ -351,6 +351,9 @@ public class SIIP {
 	@Path("/getRP_CONF_OPbyid")
 	@Produces("application/json")
 	public List<RP_CONF_OP> getRP_CONF_OPbyid(final String id) {
+		if (id == null || id.replace("\"", "").trim().isEmpty()) {
+			return new ArrayList<>();
+		}
 		return dao3.getbyid(id.replace("\"", ""));
 	}
 

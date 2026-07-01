@@ -240,8 +240,10 @@ public class RPOFDao extends GenericDaoJpaImpl<RP_OF_CAB, Integer> implements Ge
 			ordenacao = "order by " + firstMap.get("ordenacao");
 		}
 
-		String querydata = "and a.SEC_NUM in (" + firstMap.get("sec_num") + ")";
-		if (firstMap.get("sec_num").equals("ADMIN")) {
+		String sec_num = firstMap.get("sec_num");
+		String querydata = "and a.SEC_NUM in (" + sec_num + ")";
+		// null-safe: sec_num pode vir a null -> evita NullPointerException
+		if ("ADMIN".equals(sec_num)) {
 			querydata = "";
 		}
 		String estado = "null";

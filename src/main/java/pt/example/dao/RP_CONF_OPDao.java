@@ -1,5 +1,6 @@
 package pt.example.dao;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Query;
@@ -13,19 +14,26 @@ public class RP_CONF_OPDao extends GenericDaoJpaImpl<RP_CONF_OP, Integer> implem
 
 	public List<RP_CONF_OP> getbyid(String id_OP_PRINC) {
 
-		/*
-		 * String expr = id_OP_PRINC;
-		 * 
-		 * String arr[] = expr.split(","); String ID_OP_PRINC = ""; for (String
-		 * s : arr) { ID_OP_PRINC += "'" + s + "'"; }
-		 */
-		// ID_OP_PRINC.replace("''", "','")
-		
+		// ID_OP_PRINC é varchar. Em vez de concatenar os valores crus no IN(...)
+		// (o que partia com valores não-numéricos -> "Invalid column name 'TC'"
+		// e abria HQL injection), separa o CSV e vincula uma lista de strings.
+		List<String> ids = new ArrayList<>();
+		if (id_OP_PRINC != null) {
+			for (String s : id_OP_PRINC.split(",")) {
+				s = s.replace("'", "").trim();
+				if (!s.isEmpty()) {
+					ids.add(s);
+				}
+			}
+		}
+		if (ids.isEmpty()) {
+			return new ArrayList<>();
+		}
+
 		Query query = entityManager.createQuery(
-				"Select a from RP_CONF_OP a where a.ID_OP_PRINC in (" + id_OP_PRINC + ") order by a.ID_OP_SEC");
-		// query.setParameter("id", id_utz);
-		List<RP_CONF_OP> utz = query.getResultList();
-		return utz;
+				"Select a from RP_CONF_OP a where a.ID_OP_PRINC in (:ids) order by a.ID_OP_SEC");
+		query.setParameter("ids", ids);
+		return query.getResultList();
 
 	}
 
