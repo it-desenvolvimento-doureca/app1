@@ -214,13 +214,13 @@ public class CriarFicheiroService {
 
 	/**
 	 * Regra de escrita do OP_NUM no ficheiro:
-	 *   estado "C" -> so escreve se OP_PREVISTA = "1"
-	 *   outros     -> escreve se OP_NUM nao for NULL
+	 * escreve sempre que OP_NUM exista (o numero da operacao imprevista
+	 * e conhecido desde a criacao: 9000+OP_COD_ORIGEM).
 	 */
 	static String formatOpNumFicheiro(String opNum, String estado, String opPrevista) {
-		if ("C".equals(estado)) {
+		/*if ("C".equals(estado)) {
 			return "1".equals(opPrevista) ? formatOpNum(opNum) : ESPACOS_4;
-		}
+		}*/
 		return formatOpNum(opNum);
 	}
 
