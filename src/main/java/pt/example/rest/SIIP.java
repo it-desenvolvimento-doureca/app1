@@ -1818,20 +1818,23 @@ public class SIIP {
 	@Produces("application/json")
 	public void atualizarestado(@PathParam("id") Integer id, @PathParam("user") String user,
 			@PathParam("estado") String estado) {
+		// estado e user vem do URL: vao como parametros, nunca concatenados no SQL.
 		entityManager
-				.createNativeQuery("UPDATE RP_OF_OP_FUNC SET ESTADO = '" + estado
-						+ "' ,DATA_HORA_MODIF = GETDATE(),ID_UTZ_MODIF = '" + user
-						+ "' WHERE ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB =  " + id + ")")
+				.createNativeQuery("UPDATE RP_OF_OP_FUNC SET ESTADO = :estado"
+						+ " ,DATA_HORA_MODIF = GETDATE(),ID_UTZ_MODIF = :user"
+						+ " WHERE ID_OP_CAB in (select ID_OP_CAB from RP_OF_OP_CAB where ID_OF_CAB = :id)")
+				.setParameter("estado", estado).setParameter("user", user).setParameter("id", id)
 				.executeUpdate();
 		String query_user = "";
 		if (estado.equals("R")) {
-			query_user = ",ID_UTZ_EDICAO = '" + user + "' ,ESTADO_INICIAL = ESTADO";
+			query_user = ",ID_UTZ_EDICAO = :user ,ESTADO_INICIAL = ESTADO";
 		} else /* if (estado.equals("C")) */ {
 			atualizarcampos2(id);
 		}
 		entityManager.createNativeQuery(
-				"UPDATE RP_OF_CAB SET ESTADO = '" + estado + "',DATA_HORA_MODIF = GETDATE(),ID_UTZ_MODIF = '" + user
-						+ "' " + query_user + " WHERE ID_OF_CAB = " + id + "")
+				"UPDATE RP_OF_CAB SET ESTADO = :estado,DATA_HORA_MODIF = GETDATE(),ID_UTZ_MODIF = :user"
+						+ query_user + " WHERE ID_OF_CAB = :id")
+				.setParameter("estado", estado).setParameter("user", user).setParameter("id", id)
 				.executeUpdate();
 	}
 
