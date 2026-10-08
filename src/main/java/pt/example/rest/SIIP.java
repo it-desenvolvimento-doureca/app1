@@ -57,6 +57,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import net.sf.jasperreports.engine.JRException;
 import pt.example.bootstrap.ConnectProgress;
 import pt.example.bootstrap.Printer;
+import pt.example.bootstrap.RecalcularTotaisService;
 import pt.example.bootstrap.ReportGenerator;
 import pt.example.bootstrap.SendEmail;
 import pt.example.dao.CONTROLO_ETIQUETASDao;
@@ -124,6 +125,9 @@ public class SIIP {
 
 	@PersistenceContext(unitName = "persistenceUnit")
 	protected EntityManager entityManager;
+
+	@Inject
+	private RecalcularTotaisService recalcularTotais;
 
 	@Inject
 	private RPOFDao dao;
@@ -529,7 +533,18 @@ public class SIIP {
 	@Produces("application/json")
 	public RP_OF_CAB updateRP_OF_CAB(final RP_OF_CAB RP_OF_CAB) {
 		RP_OF_CAB.setESTADO(RP_OF_CAB.getESTADO());
-		return dao.update(RP_OF_CAB);
+		RP_OF_CAB result = dao.update(RP_OF_CAB);
+		// fim de trabalho (login) conclui a OF por aqui, sem passar pelo atualizartotais.
+		// Corre em segundo plano e com transacao propria: se falhar, a OF fica concluida na mesma.
+		if ("C".equals(RP_OF_CAB.getESTADO())) {
+			try {
+				recalcularTotais.recalcular(RP_OF_CAB.getID_OF_CAB());
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "updateRP_OF_CAB: recalcular totais da OF " + RP_OF_CAB.getID_OF_CAB()
+						+ " nao foi lancado: " + e.getMessage(), e);
+			}
+		}
+		return result;
 	}
 
 	@PUT
