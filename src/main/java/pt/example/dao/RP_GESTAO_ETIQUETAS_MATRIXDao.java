@@ -23,8 +23,10 @@ public class RP_GESTAO_ETIQUETAS_MATRIXDao extends GenericDaoJpaImpl<RP_GESTAO_E
 
 	public List<RP_GESTAO_ETIQUETAS_MATRIX> getbylote_referencia(String Lote,String referencia) {
 
-		Query query = entityManager.createNativeQuery("Select a.ID, a.REFERENCIA,a.LOTE,a.QTD,a.ESTADO,a.NUMERO_IMPRESSOES from RP_GESTAO_ETIQUETAS_MATRIX a where a.ESTADO != 'P' and a.LOTE  = '"+Lote+"' /*and a.REFERENCIA  = '"+referencia+"'*/ ");
-		 
+		Query query = entityManager.createNativeQuery("Select a.ID, a.REFERENCIA,a.LOTE,a.QTD,a.ESTADO,a.NUMERO_IMPRESSOES from RP_GESTAO_ETIQUETAS_MATRIX a "
+				+ "where ISNULL(a.ESTADO,'') != 'P' and LTRIM(RTRIM(a.LOTE)) like :lote order by a.DATA_CRIA desc");
+		query.setParameter("lote", "%" + (Lote == null ? "" : Lote.trim()) + "%");
+
 		List<RP_GESTAO_ETIQUETAS_MATRIX> data = query.getResultList();
 		return data;
 
