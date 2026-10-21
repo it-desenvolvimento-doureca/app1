@@ -35,6 +35,7 @@ public class RP_OF_CAB {
 	private String ESTADO;
 	private String OP_COD_ORIGEM;
 	private String OP_PREVISTA;
+	private Boolean RETOUCHE;
 	private Integer VERSAO_MODIF;
 	private String ESTADO_INICIAL;
 	private String IP_POSTO;
@@ -250,6 +251,15 @@ public class RP_OF_CAB {
 
 	public void setOP_PREVISTA(String oP_PREVISTA) {
 		OP_PREVISTA = oP_PREVISTA;
+	}
+
+	@Column(name = "RETOUCHE")
+	public Boolean getRETOUCHE() {
+		return RETOUCHE;
+	}
+
+	public void setRETOUCHE(Boolean rETOUCHE) {
+		RETOUCHE = rETOUCHE;
 	}
 
 	@Column(name = "MAQ_NUM_ORIG")

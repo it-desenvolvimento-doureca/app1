@@ -203,7 +203,7 @@ public class ConnectProgress {
 
 	public List<HashMap<String, Object>> getOP(String ofanumenr, String url) throws SQLException {
 
-		String query = " SELECT OPECOD,OPENUM,OPEDES,SECNUMENR1, "
+		String query = " SELECT OPECOD,OPENUM,OPEDES,SECNUMENR1,RETOUCHE, "
 				+ "CASE WHEN OPENUM = MAX(CASE WHEN RETOUCHE = 0 THEN OPENUM END) OVER (PARTITION BY ofanumenr) AND RETOUCHE = 0 THEN 1 ELSE 0 END AS ULTIMA_OPENUM, "
 				+ "CASE WHEN OPENUM = MIN(CASE WHEN RETOUCHE = 0 THEN OPENUM END) OVER (PARTITION BY ofanumenr) AND RETOUCHE = 0 THEN 1 ELSE 0 END AS PRIMEIRA_OPENUM "
 				+ "FROM SOFD WHERE ofanumenr = '" + ofanumenr + "' order by OPENUM";
@@ -223,6 +223,7 @@ public class ConnectProgress {
 				x.put("SECNUMENR1", rs.getString("SECNUMENR1"));
 				x.put("ULTIMA_OPENUM", rs.getBoolean("ULTIMA_OPENUM"));
 				x.put("PRIMEIRA_OPENUM", rs.getBoolean("PRIMEIRA_OPENUM"));
+				x.put("RETOUCHE", rs.getBoolean("RETOUCHE"));
 				list.add(x);
 			}
 			stmt.close();
