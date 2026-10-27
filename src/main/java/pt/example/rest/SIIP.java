@@ -57,6 +57,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import net.sf.jasperreports.engine.JRException;
 import pt.example.bootstrap.ConnectProgress;
 import pt.example.bootstrap.Printer;
+import pt.example.bootstrap.GerarFicheiroService;
 import pt.example.bootstrap.RecalcularTotaisService;
 import pt.example.bootstrap.ReportGenerator;
 import pt.example.bootstrap.SendEmail;
@@ -128,6 +129,9 @@ public class SIIP {
 
 	@Inject
 	private RecalcularTotaisService recalcularTotais;
+
+	@Inject
+	private GerarFicheiroService gerarFicheiroService;
 
 	@Inject
 	private RPOFDao dao;
@@ -2578,6 +2582,21 @@ public class SIIP {
 			LOGGER.warning("getFicheiro chamado com data2 vazio ou nulo para id: " + id);
 			return Response.status(Response.Status.BAD_REQUEST).build();
 		}
+
+		// Ficheiros para a pasta: aceita logo o pedido e gera em segundo plano, para o tablet
+		// poder sair da página (ou recarregar) sem perder o ficheiro. O download em zip continua
+		// síncrono porque o ficheiro vai na resposta.
+		if (!ficheirosdownload) {
+			gerarFicheiroService.gerar(id, estado, manual, data2);
+			return Response.accepted().build();
+		}
+
+		return gerarFicheiro(id, estado, ficheirosdownload, manual, data2);
+	}
+
+	// Chamado pelo getFicheiro (download) e pelo GerarFicheiroService (pasta), numa transação própria
+	public Response gerarFicheiro(Integer id, String estado, Boolean ficheirosdownload, Boolean manual,
+			List<HashMap<String, String>> data2) throws IOException, ParseException {
 
 		HashMap<String, String> firstMap = data2.get(0);
 		String ip_posto = firstMap.get("ip_posto");
