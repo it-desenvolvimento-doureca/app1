@@ -1181,6 +1181,27 @@ public class ConnectProgress {
 		return list;
 	}
 
+	// Referências (SOFB) de uma OF — usado para validar o par OF/referência antes de
+	// iniciar trabalho. Não apanha a SQLException para o chamador distinguir erro de
+	// "OF sem referências".
+	public List<String> getRefsOF(String ofnum, String url) throws SQLException {
+
+		String query = "select distinct b.PROREF from SOFA a "
+				+ "inner join SOFB b on a.OFANUMENR = b.OFANUMENR where a.OFNUM = ?";
+		List<String> list = new ArrayList<String>();
+
+		try (Connection connection = getConnection(url);
+				PreparedStatement ps = connection.prepareStatement(query)) {
+			ps.setString(1, ofnum);
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					list.add(rs.getString("PROREF").trim());
+				}
+			}
+		}
+		return list;
+	}
+
 	public List<HashMap<String, String>> valida_REFERENCIA_CONTROLO_ETIQUETAS(String proref, String url)
 			throws SQLException {
 

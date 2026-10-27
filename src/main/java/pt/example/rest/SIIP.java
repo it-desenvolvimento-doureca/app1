@@ -537,7 +537,28 @@ public class SIIP {
 	@Produces("application/json")
 	public RP_OF_CAB updateRP_OF_CAB(final RP_OF_CAB RP_OF_CAB) {
 		RP_OF_CAB.setESTADO(RP_OF_CAB.getESTADO());
+
+		// estado antes de gravar, para detetar o fim do trabalho (em curso -> concluído)
+		String estadoAnterior = null;
+		if ("C".equals(RP_OF_CAB.getESTADO()) && RP_OF_CAB.getID_OF_CAB_ORIGEM() == null) {
+			List<?> anterior = entityManager.createNativeQuery("select ESTADO from RP_OF_CAB where ID_OF_CAB = ?1")
+					.setParameter(1, RP_OF_CAB.getID_OF_CAB()).getResultList();
+			if (!anterior.isEmpty() && anterior.get(0) != null) {
+				estadoAnterior = anterior.get(0).toString().trim();
+			}
+		}
+
 		RP_OF_CAB result = dao.update(RP_OF_CAB);
+
+		// Se o tablet não chegar a pedir o ficheiro, o servidor gera-o (GerarFicheiroService)
+		if ("P".equals(estadoAnterior) || "E".equals(estadoAnterior) || "S".equals(estadoAnterior)) {
+			try {
+				gerarFicheiroService.agendarVerificacao(RP_OF_CAB.getID_OF_CAB());
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "updateRP_OF_CAB: verificacao do ficheiro da OF " + RP_OF_CAB.getID_OF_CAB()
+						+ " nao foi agendada: " + e.getMessage(), e);
+			}
+		}
 		// fim de trabalho (login) conclui a OF por aqui, sem passar pelo atualizartotais.
 		// Corre em segundo plano e com transacao propria: se falhar, a OF fica concluida na mesma.
 		if ("C".equals(RP_OF_CAB.getESTADO())) {
@@ -2587,6 +2608,11 @@ public class SIIP {
 		// poder sair da página (ou recarregar) sem perder o ficheiro. O download em zip continua
 		// síncrono porque o ficheiro vai na resposta.
 		if (!ficheirosdownload) {
+			// fim de trabalho ("C" no ecrã do trabalho, "O" no login): a verificação agendada na
+			// conclusão da OF já não precisa de gerar
+			if ("C".equals(estado) || "O".equals(estado)) {
+				gerarFicheiroService.registarPedido(id);
+			}
 			gerarFicheiroService.gerar(id, estado, manual, data2);
 			return Response.accepted().build();
 		}

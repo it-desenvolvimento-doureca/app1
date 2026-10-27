@@ -1,6 +1,7 @@
 package pt.example.rest;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -397,6 +398,27 @@ public class DemoRest {
 
 		List<HashMap<String, String>> dados = connectionProgress.getDefeitos(fam, getURL());
 		return dados;
+	}
+
+	// Devolve as referências enviadas que não pertencem à OF no Silver (vazio = OK)
+	@POST
+	@Path("/validaRefsOF")
+	@Produces("application/json")
+	public List<String> validaRefsOF(final List<HashMap<String, String>> data)
+			throws SQLException, ClassNotFoundException {
+		HashMap<String, String> firstMap = data.get(0);
+		String ofnum = firstMap.get("ofnum");
+		String refs = firstMap.get("refs");
+
+		ConnectProgress connectionProgress = new ConnectProgress();
+		List<String> refsOF = connectionProgress.getRefsOF(ofnum, getURL());
+
+		List<String> invalidas = new ArrayList<String>();
+		for (String ref : refs.split(",")) {
+			if (!ref.trim().isEmpty() && !refsOF.contains(ref.trim()))
+				invalidas.add(ref.trim());
+		}
+		return invalidas;
 	}
 
 	@POST
