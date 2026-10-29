@@ -28,6 +28,12 @@ public class RP_GESTAO_ETIQUETAS_MATRIX {
 	private Integer NUMERO_IMPRESSOES;
 	@Column(name = "DATA_CRIA")
 	private Timestamp DATA_CRIA;
+	@Column(name = "CONTEUDO_ORIGINAL")
+	private String CONTEUDO_ORIGINAL;
+	@Column(name = "END1")
+	private String END1;
+	@Column(name = "END2")
+	private String END2;
 
 	public Integer getID() {
 		return ID;
@@ -83,6 +89,30 @@ public class RP_GESTAO_ETIQUETAS_MATRIX {
 
 	public void setDATA_CRIA(Timestamp dATA_CRIA) {
 		DATA_CRIA = dATA_CRIA;
+	}
+
+	public String getCONTEUDO_ORIGINAL() {
+		return CONTEUDO_ORIGINAL;
+	}
+
+	public void setCONTEUDO_ORIGINAL(String cONTEUDO_ORIGINAL) {
+		CONTEUDO_ORIGINAL = cONTEUDO_ORIGINAL;
+	}
+
+	public String getEND1() {
+		return END1;
+	}
+
+	public void setEND1(String eND1) {
+		END1 = eND1;
+	}
+
+	public String getEND2() {
+		return END2;
+	}
+
+	public void setEND2(String eND2) {
+		END2 = eND2;
 	}
 
 }

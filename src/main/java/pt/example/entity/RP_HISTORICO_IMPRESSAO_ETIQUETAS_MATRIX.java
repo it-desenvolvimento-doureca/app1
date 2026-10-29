@@ -28,6 +28,12 @@ public class RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX {
 	private String UTZ_IMPRESSAO;
 	@Column(name = "CHEFE")
 	private String CHEFE;
+	@Column(name = "QTD")
+	private Integer QTD;
+	@Column(name = "LETRA")
+	private String LETRA;
+	@Column(name = "NOME_FICHEIRO")
+	private String NOME_FICHEIRO;
 
 	public Integer getID() {
 		return ID;
@@ -83,6 +89,30 @@ public class RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX {
 
 	public void setCHEFE(String cHEFE) {
 		CHEFE = cHEFE;
+	}
+
+	public Integer getQTD() {
+		return QTD;
+	}
+
+	public void setQTD(Integer qTD) {
+		QTD = qTD;
+	}
+
+	public String getLETRA() {
+		return LETRA;
+	}
+
+	public void setLETRA(String lETRA) {
+		LETRA = lETRA;
+	}
+
+	public String getNOME_FICHEIRO() {
+		return NOME_FICHEIRO;
+	}
+
+	public void setNOME_FICHEIRO(String nOME_FICHEIRO) {
+		NOME_FICHEIRO = nOME_FICHEIRO;
 	}
 
 }

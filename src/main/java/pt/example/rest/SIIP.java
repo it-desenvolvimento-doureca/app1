@@ -5807,6 +5807,296 @@ public class SIIP {
 				.executeUpdate();
 	}
 
+	/*
+	 * Etiquetas Matrix -> NiceLabel. O serviço GestaoEtiquetaMatrix envia a 1ª impressão (BTC_<lote>A); aqui
+	 * são enviadas as pendentes, as reimpressões (B, C, D...) e as etiquetas criadas a partir da carga.
+	 */
+	private static final String END2_ETIQUETA_MATRIX_MANUAL = "999/26";
+
+	@POST
+	@Path("/imprimirRP_GESTAO_ETIQUETAS_MATRIX")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public Response imprimirRP_GESTAO_ETIQUETAS_MATRIX(final HashMap<String, Object> data) {
+		String pasta = pastaNiceLabelMatrix();
+		if (pasta == null) {
+			return respostaPastaNiceLabelEmFalta();
+		}
+		Integer id = inteiro(data.get("ID"));
+		List<String> enviados = new ArrayList<String>();
+		try {
+			return Response.ok(enviarEtiquetaMatrixNiceLabel(pasta, id, null, "I", texto(data.get("UTZ")), null, enviados))
+					.build();
+		} catch (RuntimeException e) {
+			apagarFicheiros(enviados);
+			throw e;
+		}
+	}
+
+	@POST
+	@Path("/reimprimirRP_GESTAO_ETIQUETAS_MATRIX")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public Response reimprimirRP_GESTAO_ETIQUETAS_MATRIX(final HashMap<String, Object> data) {
+		String pasta = pastaNiceLabelMatrix();
+		if (pasta == null) {
+			return respostaPastaNiceLabelEmFalta();
+		}
+		Integer id = inteiro(data.get("ID"));
+		Integer qtd = inteiro(data.get("QTD"));
+		if (qtd != null && qtd <= 0) {
+			return Response.status(Response.Status.BAD_REQUEST).type("text/plain")
+					.entity("A quantidade tem de ser maior que zero.").build();
+		}
+		List<String> enviados = new ArrayList<String>();
+		try {
+			return Response.ok(enviarEtiquetaMatrixNiceLabel(pasta, id, qtd, "R", texto(data.get("UTZ")),
+					texto(data.get("CHEFE")), enviados)).build();
+		} catch (RuntimeException e) {
+			apagarFicheiros(enviados);
+			throw e;
+		}
+	}
+
+	@GET
+	@Path("/getRP_GESTAO_ETIQUETAS_MATRIXcarga/{lote}")
+	@Produces("application/json")
+	public List<Object[]> getRP_GESTAO_ETIQUETAS_MATRIXcarga(@PathParam("lote") String lote) {
+		return dao21.getcarga(lote);
+	}
+
+	/* Cria uma etiqueta por referência da carga (LOTE, UTZ, LINHAS:[{REF, QTD}]) e envia-as para a NiceLabel */
+	@SuppressWarnings("unchecked")
+	@POST
+	@Path("/createRP_GESTAO_ETIQUETAS_MATRIXporlote")
+	@Consumes("*/*")
+	@Produces("application/json")
+	public Response createRP_GESTAO_ETIQUETAS_MATRIXporlote(final HashMap<String, Object> data) {
+		String pasta = pastaNiceLabelMatrix();
+		if (pasta == null) {
+			return respostaPastaNiceLabelEmFalta();
+		}
+		String lote = texto(data.get("LOTE"));
+		String utz = texto(data.get("UTZ"));
+		List<Map<String, Object>> linhas = (List<Map<String, Object>>) data.get("LINHAS");
+		if (lote == null || lote.trim().isEmpty() || linhas == null) {
+			return Response.status(Response.Status.BAD_REQUEST).type("text/plain").entity("Lote em falta.").build();
+		}
+		lote = lote.trim();
+
+		String end1 = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date());
+		List<String> enviados = new ArrayList<String>();
+		List<Map<String, Object>> resultado = new ArrayList<Map<String, Object>>();
+		try {
+			for (Map<String, Object> linha : linhas) {
+				String referencia = texto(linha.get("REF"));
+				Integer qtd = inteiro(linha.get("QTD"));
+				if (referencia == null || referencia.trim().isEmpty() || qtd == null || qtd <= 0) {
+					continue;
+				}
+				referencia = referencia.trim();
+
+				RP_GESTAO_ETIQUETAS_MATRIX etiqueta = new RP_GESTAO_ETIQUETAS_MATRIX();
+				etiqueta.setREFERENCIA(referencia);
+				etiqueta.setLOTE(lote);
+				etiqueta.setQTD(qtd);
+				etiqueta.setESTADO("P");
+				etiqueta.setNUMERO_IMPRESSOES(0);
+				etiqueta.setDATA_CRIA(new Timestamp(System.currentTimeMillis()));
+				etiqueta.setEND1(end1);
+				etiqueta.setEND2(END2_ETIQUETA_MATRIX_MANUAL);
+				etiqueta.setCONTEUDO_ORIGINAL(conteudoEtiquetaMatrix(referencia, lote, end1, END2_ETIQUETA_MATRIX_MANUAL, qtd));
+				etiqueta = dao21.create(etiqueta);
+				entityManager.flush();
+
+				Map<String, Object> enviada = enviarEtiquetaMatrixNiceLabel(pasta, etiqueta.getID(), null, "I", utz, null,
+						enviados);
+				enviada.put("REFERENCIA", referencia);
+				resultado.add(enviada);
+			}
+		} catch (RuntimeException e) {
+			// Rollback da transação: retira também os ficheiros já escritos para não imprimir etiquetas que não ficam gravadas
+			apagarFicheiros(enviados);
+			throw e;
+		}
+		return Response.ok(resultado).build();
+	}
+
+	/*
+	 * Incrementa NUMERO_IMPRESSOES, escreve o ficheiro com BTC_<lote><letra> (e QTY_<qtd> se a quantidade foi alterada)
+	 * e regista o histórico. A letra é calculada a partir do nº de impressões anterior: 0 -> A, 1 -> B, ...
+	 */
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> enviarEtiquetaMatrixNiceLabel(String pasta, Integer id, Integer qtd, String estado,
+			String utz, String chefe, List<String> enviados) {
+		List<Object[]> linhas = entityManager.createNativeQuery(
+				"SELECT REFERENCIA, LOTE, QTD, ISNULL(NUMERO_IMPRESSOES,0), CONTEUDO_ORIGINAL, END1, END2, DATA_CRIA "
+						+ "FROM RP_GESTAO_ETIQUETAS_MATRIX WITH (UPDLOCK, ROWLOCK) WHERE ID = :id")
+				.setParameter("id", id).getResultList();
+		if (linhas.isEmpty()) {
+			throw new IllegalArgumentException("Etiqueta Matrix " + id + " não existe.");
+		}
+		Object[] linha = linhas.get(0);
+		String referencia = texto(linha[0]);
+		String lote = texto(linha[1]).trim();
+		int qtdImpressao = qtd != null ? qtd : inteiro(linha[2]);
+		int impressoesAnteriores = inteiro(linha[3]);
+		String conteudo = texto(linha[4]);
+		if (conteudo == null) {
+			// Etiquetas criadas antes de se guardar o ficheiro original
+			String end1 = texto(linha[5]) != null ? texto(linha[5])
+					: new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
+							.format(linha[7] != null ? (Date) linha[7] : new Date());
+			String end2 = texto(linha[6]) != null ? texto(linha[6]) : END2_ETIQUETA_MATRIX_MANUAL;
+			conteudo = conteudoEtiquetaMatrix(referencia, lote, end1, end2, inteiro(linha[2]));
+		}
+
+		String letra = letraImpressao(impressoesAnteriores);
+		java.nio.file.Path ficheiro = caminhoLivre(pasta, nomeFicheiroEtiquetaMatrix(id, lote, letra));
+
+		entityManager.createNativeQuery(
+				"UPDATE RP_GESTAO_ETIQUETAS_MATRIX SET ESTADO = :estado, NUMERO_IMPRESSOES = :numero WHERE ID = :id")
+				.setParameter("estado", estado).setParameter("numero", impressoesAnteriores + 1).setParameter("id", id)
+				.executeUpdate();
+
+		String descricao = estado.equals("R") ? "Utilizador reimprimiu etiqueta (NiceLabel)."
+				: "Utilizador imprimiu etiqueta (NiceLabel).";
+		entityManager.createNativeQuery(
+				"INSERT INTO RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX (ID_ETIQUETA_MATRIX, DESCRICAO, NUMERO_IMPRESSAO, "
+						+ "DATA_IMPRESSAO, UTZ_IMPRESSAO, CHEFE, QTD, LETRA, NOME_FICHEIRO) "
+						+ "VALUES (:id, :descricao, :numero, GETDATE(), :utz, NULLIF(:chefe, ''), :qtd, :letra, :ficheiro)")
+				.setParameter("id", id).setParameter("descricao", descricao)
+				.setParameter("numero", impressoesAnteriores + 1).setParameter("utz", utz == null ? "" : utz)
+				.setParameter("chefe", chefe == null ? "" : chefe).setParameter("qtd", qtdImpressao)
+				.setParameter("letra", letra).setParameter("ficheiro", ficheiro.getFileName().toString())
+				.executeUpdate();
+
+		escreverFicheiroNiceLabel(ficheiro, conteudoParaNiceLabel(conteudo, lote + letra, qtd));
+		enviados.add(ficheiro.toString());
+
+		Map<String, Object> resultado = new HashMap<String, Object>();
+		resultado.put("ID", id);
+		resultado.put("LETRA", letra);
+		resultado.put("QTD", qtdImpressao);
+		resultado.put("NOME_FICHEIRO", ficheiro.getFileName().toString());
+		return resultado;
+	}
+
+	@SuppressWarnings("unchecked")
+	private String pastaNiceLabelMatrix() {
+		List<Object> pasta = entityManager
+				.createNativeQuery("select top 1 PASTA_NICELABEL_MATRIX from GER_PARAMETROS a").getResultList();
+		if (pasta.isEmpty() || pasta.get(0) == null || pasta.get(0).toString().trim().isEmpty()) {
+			return null;
+		}
+		return pasta.get(0).toString().trim();
+	}
+
+	private Response respostaPastaNiceLabelEmFalta() {
+		return Response.status(Response.Status.BAD_REQUEST).type("text/plain")
+				.entity("Pasta NiceLabel não configurada (Parâmetros SGIID).").build();
+	}
+
+	private static String conteudoEtiquetaMatrix(String referencia, String lote, String end1, String end2,
+			Integer qtd) {
+		return "ART_" + referencia + "\r\nBTC_" + lote + "\r\nEND1_" + end1 + "\r\nEND2_" + end2 + "\r\nQTY_" + qtd
+				+ "\r\n";
+	}
+
+	/* Conteúdo original com BTC_ (e QTY_, se qtd != null) trocados; as restantes linhas ficam iguais */
+	private static String conteudoParaNiceLabel(String conteudo, String btc, Integer qtd) {
+		String[] linhas = conteudo.split("\r?\n", -1);
+		for (int i = 0; i < linhas.length; i++) {
+			String l = linhas[i].trim().toUpperCase();
+			if (l.startsWith("BTC_")) {
+				linhas[i] = "BTC_" + btc;
+			} else if (qtd != null && l.startsWith("QTY_")) {
+				linhas[i] = "QTY_" + qtd;
+			}
+		}
+		return String.join("\r\n", linhas);
+	}
+
+	/* 0 -> A, 25 -> Z, 26 -> AA, ... */
+	private static String letraImpressao(int impressoesAnteriores) {
+		StringBuilder letra = new StringBuilder();
+		int n = impressoesAnteriores + 1;
+		while (n > 0) {
+			n--;
+			letra.insert(0, (char) ('A' + n % 26));
+			n /= 26;
+		}
+		return letra.toString();
+	}
+
+	/* Mesmo nome que o serviço GestaoEtiquetaMatrix usa: ETIQUETA_MATRIX_<ID>_<LOTE><LETRA>.txt */
+	private static String nomeFicheiroEtiquetaMatrix(Integer id, String lote, String letra) {
+		return ("ETIQUETA_MATRIX_" + id + "_" + lote + letra).replaceAll("[\\\\/:*?\"<>|]", "_") + ".txt";
+	}
+
+	private static java.nio.file.Path caminhoLivre(String pasta, String nome) {
+		java.nio.file.Path destino = Paths.get(pasta, nome);
+		String base = nome.substring(0, nome.length() - 4);
+		int n = 1;
+		while (Files.exists(destino)) {
+			destino = Paths.get(pasta, base + "_" + n + ".txt");
+			n++;
+		}
+		return destino;
+	}
+
+	/* Escreve num .tmp e só depois renomeia, para a NiceLabel nunca ler um ficheiro a meio */
+	private static void escreverFicheiroNiceLabel(java.nio.file.Path destino, String conteudo) {
+		String nome = destino.getFileName().toString();
+		java.nio.file.Path temporario = destino.resolveSibling(nome.substring(0, nome.length() - 4) + ".tmp");
+		try {
+			Files.write(temporario, conteudo.getBytes(java.nio.charset.Charset.forName("windows-1252")));
+			Files.move(temporario, destino);
+		} catch (IOException e) {
+			try {
+				Files.deleteIfExists(temporario);
+			} catch (IOException e1) {
+			}
+			throw new RuntimeException("Não foi possível escrever " + destino + ": " + e.getMessage(), e);
+		}
+	}
+
+	private static void apagarFicheiros(List<String> ficheiros) {
+		for (String ficheiro : ficheiros) {
+			try {
+				Files.deleteIfExists(Paths.get(ficheiro));
+			} catch (IOException e) {
+				Logger.getLogger(SIIP.class.getName()).log(Level.WARNING,
+						"Etiqueta Matrix: não foi possível apagar " + ficheiro, e);
+			}
+		}
+	}
+
+	private static String texto(Object valor) {
+		if (valor == null) {
+			return null;
+		}
+		if (valor instanceof java.sql.Clob) {
+			try {
+				java.sql.Clob clob = (java.sql.Clob) valor;
+				return clob.getSubString(1, (int) clob.length());
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		return valor.toString();
+	}
+
+	private static Integer inteiro(Object valor) {
+		if (valor == null || valor.toString().trim().isEmpty()) {
+			return null;
+		}
+		if (valor instanceof Number) {
+			return ((Number) valor).intValue();
+		}
+		return Integer.valueOf(valor.toString().trim());
+	}
+
 	/************************************* RP_CONF_RELACAO_REF_ETIQUETAS */
 	@POST
 	@Path("/createRP_CONF_RELACAO_REF_ETIQUETAS")
