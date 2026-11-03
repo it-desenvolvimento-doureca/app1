@@ -45,7 +45,7 @@ public class RP_GESTAO_ETIQUETAS_MATRIXDao extends GenericDaoJpaImpl<RP_GESTAO_E
 
 	/*
 	 * Linhas da carga do WinRobot (PR_WINROBOT_CAB.NUMERO_IDENTICACAO_CARGA = lote), agrupadas por referência. Só postos
-	 * de carga das linhas 1, 2.0 (velha) e 2 (LINHA 1, 2, 3; a 4 é a pintura) e sem trabalhos anulados ou cancelados.
+	 * de carga das linhas 1, 2.0 (velha), 2 e pintura (LINHA 1, 2, 3, 4) e sem trabalhos anulados ou cancelados.
 	 */
 	public List<Object[]> getcarga(String lote) {
 
@@ -53,7 +53,7 @@ public class RP_GESTAO_ETIQUETAS_MATRIXDao extends GenericDaoJpaImpl<RP_GESTAO_E
 				"select a.COD_REF, max(a.DESIGN_REF) as DESIGN_REF, sum(isnull(a.NUMERO_PECAS,0)) as QTD, "
 						+ "(select count(*) from RP_GESTAO_ETIQUETAS_MATRIX m where LTRIM(RTRIM(m.LOTE)) = :lote and m.REFERENCIA = a.COD_REF) as JA_EXISTEM "
 						+ "from PR_WINROBOT_CAB c inner join PR_WINROBOT_ARTICLES a on a.ID_CAB = c.ID "
-						+ "where LTRIM(RTRIM(c.NUMERO_IDENTICACAO_CARGA)) = :lote and c.TIPO_POSTO = 'CARGA' and c.LINHA in (1, 2, 3) "
+						+ "where LTRIM(RTRIM(c.NUMERO_IDENTICACAO_CARGA)) = :lote and c.TIPO_POSTO = 'CARGA' and c.LINHA in (1, 2, 3, 4) "
 						+ "and ISNULL(c.ESTADO,'') not in ('A', 'CANC') group by a.COD_REF order by a.COD_REF");
 		query.setParameter("lote", lote == null ? "" : lote.trim());
 		List<Object[]> data = query.getResultList();
