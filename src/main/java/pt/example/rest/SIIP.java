@@ -5808,8 +5808,8 @@ public class SIIP {
 	}
 
 	/*
-	 * Etiquetas Matrix -> NiceLabel. O serviço GestaoEtiquetaMatrix envia a 1ª impressão (BTC_<lote>A); aqui
-	 * são enviadas as pendentes, as reimpressões (B, C, D...) e as etiquetas criadas a partir da carga.
+	 * Etiquetas Matrix -> NiceLabel. O serviço GestaoEtiquetaMatrix envia a 1ª impressão (BTC_<lote>, sem letra); aqui
+	 * são enviadas as pendentes, as reimpressões (A, B, C...) e as etiquetas criadas a partir da carga.
 	 */
 	private static final String END2_ETIQUETA_MATRIX_MANUAL = "999/26";
 
@@ -5884,6 +5884,23 @@ public class SIIP {
 		}
 		lote = lote.trim();
 
+		// Não deixa criar uma etiqueta que já existe para o lote e referência: nesse caso usa-se a reimpressão
+		for (Map<String, Object> linha : linhas) {
+			String referencia = texto(linha.get("REF"));
+			if (referencia == null || referencia.trim().isEmpty()) {
+				continue;
+			}
+			Number existentes = (Number) entityManager.createNativeQuery(
+					"select count(*) from RP_GESTAO_ETIQUETAS_MATRIX where LTRIM(RTRIM(LOTE)) = :lote and LTRIM(RTRIM(REFERENCIA)) = :referencia")
+					.setParameter("lote", lote).setParameter("referencia", referencia.trim()).getSingleResult();
+			if (existentes.intValue() > 0) {
+				return Response.status(Response.Status.BAD_REQUEST).type("text/plain")
+						.entity("Já existe etiqueta para o lote " + lote + " e a referência " + referencia.trim()
+								+ ". Use a reimpressão.")
+						.build();
+			}
+		}
+
 		String end1 = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date());
 		List<String> enviados = new ArrayList<String>();
 		List<Map<String, Object>> resultado = new ArrayList<Map<String, Object>>();
@@ -5924,7 +5941,7 @@ public class SIIP {
 
 	/*
 	 * Incrementa NUMERO_IMPRESSOES, escreve o ficheiro com BTC_<lote><letra> (e QTY_<qtd> se a quantidade foi alterada)
-	 * e regista o histórico. A letra é calculada a partir do nº de impressões anterior: 0 -> A, 1 -> B, ...
+	 * e regista o histórico. A letra é calculada a partir do nº de impressões anterior: 0 -> sem letra, 1 -> A, 2 -> B, ...
 	 */
 	@SuppressWarnings("unchecked")
 	private Map<String, Object> enviarEtiquetaMatrixNiceLabel(String pasta, Integer id, Integer qtd, String estado,
@@ -5959,19 +5976,20 @@ public class SIIP {
 				.setParameter("estado", estado).setParameter("numero", impressoesAnteriores + 1).setParameter("id", id)
 				.executeUpdate();
 
+		String conteudoNiceLabel = conteudoParaNiceLabel(conteudo, lote + letra, qtd);
 		String descricao = estado.equals("R") ? "Utilizador reimprimiu etiqueta (NiceLabel)."
 				: "Utilizador imprimiu etiqueta (NiceLabel).";
 		entityManager.createNativeQuery(
 				"INSERT INTO RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX (ID_ETIQUETA_MATRIX, DESCRICAO, NUMERO_IMPRESSAO, "
-						+ "DATA_IMPRESSAO, UTZ_IMPRESSAO, CHEFE, QTD, LETRA, NOME_FICHEIRO) "
-						+ "VALUES (:id, :descricao, :numero, GETDATE(), :utz, NULLIF(:chefe, ''), :qtd, :letra, :ficheiro)")
+						+ "DATA_IMPRESSAO, UTZ_IMPRESSAO, CHEFE, QTD, LETRA, NOME_FICHEIRO, CONTEUDO) "
+						+ "VALUES (:id, :descricao, :numero, GETDATE(), :utz, NULLIF(:chefe, ''), :qtd, NULLIF(:letra, ''), :ficheiro, :conteudo)")
 				.setParameter("id", id).setParameter("descricao", descricao)
 				.setParameter("numero", impressoesAnteriores + 1).setParameter("utz", utz == null ? "" : utz)
 				.setParameter("chefe", chefe == null ? "" : chefe).setParameter("qtd", qtdImpressao)
 				.setParameter("letra", letra).setParameter("ficheiro", ficheiro.getFileName().toString())
-				.executeUpdate();
+				.setParameter("conteudo", conteudoNiceLabel).executeUpdate();
 
-		escreverFicheiroNiceLabel(ficheiro, conteudoParaNiceLabel(conteudo, lote + letra, qtd));
+		escreverFicheiroNiceLabel(ficheiro, conteudoNiceLabel);
 		enviados.add(ficheiro.toString());
 
 		Map<String, Object> resultado = new HashMap<String, Object>();
@@ -6017,10 +6035,10 @@ public class SIIP {
 		return String.join("\r\n", linhas);
 	}
 
-	/* 0 -> A, 25 -> Z, 26 -> AA, ... */
+	/* 1ª impressão sem letra; reimpressões: 1 -> A, 26 -> Z, 27 -> AA, ... */
 	private static String letraImpressao(int impressoesAnteriores) {
 		StringBuilder letra = new StringBuilder();
-		int n = impressoesAnteriores + 1;
+		int n = impressoesAnteriores;
 		while (n > 0) {
 			n--;
 			letra.insert(0, (char) ('A' + n % 26));

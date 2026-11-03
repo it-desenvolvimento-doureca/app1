@@ -34,6 +34,8 @@ public class RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX {
 	private String LETRA;
 	@Column(name = "NOME_FICHEIRO")
 	private String NOME_FICHEIRO;
+	@Column(name = "CONTEUDO")
+	private String CONTEUDO;
 
 	public Integer getID() {
 		return ID;
@@ -113,6 +115,14 @@ public class RP_HISTORICO_IMPRESSAO_ETIQUETAS_MATRIX {
 
 	public void setNOME_FICHEIRO(String nOME_FICHEIRO) {
 		NOME_FICHEIRO = nOME_FICHEIRO;
+	}
+
+	public String getCONTEUDO() {
+		return CONTEUDO;
+	}
+
+	public void setCONTEUDO(String cONTEUDO) {
+		CONTEUDO = cONTEUDO;
 	}
 
 }
